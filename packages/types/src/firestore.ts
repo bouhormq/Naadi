@@ -8,12 +8,16 @@ export interface User {
   role: 'user' | 'business';
   displayName?: string;
   profilePic?: string;
+  photoURL?: string;
+  phoneNumber?: string;
   businessName?: string;
   contactInfo?: {
     phone: string;
     address: string;
   };
+  authMethod?: 'email' | 'phone' | 'google' | 'facebook' | 'apple';
   createdAt: string;
+  lastLoginAt?: string;
 }
 
 /**

@@ -1,11 +1,9 @@
-import { SignupRequest, User, AuthResponse } from '@naadi/types';
-import { createDocument } from '../../utils/firestore';
+import { SignupRequest, AuthResponse } from '@naadi/types';
 import { ApiError } from '../../utils/apiError';
-import { getAuth, createUserWithEmailAndPassword } from 'firebase/auth';
-import { getApp } from 'firebase/app';
+import { emailSignup } from './providers';
 
 /**
- * Handles user signup
+ * Handles user signup with email and password
  * @param data SignupRequest data from client
  * @returns User object with auth token
  */
@@ -18,52 +16,13 @@ export async function signup(data: SignupRequest): Promise<AuthResponse> {
       throw new ApiError('Email and password are required', 400);
     }
     
-    // Get Firebase Auth instance
-    const auth = getAuth(getApp());
-    
-    // Create user in Firebase Auth
-    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-    const uid = userCredential.user.uid;
-    
-    // Create user document in Firestore
-    const userData: Omit<User, 'id'> = {
-      uid,
-      email,
-      role: 'user',
-      displayName,
-      createdAt: new Date().toISOString()
-    };
-    
-    await createDocument<User>('users', userData);
-    
-    // Get ID token for authentication
-    const token = await userCredential.user.getIdToken();
-    
-    return {
-      user: {
-        uid,
-        email,
-        role: 'user',
-        displayName
-      },
-      token
-    };
+    // Use the email provider for signup
+    return await emailSignup(email, password, { displayName });
   } catch (error) {
     console.error('Signup error:', error);
     
-    if (error instanceof Error) {
-      // Handle Firebase auth errors
-      if (error.message.includes('email-already-in-use')) {
-        throw new ApiError('Email already in use', 400);
-      }
-      if (error.message.includes('invalid-email')) {
-        throw new ApiError('Invalid email format', 400);
-      }
-      if (error.message.includes('weak-password')) {
-        throw new ApiError('Password is too weak', 400);
-      }
-      
-      throw new ApiError(error.message, 400);
+    if (error instanceof ApiError) {
+      throw error;
     }
     
     throw new ApiError('Failed to create account', 500);

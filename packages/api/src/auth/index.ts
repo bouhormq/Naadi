@@ -1,3 +1,10 @@
+// Export standard email/password auth
 export * from './signup';
+export * from './login';
 export * from './businessSignup';
-export * from './login'; 
+
+// Export OAuth providers
+export * from './oauth';
+
+// Export phone authentication
+export * from './phone'; 

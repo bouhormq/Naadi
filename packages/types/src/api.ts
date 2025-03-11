@@ -29,8 +29,18 @@ export interface AuthResponse {
     role: 'user' | 'business';
     displayName?: string;
     businessName?: string;
+    phoneNumber?: string;
   };
   token: string;
+}
+
+export interface PhoneVerifyRequest {
+  phoneNumber: string;
+}
+
+export interface PhoneConfirmRequest {
+  verificationId: string;
+  verificationCode: string;
 }
 
 /**
