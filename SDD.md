@@ -350,7 +350,7 @@ naadi-business/
 ```typescript
 import { useState, useEffect } from 'react';
 import { collection, getDocs } from 'firebase/firestore';
-import { Studio } from 'packages/types/src/firestore';
+import { Studio } from '@naadi/types';
 import { db } from '../utils/firebase/firestore';
 
 export function useStudios() {

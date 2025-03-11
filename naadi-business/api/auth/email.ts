@@ -1,9 +1,9 @@
 import { 
   emailSignup as apiEmailSignup,
   emailLogin as apiEmailLogin 
-} from '@naadi/api/src/auth/providers';
-import { AuthResponse } from '@naadi/types/src/api';
-import { User } from '@naadi/types/src/firestore';
+} from '@naadi/api';
+import { AuthResponse } from '@naadi/types';
+import { User } from '@naadi/types';
 
 /**
  * Handles business signup with email/password

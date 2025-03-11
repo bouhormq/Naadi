@@ -1,8 +1,8 @@
 import { 
   googleAuth as apiGoogleAuth,
   facebookAuth as apiFacebookAuth 
-} from '@naadi/api/src/auth/providers';
-import { AuthResponse } from '@naadi/types/src/api';
+} from '@naadi/api';
+import { AuthResponse } from '@naadi/types';
 
 /**
  * Handles authentication with Google

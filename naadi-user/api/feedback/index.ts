@@ -1,5 +1,5 @@
-import { Feedback } from '@naadi/types/src/firestore';
-import { SubmitFeedbackRequest } from '@naadi/types/src/api';
+import { Feedback } from '@naadi/types';
+import { SubmitFeedbackRequest } from '@naadi/types';
 
 /**
  * Submits user feedback

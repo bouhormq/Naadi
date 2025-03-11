@@ -1,6 +1,5 @@
 import { ExpoRequest, ExpoResponse } from 'expo-router/server';
-import { CreateStudioRequest } from '@naadi/types/src/api';
-import { Studio } from '@naadi/types/src/firestore';
+import { CreateStudioRequest, Studio } from '@naadi/types';
 import { getAuth } from 'firebase-admin/auth';
 import { getFirestore } from 'firebase-admin/firestore';
 

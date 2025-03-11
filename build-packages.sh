@@ -5,31 +5,20 @@ set -e
 
 echo "Building Naadi packages..."
 
-# Install dependencies if needed
+# Install root dependencies if needed
 if [ ! -d "node_modules" ]; then
-  echo "Installing root dependencies..."
+  echo "Installing dependencies..."
   npm install
 fi
 
-# Build types package
+# Build types package first since API depends on it
 echo "Building @naadi/types..."
-cd packages/types
-if [ ! -d "node_modules" ]; then
-  npm install
-fi
-npm run build
-cd ../..
+npm run build:types
 
 # Build API package
 echo "Building @naadi/api..."
-cd packages/api
-if [ ! -d "node_modules" ]; then
-  npm install
-fi
-npm run build
-cd ../..
+npm run build:api
 
 echo "All packages built successfully!"
-echo ""
-echo "You can now use the packages in your application."
-echo "If you encounter any issues, try running 'npm install' in the root directory." 
+echo "Workspace links are automatically managed by npm workspaces."
+echo "You can use direct imports like: import { signup } from '@naadi/api';" 

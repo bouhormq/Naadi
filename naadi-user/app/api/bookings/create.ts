@@ -1,6 +1,5 @@
 import { ExpoRequest, ExpoResponse } from 'expo-router/server';
-import { CreateBookingRequest } from '@naadi/types/src/api';
-import { Booking } from '@naadi/types/src/firestore';
+import { CreateBookingRequest, Booking } from '@naadi/types';
 import { getAuth } from 'firebase-admin/auth';
 import { getFirestore, FieldValue } from 'firebase-admin/firestore';
 

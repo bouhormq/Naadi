@@ -1,5 +1,4 @@
-import { Booking } from '@naadi/types/src/firestore';
-import { CreateBookingRequest, CancelBookingRequest } from '@naadi/types/src/api';
+import { Booking, CreateBookingRequest, CancelBookingRequest } from '@naadi/types';
 import { getAuthToken } from '../auth/session';
 
 /**

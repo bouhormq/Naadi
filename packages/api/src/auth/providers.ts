@@ -62,7 +62,7 @@ export async function createUserDocument(firebaseUser: FirebaseUser, additionalD
       photoURL: firebaseUser.photoURL || additionalData.photoURL || '',
       phoneNumber: firebaseUser.phoneNumber || additionalData.phoneNumber || '',
       role: 'user',
-      authMethod,
+      authMethod: authMethod as 'email' | 'phone' | 'google' | 'facebook' | 'apple',
       createdAt: new Date().toISOString(),
       lastLoginAt: new Date().toISOString(),
       ...additionalData
@@ -364,7 +364,7 @@ export async function linkPhoneToAccount(
 ): Promise<User> {
   try {
     const result = await linkWithCredential(user, phoneCredential);
-    return await createUserDocument(result.user, { phoneNumber: result.user.phoneNumber });
+    return await createUserDocument(result.user, { phoneNumber: result.user.phoneNumber || '' });
   } catch (error) {
     console.error('Link phone error:', error);
     

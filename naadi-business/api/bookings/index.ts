@@ -1,4 +1,4 @@
-import { Booking } from '@naadi/types/src/firestore';
+import { Booking } from '@naadi/types';
 import { getCurrentUser } from '../auth/session';
 
 /**

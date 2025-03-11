@@ -1,7 +1,7 @@
 import { getAuth, signOut, onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
 import { getApp } from 'firebase/app';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { User } from '@naadi/types/src/firestore';
+import { User } from '@naadi/types';
 
 // Storage keys
 const BUSINESS_DATA_KEY = 'naadi_business_data';

@@ -1,8 +1,8 @@
 import { 
   phoneAuth as apiPhoneAuth,
   verifyPhoneCode as apiVerifyPhoneCode
-} from '@naadi/api/src/auth/providers';
-import { AuthResponse } from '@naadi/types/src/api';
+} from '@naadi/api';
+import { AuthResponse } from '@naadi/types';
 
 /**
  * Sends a verification code to the provided phone number

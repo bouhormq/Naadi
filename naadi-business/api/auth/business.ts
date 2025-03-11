@@ -1,5 +1,5 @@
-import { UpdateUserRequest } from '@naadi/types/src/api';
-import { User, Studio } from '@naadi/types/src/firestore';
+import { UpdateUserRequest } from '@naadi/types';
+import { User, Studio } from '@naadi/types';
 import { getCurrentUser, getIdToken } from './session';
 
 /**

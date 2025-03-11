@@ -1,5 +1,5 @@
-import { User } from '@naadi/types/src/firestore';
-import { UpdateUserRequest } from '@naadi/types/src/api';
+import { User } from '@naadi/types';
+import { UpdateUserRequest } from '@naadi/types';
 
 /**
  * Gets the current user's profile

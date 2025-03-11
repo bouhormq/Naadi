@@ -1,5 +1,4 @@
-import { Class } from '@naadi/types/src/firestore';
-import { CreateClassRequest, UpdateClassRequest } from '@naadi/types/src/api';
+import { Class, CreateClassRequest, UpdateClassRequest } from '@naadi/types';
 import { getCurrentUser, getIdToken } from '../auth/session';
 
 /**

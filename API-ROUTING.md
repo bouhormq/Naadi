@@ -30,7 +30,7 @@ These modules export functions that implement the core business logic, e.g.:
 
 ```typescript
 // packages/api/src/auth/signup.ts
-import { SignupRequest, AuthResponse } from '@naadi/types/src/api';
+import { SignupRequest, AuthResponse } from '@naadi/types';
 
 export async function signup(data: SignupRequest): Promise<AuthResponse> {
   // Implementation of core signup logic
@@ -71,7 +71,7 @@ Each API route file exports HTTP method handlers (GET, POST, etc.):
 ```typescript
 // naadi-user/app/api/auth/signup.ts
 import { ExpoRequest, ExpoResponse } from 'expo-router/server';
-import { signup } from '@naadi/api/src/auth/signup';
+import { signup } from '@naadi/api';
 
 export async function POST(request: ExpoRequest): Promise<ExpoResponse> {
   try {
@@ -117,7 +117,7 @@ Client API functions handle the fetch calls to the server endpoints:
 
 ```typescript
 // naadi-user/api/auth/email.ts
-import { SignupRequest, AuthResponse } from '@naadi/types/src/api';
+import { SignupRequest, AuthResponse } from '@naadi/types';
 
 export async function signupWithEmail(
   email: string,

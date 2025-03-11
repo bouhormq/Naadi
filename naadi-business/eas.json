@@ -1,0 +1,22 @@
+{
+  "cli": {
+    "version": ">= 5.9.1"
+  },
+  "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal",
+      "workspaceRoot": "../"
+    },
+    "preview": {
+      "distribution": "internal",
+      "workspaceRoot": "../"
+    },
+    "production": {
+      "workspaceRoot": "../"
+    }
+  },
+  "submit": {
+    "production": {}
+  }
+} 

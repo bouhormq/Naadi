@@ -1,5 +1,5 @@
-import { Studio } from '@naadi/types/src/firestore';
-import { CreateStudioRequest, UpdateStudioRequest } from '@naadi/types/src/api';
+import { Studio, CreateStudioRequest, UpdateStudioRequest } from '@naadi/types';
+import { getFirestore } from 'firebase/firestore';
 import { getAuthToken } from '../auth/session';
 
 /**

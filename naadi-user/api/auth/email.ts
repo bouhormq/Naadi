@@ -1,4 +1,4 @@
-import { AuthResponse } from '@naadi/types/src/api';
+import { AuthResponse } from '@naadi/types';
 import { getIdToken } from './session';
 
 /**

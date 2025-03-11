@@ -1,4 +1,4 @@
-import { Class } from '@naadi/types/src/firestore';
+import { Class } from '@naadi/types';
 
 /**
  * Gets all classes for a studio

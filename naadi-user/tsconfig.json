@@ -1,0 +1,14 @@
+{
+  "extends": "../tsconfig.base.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@naadi/api": ["../packages/api/src"],
+      "@naadi/api/*": ["../packages/api/src/*"],
+      "@naadi/types": ["../packages/types/src"],
+      "@naadi/types/*": ["../packages/types/src/*"]
+    }
+  },
+  "include": ["**/*.ts", "**/*.tsx"],
+  "exclude": ["node_modules"]
+} 

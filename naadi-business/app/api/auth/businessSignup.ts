@@ -1,5 +1,6 @@
 import { ExpoRequest, ExpoResponse } from 'expo-router/server';
-import { BusinessSignupRequest } from '@naadi/types/src/api';
+import { businessSignup } from '@naadi/api';
+import { BusinessSignupRequest } from '@naadi/types';
 import { getAuth } from 'firebase-admin/auth';
 import { getFirestore } from 'firebase-admin/firestore';
 

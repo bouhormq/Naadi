@@ -1,4 +1,4 @@
-import { StudioStatsResponse } from '@naadi/types/src/api';
+import { StudioStatsResponse } from '@naadi/types';
 import { getCurrentUser } from '../auth/session';
 
 /**
