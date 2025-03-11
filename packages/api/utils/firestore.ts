@@ -3,16 +3,59 @@ import { getFirestore } from 'firebase-admin/firestore';
 
 // Initialize Firebase Admin if not already initialized
 if (!admin.apps.length) {
-  // In production, use environment variables or service account
-  const serviceAccount = process.env.FIREBASE_SERVICE_ACCOUNT 
-    ? JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT) 
-    : undefined;
-
-  admin.initializeApp({
-    credential: serviceAccount 
-      ? admin.credential.cert(serviceAccount) 
-      : undefined,
-  });
+  // Check for different ways to initialize Firebase Admin
+  if (process.env.FIREBASE_SERVICE_ACCOUNT) {
+    try {
+      // Use the service account JSON from environment variable 
+      const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+      
+      admin.initializeApp({
+        credential: admin.credential.cert(serviceAccount)
+      });
+      console.log("Firebase Admin SDK initialized with service account JSON");
+    } catch (jsonError: unknown) {
+      console.error("Error parsing FIREBASE_SERVICE_ACCOUNT JSON:", jsonError instanceof Error ? jsonError.message : 'Unknown error');
+      console.log("Trying alternative method with individual variables...");
+      
+      // If JSON parsing fails, try using individual environment variables
+      if (
+        process.env.FIREBASE_PROJECT_ID && 
+        process.env.FIREBASE_CLIENT_EMAIL && 
+        process.env.FIREBASE_PRIVATE_KEY
+      ) {
+        admin.initializeApp({
+          credential: admin.credential.cert({
+            projectId: process.env.FIREBASE_PROJECT_ID,
+            clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+            // The private key needs to be properly formatted
+            privateKey: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n'),
+          }),
+        });
+        console.log("Firebase Admin SDK initialized with individual credentials");
+      } else {
+        throw new Error("No valid Firebase credentials found in environment variables");
+      }
+    }
+  } else if (
+    process.env.FIREBASE_PROJECT_ID && 
+    process.env.FIREBASE_CLIENT_EMAIL && 
+    process.env.FIREBASE_PRIVATE_KEY
+  ) {
+    // Use individual environment variables
+    admin.initializeApp({
+      credential: admin.credential.cert({
+        projectId: process.env.FIREBASE_PROJECT_ID,
+        clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+        // The private key needs to be properly formatted
+        privateKey: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n'),
+      }),
+    });
+    console.log("Firebase Admin SDK initialized with individual credentials");
+  } else {
+    // Default initialization for development (uses Application Default Credentials if available)
+    admin.initializeApp();
+    console.warn('Firebase Admin initialized without explicit credentials. Using Application Default Credentials.');
+  }
 }
 
 // Export Firestore instance

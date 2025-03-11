@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "611614680109",
+    "project_id": "naadi-cf4c9",
+    "storage_bucket": "naadi-cf4c9.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:611614680109:android:5aa4051d6d11f6ce3444a4",
+        "android_client_info": {
+          "package_name": "com.naadi.user"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBPMJsL2PqrraqQtVLHbfa6fQvGvZjFpj4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
