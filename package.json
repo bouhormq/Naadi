@@ -1,0 +1,24 @@
+{
+  "name": "naadi",
+  "private": true,
+  "workspaces": [
+    "naadi-user",
+    "naadi-business",
+    "packages/*"
+  ],
+  "scripts": {
+    "build:types": "cd packages/types && npm run build",
+    "build:api": "cd packages/api && npm run build",
+    "build:all": "npm run build:types && npm run build:api",
+    "dev:user": "cd naadi-user && npm run dev",
+    "dev:business": "cd naadi-business && npm run dev",
+    "build:user": "cd naadi-user && eas build",
+    "build:business": "cd naadi-business && eas build",
+    "deploy:user-web": "cd naadi-user && eas deploy --platform web",
+    "deploy:business-web": "cd naadi-business && eas deploy --platform web",
+    "postinstall": "npm run build:all"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+} 
