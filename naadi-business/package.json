@@ -12,8 +12,8 @@
     "deploy:web": "eas deploy --platform web"
   },
   "dependencies": {
-    "@naadi/api": "0.1.0",
-    "@naadi/types": "0.1.0",
+    "@naadi/api": "file:../packages/api",
+    "@naadi/types": "file:../packages/types",
     "expo": "~52.0.0",
     "expo-constants": "~16.0.0",
     "expo-linking": "~7.0.0",
@@ -33,4 +33,4 @@
     "typescript": "^5.1.6"
   },
   "private": true
-} 
+}

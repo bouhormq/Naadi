@@ -15,8 +15,8 @@
   },
   "dependencies": {
     "@expo/vector-icons": "^13.0.0",
-    "@naadi/api": "0.1.0",
-    "@naadi/types": "0.1.0",
+    "@naadi/api": "file:../packages/api",
+    "@naadi/types": "file:../packages/types",
     "@react-native-async-storage/async-storage": "1.18.2",
     "expo": "~49.0.15",
     "expo-constants": "~14.4.2",
@@ -48,4 +48,4 @@
     "metro-resolver": "0.76.8"
   },
   "private": true
-} 
+}

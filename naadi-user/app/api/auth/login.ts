@@ -1,6 +1,6 @@
 import { ExpoRequest, ExpoResponse } from 'expo-router/server';
-import { login } from '@naadi/api/src/auth/login';
-import { LoginRequest } from '@naadi/types/src/api';
+import { login } from '@naadi/api';
+import { LoginRequest } from '@naadi/types';
 
 export async function POST(request: ExpoRequest): Promise<ExpoResponse> {
   try {
