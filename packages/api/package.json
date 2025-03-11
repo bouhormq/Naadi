@@ -9,7 +9,15 @@
   "scripts": {
     "build": "tsc",
     "build:api": "tsc",
-    "dev": "tsc --watch"
+    "dev": "tsc --watch",
+    "test": "node tests/run-all-tests.js",
+    "test:studio": "node tests/test-studio-api.js",
+    "test:classes": "node tests/test-classes-api.js",
+    "test:bookings": "node tests/test-bookings-api.js",
+    "test:feedback": "node tests/test-feedback-api.js",
+    "test:imports": "node tests/test-api-imports.js",
+    "test:functions": "node tests/test-api-functions.js",
+    "test:studio-stats": "node tests/test-studio-stats-api.js"
   },
   "dependencies": {
     "@naadi/types": "0.1.0",
