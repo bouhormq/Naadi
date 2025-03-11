@@ -48,7 +48,7 @@ naadi/
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/yourusername/naadi.git
+   git clone https://github.com/bouhormq/Naadi.git
    cd naadi
    ```
 
