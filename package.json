@@ -26,6 +26,7 @@
     "test:api:imports": "cd packages/api && npm run test:imports",
     "test:api:studio-stats": "cd packages/api && npm run test:studio-stats",
     "test:all": "bash scripts/test/run-all-tests.sh",
+    "test:cleanup": "node scripts/test/cleanup/cleanup-test-data.js",
     "postinstall": "npm run build:all"
   },
   "engines": {

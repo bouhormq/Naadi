@@ -13,6 +13,7 @@ const { db } = require('../dist/utils/firestore');
 const userId = 'test-user-' + Math.random().toString(36).substring(2, 10);
 const studioId = 'test-studio-' + Math.random().toString(36).substring(2, 10);
 const classId = 'test-class-' + Math.random().toString(36).substring(2, 10);
+let bookingId = null; // Will store the ID of the booking created during the test
 
 // Setup test data in Firestore
 async function setupTestData() {
@@ -67,6 +68,35 @@ async function setupTestData() {
 // Clean up test data from Firestore
 async function cleanupTestData() {
   console.log('🧹 Cleaning up test data...');
+  
+  // Delete the booking first (due to potential foreign key relationships)
+  if (bookingId) {
+    try {
+      await db.collection('bookings').doc(bookingId).delete();
+      console.log('✅ Test booking deleted');
+    } catch (e) {
+      console.error('Error deleting booking:', e.message);
+    }
+  }
+  
+  // Also delete any other bookings associated with the test class
+  try {
+    const bookingsSnapshot = await db.collection('bookings').where('classId', '==', classId).get();
+    const batch = db.batch();
+    let count = 0;
+    
+    bookingsSnapshot.forEach(doc => {
+      batch.delete(doc.ref);
+      count++;
+    });
+    
+    if (count > 0) {
+      await batch.commit();
+      console.log(`✅ ${count} additional test bookings deleted`);
+    }
+  } catch (e) {
+    console.error('Error deleting additional bookings:', e.message);
+  }
   
   try {
     await db.collection('users').doc(userId).delete();
