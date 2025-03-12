@@ -17,6 +17,15 @@
     "deploy:user-web": "cd naadi-user && eas deploy --platform web",
     "deploy:business-web": "cd naadi-business && eas deploy --platform web",
     "git:sync": "bash scripts/git-sync.sh",
+    "test:api": "cd packages/api && npm run test",
+    "test:api:studio": "cd packages/api && npm run test:studio",
+    "test:api:classes": "cd packages/api && npm run test:classes",
+    "test:api:bookings": "cd packages/api && npm run test:bookings",
+    "test:api:feedback": "cd packages/api && npm run test:feedback",
+    "test:api:functions": "cd packages/api && npm run test:functions",
+    "test:api:imports": "cd packages/api && npm run test:imports",
+    "test:api:studio-stats": "cd packages/api && npm run test:studio-stats",
+    "test:all": "bash scripts/test/run-all-tests.sh",
     "postinstall": "npm run build:all"
   },
   "engines": {
