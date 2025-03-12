@@ -20,13 +20,25 @@ Naadi is a platform that connects users to fitness studios via map-based browsin
 
 ```
 naadi/
-├── packages/              # Shared packages
-│   ├── types/             # Type definitions
-│   └── api/               # API logic
-├── naadi-user/            # User app (mobile + naadi.ma)
-├── naadi-business/        # Business app (mobile + naadi.ma/business)
-├── build-packages.sh      # Script to build packages
-└── package.json           # Root monorepo config
+├── config/
+│   └── tsconfig.base.json    # Base TypeScript configuration
+├── docs/
+│   ├── api-routing-guide.md        # API routing documentation
+│   ├── software-design-document.md # Software Design Document
+│   ├── api-implementation-plan.md  # API implementation plan
+│   ├── firebase-platform-checklist.md # Firebase platform setup checklist
+│   └── firebase-setup-guide.md     # Firebase setup guide
+├── naadi-business/           # Business app (mobile + naadi.ma/business)
+├── naadi-user/               # User app (mobile + naadi.ma)
+├── packages/
+│   ├── api/                  # Shared API logic (as subrepo)
+│   └── types/                # Shared type definitions (as subrepo)
+├── scripts/
+│   ├── build-packages.sh     # Script to build packages
+│   └── git-sync.sh           # Script to commit and push changes to GitHub
+├── .env.local                # Environment variables
+├── package.json              # Root package.json
+└── README.md                 # This file
 ```
 
 ## Technologies
@@ -59,10 +71,29 @@ naadi/
 
 3. Build the packages:
    ```bash
-   ./build-packages.sh
+   npm run build:all
    ```
 
 ### Development
+
+1. Install dependencies:
+```bash
+npm install
+```
+
+2. Build shared packages:
+```bash
+npm run build:all
+# OR
+bash scripts/build-packages.sh
+```
+
+3. Commit and push changes to GitHub:
+```bash
+npm run git:sync
+# OR
+bash scripts/git-sync.sh
+```
 
 - To run the user app:
   ```bash
