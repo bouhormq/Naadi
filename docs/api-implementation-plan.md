@@ -83,6 +83,17 @@ This guide outlines the steps to implement the API layers in the Naadi project, 
 ### 6. Testing
 - Test API endpoints with real requests
 - Verify authentication and authorization
+- Create comprehensive test suite for all API endpoints
+- Implement mock API for isolated testing without Firebase dependencies
+- Test authentication flows (signup, login, me, signout)
+- Test user management including staff operations
+- Test studio operations (list, create, get by ID, update, delete)
+- Test class management (list, create, update, delete)
+- Test booking operations (get by studio, get by ID, update status)
+- Test feedback retrieval for studios and classes
+- Implement central test runner to execute all tests
+- Verify proper error handling for all endpoints
+- Test authorization rules and access control
 
 ## Phase 3: Implement Client API Wrappers
 
@@ -122,6 +133,10 @@ This guide outlines the steps to implement the API layers in the Naadi project, 
 2. **Test as You Go**:
    - Create simple test scripts to validate each module
    - Use tools like Postman or write simple Node.js scripts
+   - Implement mock API for endpoint testing without real database
+   - Create automated tests for all API endpoints
+   - Test authorization and access control
+   - Run all tests before deploying changes
 
 3. **Build Between Layers**:
    - Complete the first layer (packages/api) for a module

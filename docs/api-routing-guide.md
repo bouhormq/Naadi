@@ -195,4 +195,110 @@ export async function GET(request: ExpoRequest): Promise<ExpoResponse> {
 export async function getFeaturedStudios() {
   // Call /api/studios/featured endpoint
 }
-``` 
+```
+
+## Testing API Endpoints
+
+Naadi implements a comprehensive testing approach for API endpoints to ensure reliability and correctness.
+
+### Testing Architecture
+
+```
+naadi-business/tests/
+├── mock-api.js                 # Mock API implementation
+├── run-all-tests.js            # Test runner
+├── test-auth-endpoints.js      # Authentication tests
+├── test-analytics-endpoints.js # Analytics tests
+├── test-users-endpoints.js     # User management tests
+├── test-studios-endpoints.js   # Studio management tests
+├── test-classes-endpoints.js   # Class management tests
+├── test-bookings-endpoints.js  # Booking tests
+└── test-feedback-endpoints.js  # Feedback tests
+```
+
+### Mock API Approach
+
+The testing system uses a mock API implementation that simulates Firebase functionality:
+
+```javascript
+// Example from mock-api.js
+const API = {
+  mockData: {
+    users: {},
+    studios: {},
+    classes: {},
+    bookings: {},
+    feedback: {}
+  },
+  
+  getDocument: (collection, id) => {
+    return API.mockData[collection][id];
+  },
+  
+  getUserIdFromToken: (token) => {
+    // Parse token to extract user ID
+  }
+};
+```
+
+### Test Implementation Pattern
+
+Each test file follows a consistent pattern:
+
+1. Mock endpoint implementation
+2. Test function for each endpoint
+3. Run all tests function
+
+```javascript
+// Example test pattern
+// Mock endpoint
+function mockGetStudioByIdEndpoint(req, res) {
+  // Authentication and authorization checks
+  // Return appropriate response
+}
+
+// Test function
+async function testGetStudioByIdEndpoint() {
+  // Setup test data
+  // Make request
+  // Verify response
+  // Log success
+}
+
+// Run all tests
+async function runAllTests() {
+  // Initialize test data
+  // Run test functions
+  // Log summary
+}
+```
+
+### Running Tests
+
+Tests can be run individually or all together using the run-all-tests.js script:
+
+```
+node tests/run-all-tests.js
+```
+
+### Test Coverage
+
+The test suite covers:
+
+1. Authentication flows (signup, login, me, signout)
+2. User management including staff operations
+3. Studio operations (list, create, get by ID, update, delete)
+4. Class management (list, create, update, delete)
+5. Booking operations (get by studio, get by ID, update status)
+6. Feedback retrieval for studios and classes
+7. Analytics endpoints
+8. Error handling for various scenarios
+9. Authorization rules and access control
+
+### Benefits of This Approach
+
+1. **Isolation**: Tests run without real Firebase dependencies
+2. **Speed**: No network calls or database interactions required
+3. **Comprehensive**: All endpoints and error scenarios are tested
+4. **Reusable**: Mock API can be extended for new endpoints
+5. **Maintainable**: Consistent pattern makes tests easy to understand and update 

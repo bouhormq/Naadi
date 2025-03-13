@@ -1,38 +1,5 @@
 import { AuthResponse } from '@naadi/types';
-import { User } from '@naadi/types';
-
-/**
- * Handles business signup with email/password
- */
-export async function businessSignup(
-  email: string, 
-  password: string, 
-  businessName: string,
-  contactInfo: {
-    phone: string;
-    address: string;
-  }
-): Promise<AuthResponse> {
-  try {
-    const response = await fetch('/api/auth/businessSignup', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ email, password, businessName, role: 'business', contactInfo })
-    });
-    
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error || 'Failed to sign up business');
-    }
-    
-    return await response.json();
-  } catch (error: any) {
-    console.error('Business signup error:', error);
-    throw new Error(error.message || 'Failed to sign up business');
-  }
-}
+import { storeUserData, storeAuthToken } from './session';
 
 /**
  * Handles business login with email/password
@@ -42,7 +9,7 @@ export async function loginWithEmail(
   password: string
 ): Promise<AuthResponse> {
   try {
-    const response = await fetch('/api/auth/login', {
+    const response = await fetch('/api/auth/business/login', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -52,18 +19,41 @@ export async function loginWithEmail(
     
     if (!response.ok) {
       const errorData = await response.json();
-      throw new Error(errorData.error || 'Failed to login business account');
+      throw new Error(errorData.error || 'Failed to login with email');
     }
     
-    const responseData = await response.json();
-    // Verify this is a business account
-    if (responseData.user.role !== 'business') {
-      throw new Error('This account is not registered as a business');
-    }
+    const authResponse = await response.json();
     
-    return responseData;
+    // Store the user data and auth token for later use
+    await storeUserData(authResponse.user);
+    await storeAuthToken(authResponse.token);
+    
+    return authResponse;
   } catch (error: any) {
-    console.error('Business login error:', error);
-    throw new Error(error.message || 'Failed to login business account');
+    console.error('Email login error:', error);
+    throw new Error(error.message || 'Failed to login with email');
+  }
+}
+
+/**
+ * Sends a password reset email
+ */
+export async function sendPasswordResetEmail(email: string): Promise<void> {
+  try {
+    const response = await fetch('/api/auth/business/reset-password', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ email })
+    });
+    
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Failed to send password reset email');
+    }
+  } catch (error: any) {
+    console.error('Password reset error:', error);
+    throw new Error(error.message || 'Failed to send password reset email');
   }
 } 

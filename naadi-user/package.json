@@ -11,7 +11,8 @@
     "build:preview": "eas build --profile preview",
     "build:production": "eas build --profile production",
     "predeploy:web": "npx expo export --platform web",
-    "deploy:web": "eas deploy --platform web"
+    "deploy:web": "eas deploy --platform web",
+    "test:api": "node tests/run-all-tests.js"
   },
   "dependencies": {
     "@expo/vector-icons": "^13.0.0",

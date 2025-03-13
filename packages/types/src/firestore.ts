@@ -73,8 +73,10 @@ export interface Booking {
 export interface Feedback {
   id?: string;
   userId: string;
-  content: string;
+  classId: string;
+  studioId: string;
   rating: number;
+  comment: string;
   createdAt: string;
 }
 

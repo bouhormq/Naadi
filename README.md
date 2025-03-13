@@ -95,6 +95,21 @@ npm run git:sync
 bash scripts/git-sync.sh
 ```
 
+4. Running Tests:
+```bash
+# Run all API endpoint tests (both business and user apps)
+npm run test:endpoints
+
+# Run business app API endpoint tests only
+npm run test:business
+
+# Run user app API endpoint tests only
+npm run test:user
+
+# Run shared API package tests
+npm run test:api
+```
+
 - To run the user app:
   ```bash
   npm run dev:user

@@ -7,4 +7,7 @@ export * from './businessSignup';
 export * from './oauth';
 
 // Export phone authentication
-export * from './phone'; 
+export * from './phone';
+
+// Export session management
+export * from './session'; 

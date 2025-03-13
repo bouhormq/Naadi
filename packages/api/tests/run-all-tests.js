@@ -35,6 +35,9 @@ const colors = {
 const testFiles = [
   'test-api-imports.js',
   'test-api-functions.js',
+  'test-auth-api.js',
+  'test-users-api.js',
+  'test-session-api.js',
   'test-studio-api.js',
   'test-classes-api.js',
   'test-bookings-api.js',

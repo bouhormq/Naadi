@@ -145,4 +145,27 @@ export interface UpdateUserRequest {
 export interface SubmitFeedbackRequest {
   content: string;
   rating: number;
+}
+
+/**
+ * Analytics API Types
+ */
+export interface StudioStats {
+  totalBookings: number;
+  revenue: number;
+  totalClasses: number;
+  averageRating: number;
+  popularClasses: Array<{
+    id: string;
+    name: string;
+    bookings: number;
+  }>;
+  recentBookings: Array<{
+    id: string;
+    userId: string;
+    classId: string;
+    className: string;
+    status: string;
+    createdAt: string;
+  }>;
 } 

@@ -1,5 +1,5 @@
-// Export all auth-related functions
+// Export all auth module functions
 export * from './email';
-export * from './phone';
 export * from './social';
+export * from './phone';
 export * from './session'; 

@@ -27,6 +27,9 @@
     "test:api:studio-stats": "cd packages/api && npm run test:studio-stats",
     "test:all": "bash scripts/test/run-all-tests.sh",
     "test:cleanup": "node scripts/test/cleanup/cleanup-test-data.js",
+    "test:business": "cd naadi-business && node tests/run-all-tests.js",
+    "test:user": "cd naadi-user && node tests/run-all-tests.js",
+    "test:endpoints": "bash scripts/test/run-endpoint-tests.sh",
     "postinstall": "npm run build:all"
   },
   "engines": {

@@ -1,87 +1,53 @@
 import { ExpoRequest, ExpoResponse } from 'expo-router/server';
-import { CreateStudioRequest, Studio } from '@naadi/types';
-import { getAuth } from 'firebase-admin/auth';
-import { getFirestore } from 'firebase-admin/firestore';
-
-// Initialize Firebase Admin if not already initialized
-// (This would be in a shared util file in a real app)
-import { initializeApp, getApps, cert } from 'firebase-admin/app';
-if (!getApps().length) {
-  initializeApp({
-    credential: cert({
-      projectId: process.env.FIREBASE_PROJECT_ID,
-      clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-      privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n')
-    })
-  });
-}
+import { getUserIdFromToken, getUserById, createStudio } from '@naadi/api';
+import { CreateStudioRequest } from '@naadi/types';
 
 export async function POST(request: ExpoRequest): Promise<ExpoResponse> {
   try {
-    // Get authorization token
-    const authHeader = request.headers.get('Authorization');
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    // Get the authentication token from headers
+    const authHeader = request.headers.get('authorization');
+    const token = authHeader?.split(' ')[1];
+    
+    if (!token) {
       return new ExpoResponse(
-        JSON.stringify({ error: 'Unauthorized' }),
+        JSON.stringify({ error: 'Authentication token is required' }),
         { status: 401, headers: { 'Content-Type': 'application/json' } }
       );
     }
     
-    const token = authHeader.split('Bearer ')[1];
+    // Verify token and get user ID
+    const userId = await getUserIdFromToken(token);
     
-    // Verify the token
-    const decodedToken = await getAuth().verifyIdToken(token);
-    const uid = decodedToken.uid;
+    // Get the user to verify it's a business account
+    const user = await getUserById(userId);
     
-    // Verify user is a business
-    const db = getFirestore();
-    const userDoc = await db.collection('users').doc(uid).get();
-    if (!userDoc.exists || userDoc.data()?.role !== 'business') {
+    // Verify this is a business account
+    if (user.role !== 'business') {
       return new ExpoResponse(
-        JSON.stringify({ error: 'Only business accounts can create studios' }),
+        JSON.stringify({ error: 'This account is not registered as a business' }),
         { status: 403, headers: { 'Content-Type': 'application/json' } }
       );
     }
     
-    // Get request body
-    const body = await request.json() as CreateStudioRequest;
+    // Get studio data from request body
+    const studioData = await request.json() as CreateStudioRequest;
     
-    // Validate request data
-    if (!body.name || !body.location || !body.address || !body.description) {
-      return new ExpoResponse(
-        JSON.stringify({ error: 'All required fields must be provided' }),
-        { status: 400, headers: { 'Content-Type': 'application/json' } }
-      );
-    }
+    // Create the studio
+    const studio = await createStudio(studioData, userId);
     
-    // Create the studio in Firestore
-    const studioRef = db.collection('studios').doc();
-    
-    const studio: Studio = {
-      id: studioRef.id,
-      businessId: uid,
-      name: body.name,
-      location: body.location,
-      address: body.address,
-      description: body.description,
-      photos: body.photos || [],
-      healthSafetyInfo: body.healthSafetyInfo || '',
-      createdAt: new Date().toISOString()
-    };
-    
-    await studioRef.set(studio);
-    
-    // Return success response
+    // Return the created studio
     return new ExpoResponse(
       JSON.stringify(studio),
-      { status: 200, headers: { 'Content-Type': 'application/json' } }
+      { status: 201, headers: { 'Content-Type': 'application/json' } }
     );
   } catch (error: any) {
-    // Handle errors
     console.error('Create studio error:', error);
     return new ExpoResponse(
       JSON.stringify({ error: error.message || 'Failed to create studio' }),
-      { status: 500, headers: { 'Content-Type': 'application/json' } }
+      { 
+        status: error.statusCode || 500, 
+        headers: { 'Content-Type': 'application/json' } 
+      }
     );
   }
 } 

@@ -1,4 +1,4 @@
-// Export all auth-related functions
+// Export all business auth module functions
 export * from './email';
-export * from './session';
-export * from './business'; 
+export * from './business';
+export * from './session'; 

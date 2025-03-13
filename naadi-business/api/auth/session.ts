@@ -4,18 +4,26 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { User } from '@naadi/types';
 
 // Storage keys
-const BUSINESS_DATA_KEY = 'naadi_business_data';
-const AUTH_TOKEN_KEY = 'naadi_auth_token';
+const USER_DATA_KEY = 'naadi_business_user_data';
+const AUTH_TOKEN_KEY = 'naadi_business_auth_token';
 
 /**
- * Signs out the current business user
+ * Signs out the current user
  */
-export async function signOutBusiness(): Promise<void> {
+export async function signOutUser(): Promise<void> {
   try {
     const auth = getAuth(getApp());
     await signOut(auth);
-    // Clear stored business data and token
-    await AsyncStorage.multiRemove([BUSINESS_DATA_KEY, AUTH_TOKEN_KEY]);
+    // Clear stored user data and token
+    await AsyncStorage.multiRemove([USER_DATA_KEY, AUTH_TOKEN_KEY]);
+    
+    // Call the server API to clear session
+    await fetch('/api/auth/signout', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
   } catch (error: any) {
     console.error('Sign out error:', error);
     throw new Error(error.message || 'Failed to sign out');
@@ -46,7 +54,10 @@ export async function getIdToken(forceRefresh = false): Promise<string | null> {
   if (!user) return null;
   
   try {
-    return await user.getIdToken(forceRefresh);
+    const token = await user.getIdToken(forceRefresh);
+    // Store the token for future use
+    await storeAuthToken(token);
+    return token;
   } catch (error) {
     console.error('Get ID token error:', error);
     return null;
@@ -54,24 +65,24 @@ export async function getIdToken(forceRefresh = false): Promise<string | null> {
 }
 
 /**
- * Stores business data in AsyncStorage
+ * Stores user data in AsyncStorage
  */
-export async function storeBusinessData(businessData: any): Promise<void> {
-  // Make sure businessData has all required User fields
-  const business = {
-    ...businessData,
-    createdAt: businessData.createdAt || new Date().toISOString()
+export async function storeUserData(userData: any): Promise<void> {
+  // Make sure userData has all required User fields
+  const user = {
+    ...userData,
+    createdAt: userData.createdAt || new Date().toISOString()
   };
   
-  await AsyncStorage.setItem(BUSINESS_DATA_KEY, JSON.stringify(business));
+  await AsyncStorage.setItem(USER_DATA_KEY, JSON.stringify(user));
 }
 
 /**
- * Gets business data from AsyncStorage
+ * Gets user data from AsyncStorage
  */
-export async function getBusinessData(): Promise<User | null> {
-  const businessData = await AsyncStorage.getItem(BUSINESS_DATA_KEY);
-  return businessData ? JSON.parse(businessData) : null;
+export async function getUserData(): Promise<User | null> {
+  const userData = await AsyncStorage.getItem(USER_DATA_KEY);
+  return userData ? JSON.parse(userData) : null;
 }
 
 /**
@@ -86,4 +97,78 @@ export async function storeAuthToken(token: string): Promise<void> {
  */
 export async function getAuthToken(): Promise<string | null> {
   return await AsyncStorage.getItem(AUTH_TOKEN_KEY);
+}
+
+/**
+ * Refreshes the current user data from the server
+ */
+export async function refreshUserData(): Promise<User | null> {
+  try {
+    const token = await getIdToken(true);
+    if (!token) return null;
+    
+    const response = await fetch('/api/auth/me', {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    if (!response.ok) {
+      throw new Error('Failed to refresh user data');
+    }
+    
+    const userData = await response.json();
+    await storeUserData(userData);
+    return userData;
+  } catch (error) {
+    console.error('Refresh user data error:', error);
+    return null;
+  }
+}
+
+/**
+ * Initializes the auth session
+ * Call this on app startup to restore the user session
+ */
+export async function initializeAuthSession(): Promise<User | null> {
+  try {
+    // Check if we have stored user data
+    const userData = await getUserData();
+    
+    // If we have a current Firebase user, refresh their data
+    const firebaseUser = getCurrentUser();
+    if (firebaseUser) {
+      return await refreshUserData();
+    }
+    
+    // If we have stored user data but no Firebase user,
+    // we might have a session cookie but Firebase auth in memory is gone
+    if (userData) {
+      // Try to validate the session with the server
+      const token = await getAuthToken();
+      if (token) {
+        const response = await fetch('/api/auth/validate', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        if (response.ok) {
+          return userData;
+        }
+        
+        // If validation fails, clear session data
+        await AsyncStorage.multiRemove([USER_DATA_KEY, AUTH_TOKEN_KEY]);
+      }
+    }
+    
+    return null;
+  } catch (error) {
+    console.error('Initialize auth session error:', error);
+    return null;
+  }
 } 

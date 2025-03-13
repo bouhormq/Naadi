@@ -440,6 +440,34 @@ service cloud.firestore {
 - **1M Ops**: ~$0.96 (Firestore + EAS free tier).
 - **10M Ops**: ~$108.60 (Firestore + EAS Growth Plan).
 
+### 5.4 Testing Strategy
+
+- **Mock API Testing**: A mock implementation of Firebase API that allows testing without real database connections.
+- **Endpoint Tests**: Comprehensive tests for all API endpoints:
+  - Authentication (signup, login, me, signout)
+  - User Management (staff operations)
+  - Studios (list, create, retrieve, update, delete)
+  - Classes (list, create, update, delete)
+  - Bookings (get by studio, get by ID, update status)
+  - Feedback (retrieve for studios and classes)
+  - Analytics (daily, weekly, financial)
+- **Test Structure**:
+  - Mock endpoint implementations
+  - Test functions for each API endpoint
+  - Centralized test runner (run-all-tests.js)
+- **Coverage**:
+  - Authentication and authorization checks
+  - Input validation
+  - Error handling
+  - Business logic validation
+  - Access control
+- **Benefits**:
+  - Isolation from external dependencies
+  - Fast execution without network calls
+  - Comprehensive coverage of API functionality
+  - Early detection of regressions
+  - Documentation of expected behavior
+
 ## 6. Constraints and Assumptions
 
 ### 6.1 Constraints

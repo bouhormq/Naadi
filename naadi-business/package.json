@@ -9,7 +9,8 @@
     "web": "expo start --web",
     "dev": "expo start --web",
     "build": "eas build",
-    "deploy:web": "eas deploy --platform web"
+    "deploy:web": "eas deploy --platform web",
+    "test:api": "node tests/run-all-tests.js"
   },
   "dependencies": {
     "@naadi/api": "0.1.0",
