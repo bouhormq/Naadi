@@ -7,8 +7,8 @@ import { Ionicons } from '@expo/vector-icons';
 const useBusinessStudios = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
-  // Mock empty studios list for now
-  const studios = [];
+  // Mock empty studios list for now with proper typing
+  const studios: any[] = [];
   
   return { studios, loading, error };
 };

@@ -13,11 +13,11 @@ export default function HomeScreen() {
       </View>
       
       <View style={styles.content}>
-        <Image 
+        {/* <Image 
           source={require('../assets/naadi.png')} 
           style={styles.logo}
           resizeMode="contain"
-        />
+        /> */}
         
         <Text style={styles.title}>Grow Your Fitness Business</Text>
         <Text style={styles.subtitle}>
