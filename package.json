@@ -29,8 +29,7 @@
     "test:cleanup": "node scripts/test/cleanup/cleanup-test-data.js",
     "test:business": "cd naadi-business && node tests/run-all-tests.js",
     "test:user": "cd naadi-user && node tests/run-all-tests.js",
-    "test:endpoints": "bash scripts/test/run-endpoint-tests.sh",
-    "postinstall": "npm run build:all"
+    "test:endpoints": "bash scripts/test/run-endpoint-tests.sh"
   },
   "engines": {
     "node": ">=18.0.0"

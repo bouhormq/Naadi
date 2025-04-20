@@ -1,6 +1,9 @@
 /**
  * Authentication API Types
  */
+
+
+
 export interface SignupRequest {
   email: string;
   password: string;
@@ -9,12 +12,14 @@ export interface SignupRequest {
 
 export interface BusinessSignupRequest {
   email: string;
-  password: string;
+  firstName: string;
+  lastName: string;
   businessName: string;
-  contactInfo: {
-    phone: string;
-    address: string;
-  };
+  website: string;
+  businessType: string;
+  location: string;
+  phone: string;
+  consent: boolean;
 }
 
 export interface LoginRequest {

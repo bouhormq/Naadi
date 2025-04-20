@@ -13,8 +13,8 @@
     "test:api": "node tests/run-all-tests.js"
   },
   "dependencies": {
-    "@naadi/api": "0.1.0",
-    "@naadi/types": "0.1.0",
+    "@naadi/api": "../packages/types/src/api",
+    "@naadi/types": "../packages/types/src/types",
     "expo": "~52.0.0",
     "expo-constants": "~16.0.0",
     "expo-linking": "~7.0.0",

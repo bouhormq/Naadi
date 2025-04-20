@@ -90,3 +90,16 @@ export interface SignupCode {
   usedBy?: string;
   createdAt: string;
 } 
+
+export interface BusinessContactFormData {
+  email: string;
+  firstName: string;
+  lastName: string;
+  businessName: string;
+  website: string;
+  businessType: string; // Assuming this might still be relevant for a business contact
+  location: string;
+  phone: string;
+  message: string; // Added message field
+  consent: boolean;
+}

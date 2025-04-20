@@ -35,7 +35,11 @@ export default function SignupScreen() {
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
+      <HeroSection /> 
+      <SmartToolsSection />
       <BusinessSignupForm onSubmit={handleSubmit} />
+      <FAQSection />
+      <CTASection />
       <Footer />
     </ScrollView>
   );
