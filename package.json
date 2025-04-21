@@ -3,7 +3,7 @@
   "private": true,
   "workspaces": [
     "naadi-user",
-    "naadi-business",
+    "naadi-partner",
     "packages/*"
   ],
   "scripts": {
@@ -11,11 +11,11 @@
     "build:api": "cd packages/api && npm run build",
     "build:all": "bash scripts/build-packages.sh",
     "dev:user": "cd naadi-user && npm run dev",
-    "dev:business": "cd naadi-business && npm run dev",
+    "dev:partner": "cd naadi-partner && npm run dev",
     "build:user": "cd naadi-user && eas build",
-    "build:business": "cd naadi-business && eas build",
+    "build:partner": "cd naadi-partner && eas build",
     "deploy:user-web": "cd naadi-user && eas deploy --platform web",
-    "deploy:business-web": "cd naadi-business && eas deploy --platform web",
+    "deploy:partner-web": "cd naadi-partner && eas deploy --platform web",
     "git:sync": "bash scripts/git-sync.sh",
     "test:api": "cd packages/api && npm run test",
     "test:api:studio": "cd packages/api && npm run test:studio",
@@ -27,11 +27,14 @@
     "test:api:studio-stats": "cd packages/api && npm run test:studio-stats",
     "test:all": "bash scripts/test/run-all-tests.sh",
     "test:cleanup": "node scripts/test/cleanup/cleanup-test-data.js",
-    "test:business": "cd naadi-business && node tests/run-all-tests.js",
+    "test:partner": "cd naadi-partner && node tests/run-all-tests.js",
     "test:user": "cd naadi-user && node tests/run-all-tests.js",
     "test:endpoints": "bash scripts/test/run-endpoint-tests.sh"
   },
   "engines": {
     "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "@react-native-picker/picker": "^2.11.0"
   }
-} 
+}

@@ -5,7 +5,7 @@ import { ApiError } from '../../utils/apiError';
 /**
  * Deletes a class
  * @param classId ID of the class to delete
- * @param businessId ID of the business deleting the class
+ * @param businessId ID of the partner deleting the class
  * @returns Success message
  */
 export async function deleteClass(classId: string, businessId: string) {
@@ -16,7 +16,7 @@ export async function deleteClass(classId: string, businessId: string) {
     }
     
     if (!businessId) {
-      throw new ApiError('Business ID is required', 400);
+      throw new ApiError('Partner ID is required', 400);
     }
     
     // Check if the class exists
@@ -26,7 +26,7 @@ export async function deleteClass(classId: string, businessId: string) {
       throw new ApiError('Class not found', 404);
     }
     
-    // Verify that the class belongs to one of this business's studios
+    // Verify that the class belongs to one of this partner's studios
     const studio = await getDocument<Studio>('studios', classData.studioId);
     
     if (!studio) {

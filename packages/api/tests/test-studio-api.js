@@ -8,8 +8,8 @@ console.log('🔍 Testing @naadi/api Studio functions...');
 // Import the API functions we need to test
 const { createStudio, updateStudio, deleteStudio } = require('../dist/src/index');
 
-// Random ID for our test business
-const businessId = 'test-business-' + Math.random().toString(36).substring(2, 10);
+// Random ID for our test partner
+const businessId = 'test-partner-' + Math.random().toString(36).substring(2, 10);
 
 // Test studio data
 const testStudioData = {

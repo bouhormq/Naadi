@@ -61,7 +61,7 @@ The module supports standard email/password authentication methods:
 
 - `signup`: Creates a new user account with email and password
 - `login`: Authenticates an existing user with email and password
-- `businessSignup`: Creates a new business account with additional business details
+- `businessSignup`: Creates a new partner account with additional partner details
 
 ### OAuth Providers
 
@@ -153,7 +153,7 @@ Functions for searching and filtering users:
 
 - `displayName`: Filter by display name (prefix search)
 - `email`: Filter by exact email match
-- `isBusiness`: Filter by business account status
+- `isBusiness`: Filter by partner account status
 - `limit`: Maximum number of results to return (default: 20)
 
 #### Usage Example
@@ -161,7 +161,7 @@ Functions for searching and filtering users:
 ```typescript
 import { queryUsers } from '@naadi/api';
 
-// Find all business users
+// Find all partner users
 const businessUsers = await queryUsers({ isBusiness: true });
 
 // Find users by name prefix

@@ -38,7 +38,7 @@ For this project, you need to create **three separate** `.env.local` files:
 
 1. **Root `.env.local`** (at the project root): Contains Firebase Admin SDK credentials for server-side operations
 2. **User App `.env.local`** (in naadi-user directory): Contains Firebase Web SDK config for the user app
-3. **Business App `.env.local`** (in naadi-business directory): Contains Firebase Web SDK config for the business app
+3. **Partner App `.env.local`** (in naadi-partner directory): Contains Firebase Web SDK config for the partner app
 
 ### Create the App-Specific .env.local Files
 
@@ -47,9 +47,9 @@ For this project, you need to create **three separate** `.env.local` files:
    touch naadi-user/.env.local
    ```
 
-2. **Create the Business App environment file**:
+2. **Create the Partner App environment file**:
    ```bash
-   touch naadi-business/.env.local
+   touch naadi-partner/.env.local
    ```
 
 Each app needs its own Firebase configuration because they are registered as separate apps in Firebase. The app-specific files will be populated with the respective Firebase Web SDK configurations in the next steps.
@@ -75,10 +75,10 @@ You MUST register each platform separately in your Firebase project.
    EXPO_PUBLIC_FIREBASE_MEASUREMENT_ID=your_measurement_id_for_user_web
    ```
 
-#### 2.1.2 Register Business Web App
+#### 2.1.2 Register Partner Web App
 1. Click on the web icon (</>) AGAIN to add a second web app
-2. Register the app with a nickname like "Naadi Business Web"
-3. Copy the `firebaseConfig` object values to `naadi-business/.env.local`:
+2. Register the app with a nickname like "Naadi Partner Web"
+3. Copy the `firebaseConfig` object values to `naadi-partner/.env.local`:
    ```
    EXPO_PUBLIC_FIREBASE_API_KEY=your_api_key
    EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN=your_project_id.firebaseapp.com
@@ -108,15 +108,15 @@ You MUST register each platform separately in your Firebase project.
 7. Download the `GoogleService-Info.plist` file
 8. Save this file as `naadi-user/GoogleService-Info.plist`
 
-#### 2.2.2 Register Business iOS App
+#### 2.2.2 Register Partner iOS App
 1. Click on the iOS icon AGAIN to add a second iOS app
-2. Enter your iOS Bundle ID: `com.naadi.business`
-   - This matches the `ios.bundleIdentifier` in naadi-business/app.json
-3. Enter an App Nickname (e.g., "Naadi Business iOS")
+2. Enter your iOS Bundle ID: `com.naadi.partner`
+   - This matches the `ios.bundleIdentifier` in naadi-partner/app.json
+3. Enter an App Nickname (e.g., "Naadi Partner iOS")
 4. (Optional) Enter the App Store ID if you have one
 5. Click "Register app"
 6. Download the `GoogleService-Info.plist` file
-7. Save this file as `naadi-business/GoogleService-Info.plist`
+7. Save this file as `naadi-partner/GoogleService-Info.plist`
 
 ### 2.3 Register Android Apps (Two Separate Registrations)
 
@@ -132,15 +132,15 @@ You MUST register each platform separately in your Firebase project.
 7. Download the `google-services.json` file
 8. Save this file as `naadi-user/google-services.json`
 
-#### 2.3.2 Register Business Android App
+#### 2.3.2 Register Partner Android App
 1. Click on the Android icon AGAIN to add a second Android app
-2. Enter your Android package name: `com.naadi.business`
-   - This matches the `android.package` in naadi-business/app.json
-3. Enter an App Nickname (e.g., "Naadi Business Android")
+2. Enter your Android package name: `com.naadi.partner`
+   - This matches the `android.package` in naadi-partner/app.json
+3. Enter an App Nickname (e.g., "Naadi Partner Android")
 4. (Optional) Enter the SHA-1 debugging certificate
 5. Click "Register app"
 6. Download the `google-services.json` file
-7. Save this file as `naadi-business/google-services.json`
+7. Save this file as `naadi-partner/google-services.json`
 
 ## 3. Configure Expo for Native Platforms (iOS/Android)
 
@@ -167,19 +167,19 @@ You MUST register each platform separately in your Firebase project.
 }
 ```
 
-### 3.2 Configure Business App
-1. Open `naadi-business/app.json` and update:
+### 3.2 Configure Partner App
+1. Open `naadi-partner/app.json` and update:
 
 ```json
 {
   "expo": {
     // ... existing config
     "ios": {
-      "bundleIdentifier": "com.naadi.business",
+      "bundleIdentifier": "com.naadi.partner",
       "googleServicesFile": "./GoogleService-Info.plist"
     },
     "android": {
-      "package": "com.naadi.business",
+      "package": "com.naadi.partner",
       "googleServicesFile": "./google-services.json"
     },
     "plugins": [
@@ -208,7 +208,7 @@ You MUST register each platform separately in your Firebase project.
   - Add `https://naadi.ma` for both apps
 - Other OAuth providers: Configure redirect URLs
   - Set redirect URL to `https://naadi.ma/__/auth/handler` for the user app
-  - Set redirect URL to `https://naadi.ma/business/__/auth/handler` for the business app
+  - Set redirect URL to `https://naadi.ma/partner/__/auth/handler` for the partner app
 
 #### iOS-Specific Requirements
 - For Google Sign-In: Add the reversed client ID to your URL schemes
@@ -262,24 +262,24 @@ service cloud.firestore {
    npm run dev:user
    ```
 
-### 6.2 Testing Business Web App
-1. Set up `naadi-business/.env.local` with the business web app configuration
-2. Test business authentication:
+### 6.2 Testing Partner Web App
+1. Set up `naadi-partner/.env.local` with the partner web app configuration
+2. Test partner authentication:
    ```bash
-   npm run dev:business
+   npm run dev:partner
    ```
 
 ### 6.3 Testing iOS and Android
 1. Ensure platform-specific files are in their correct locations:
    - `naadi-user/GoogleService-Info.plist` and `naadi-user/google-services.json`
-   - `naadi-business/GoogleService-Info.plist` and `naadi-business/google-services.json`
+   - `naadi-partner/GoogleService-Info.plist` and `naadi-partner/google-services.json`
 2. Build development clients:
    ```bash
    cd naadi-user
    eas build --profile development --platform ios
    eas build --profile development --platform android
    
-   cd ../naadi-business
+   cd ../naadi-partner
    eas build --profile development --platform ios
    eas build --profile development --platform android
    ```
@@ -289,7 +289,7 @@ service cloud.firestore {
    cd naadi-user
    eas start --device
    
-   cd ../naadi-business
+   cd ../naadi-partner
    eas start --device
    ```
 
@@ -303,7 +303,7 @@ service cloud.firestore {
 ### Firebase Client Error
 - Check that all EXPO_PUBLIC_FIREBASE_* variables are set correctly
 - Verify that ALL apps are registered in Firebase Console for all platforms
-- Ensure you're using the correct configuration for each app (user vs. business)
+- Ensure you're using the correct configuration for each app (user vs. partner)
 
 ### Authentication Issues
 - Ensure the authentication methods are enabled in Firebase Console
@@ -335,10 +335,10 @@ It's crucial to understand the environment variable file structure in this proje
    - **Used by**: User app only
    - **Key variables**: `EXPO_PUBLIC_FIREBASE_*` variables with unique APP_ID
 
-3. **Business App `.env.local`**
-   - **Location**: `naadi-business/` directory
-   - **Contains**: Firebase Business Web App configuration
-   - **Used by**: Business app only
+3. **Partner App `.env.local`**
+   - **Location**: `naadi-partner/` directory
+   - **Contains**: Firebase Partner Web App configuration
+   - **Used by**: Partner app only
    - **Key variables**: `EXPO_PUBLIC_FIREBASE_*` variables with unique APP_ID
 
 This separation ensures that each app has its own Firebase configuration while sharing the same Admin SDK credentials for server-side operations.

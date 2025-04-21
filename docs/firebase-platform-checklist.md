@@ -5,7 +5,7 @@ Use this checklist to track your progress in setting up Firebase for all platfor
 ## Environment Files Setup
 - [ ] Created root `.env.local` file in project root
 - [ ] Created `naadi-user/.env.local` file for User app
-- [ ] Created `naadi-business/.env.local` file for Business app
+- [ ] Created `naadi-partner/.env.local` file for Partner app
 
 ## Service Account Setup
 - [ ] Generated Firebase Admin service account key
@@ -18,15 +18,15 @@ Use this checklist to track your progress in setting up Firebase for all platfor
 - [ ] Copied Web config to `naadi-user/.env.local`
 - [ ] Added deployment domain (naadi.ma) to Authorized Domains
 
-### Business Web App
-- [ ] Registered Business Web app in Firebase Console
-- [ ] Copied Web config to `naadi-business/.env.local`
+### Partner Web App
+- [ ] Registered Partner Web app in Firebase Console
+- [ ] Copied Web config to `naadi-partner/.env.local`
 - [ ] Verified that APP_ID and MEASUREMENT_ID are different from User Web app
 
 ### Web Authentication Settings
 - [ ] Configured reCAPTCHA for Phone Authentication (if using)
 - [ ] Set up OAuth redirect domains for User app (https://naadi.ma/__/auth/handler)
-- [ ] Set up OAuth redirect domains for Business app (https://naadi.ma/business/__/auth/handler)
+- [ ] Set up OAuth redirect domains for Partner app (https://naadi.ma/partner/__/auth/handler)
 
 ## iOS Platform (Two Separate Apps)
 
@@ -42,14 +42,14 @@ Use this checklist to track your progress in setting up Firebase for all platfor
   }
   ```
 
-### Business iOS App
-- [ ] Registered Business iOS app with bundle ID `com.naadi.business`
-- [ ] Downloaded GoogleService-Info.plist for Business app
-- [ ] Placed GoogleService-Info.plist in `naadi-business/` directory
-- [ ] Added iOS configuration to naadi-business/app.json:
+### Partner iOS App
+- [ ] Registered Partner iOS app with bundle ID `com.naadi.partner`
+- [ ] Downloaded GoogleService-Info.plist for Partner app
+- [ ] Placed GoogleService-Info.plist in `naadi-partner/` directory
+- [ ] Added iOS configuration to naadi-partner/app.json:
   ```json
   "ios": {
-    "bundleIdentifier": "com.naadi.business",
+    "bundleIdentifier": "com.naadi.partner",
     "googleServicesFile": "./GoogleService-Info.plist"
   }
   ```
@@ -73,15 +73,15 @@ Use this checklist to track your progress in setting up Firebase for all platfor
   }
   ```
 
-### Business Android App
-- [ ] Registered Business Android app with package name `com.naadi.business`
+### Partner Android App
+- [ ] Registered Partner Android app with package name `com.naadi.partner`
 - [ ] Added SHA-1 certificate fingerprint(s)
-- [ ] Downloaded google-services.json for Business app
-- [ ] Placed google-services.json in `naadi-business/` directory
-- [ ] Added Android configuration to naadi-business/app.json:
+- [ ] Downloaded google-services.json for Partner app
+- [ ] Placed google-services.json in `naadi-partner/` directory
+- [ ] Added Android configuration to naadi-partner/app.json:
   ```json
   "android": {
-    "package": "com.naadi.business",
+    "package": "com.naadi.partner",
     "googleServicesFile": "./google-services.json"
   }
   ```
@@ -100,15 +100,15 @@ Use this checklist to track your progress in setting up Firebase for all platfor
 
 ## Testing
 - [ ] Tested authentication on User Web app
-- [ ] Tested authentication on Business Web app
+- [ ] Tested authentication on Partner Web app
 - [ ] Tested authentication on User iOS app
-- [ ] Tested authentication on Business iOS app
+- [ ] Tested authentication on Partner iOS app
 - [ ] Tested authentication on User Android app
-- [ ] Tested authentication on Business Android app
+- [ ] Tested authentication on Partner Android app
 - [ ] Verified data writing to Firestore
 - [ ] Verified data reading from Firestore
 
 ## Build & Deploy
 - [ ] Successfully built API package
 - [ ] Successfully deployed User app
-- [ ] Successfully deployed Business app 
+- [ ] Successfully deployed Partner app 

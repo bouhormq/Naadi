@@ -5,7 +5,7 @@ import { ApiError } from '../../utils/apiError';
 /**
  * Updates an existing class
  * @param data UpdateClassRequest data from client
- * @param businessId ID of the business updating the class
+ * @param businessId ID of the partner updating the class
  * @returns Updated class object
  */
 export async function updateClass(data: UpdateClassRequest, businessId: string) {
@@ -18,7 +18,7 @@ export async function updateClass(data: UpdateClassRequest, businessId: string) 
     }
     
     if (!businessId) {
-      throw new ApiError('Business ID is required', 400);
+      throw new ApiError('Partner ID is required', 400);
     }
     
     // Check if the class exists
@@ -28,7 +28,7 @@ export async function updateClass(data: UpdateClassRequest, businessId: string) 
       throw new ApiError('Class not found', 404);
     }
     
-    // Verify that the class belongs to one of this business's studios
+    // Verify that the class belongs to one of this partner's studios
     const studio = await getDocument<Studio>('studios', classData.studioId);
     
     if (!studio) {

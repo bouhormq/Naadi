@@ -5,7 +5,7 @@ export interface User {
   id?: string;
   uid: string;
   email: string;
-  role: 'user' | 'business';
+  role: 'user' | 'partner';
   displayName?: string;
   profilePic?: string;
   photoURL?: string;
@@ -97,7 +97,7 @@ export interface BusinessContactFormData {
   lastName: string;
   businessName: string;
   website: string;
-  businessType: string; // Assuming this might still be relevant for a business contact
+  businessType: string; // Assuming this might still be relevant for a partner contact
   location: string;
   phone: string;
   message: string; // Added message field

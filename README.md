@@ -1,6 +1,6 @@
 # Naadi
 
-Naadi is a platform that connects users to fitness studios via map-based browsing and enables businesses to manage their offerings.
+Naadi is a platform that connects users to fitness studios via map-based browsing and enables partneres to manage their offerings.
 
 ## Features
 
@@ -10,10 +10,10 @@ Naadi is a platform that connects users to fitness studios via map-based browsin
   - Manage bookings
   - Available on mobile and web
 
-- **Business App** (naadi.ma/business):
+- **Partner App** (naadi.ma/partner):
   - Manage studios and classes
   - Handle bookings
-  - View business statistics
+  - View partner statistics
   - Available on mobile and web
 
 ## Project Structure
@@ -28,7 +28,7 @@ naadi/
 │   ├── api-implementation-plan.md  # API implementation plan
 │   ├── firebase-platform-checklist.md # Firebase platform setup checklist
 │   └── firebase-setup-guide.md     # Firebase setup guide
-├── naadi-business/           # Business app (mobile + naadi.ma/business)
+├── naadi-partner/           # Partner app (mobile + naadi.ma/partner)
 ├── naadi-user/               # User app (mobile + naadi.ma)
 ├── packages/
 │   ├── api/                  # Shared API logic (as subrepo)
@@ -97,11 +97,11 @@ bash scripts/git-sync.sh
 
 4. Running Tests:
 ```bash
-# Run all API endpoint tests (both business and user apps)
+# Run all API endpoint tests (both partner and user apps)
 npm run test:endpoints
 
-# Run business app API endpoint tests only
-npm run test:business
+# Run partner app API endpoint tests only
+npm run test:partner
 
 # Run user app API endpoint tests only
 npm run test:user
@@ -115,9 +115,9 @@ npm run test:api
   npm run dev:user
   ```
 
-- To run the business app:
+- To run the partner app:
   ```bash
-  npm run dev:business
+  npm run dev:partner
   ```
 
 ## Deployment
@@ -125,13 +125,13 @@ npm run test:api
 - **Mobile Apps**:
   ```bash
   npm run build:user    # Build user app
-  npm run build:business    # Build business app
+  npm run build:partner    # Build partner app
   ```
 
 - **Web Apps**:
   ```bash
   npm run deploy:user-web     # Deploy to naadi.ma
-  npm run deploy:business-web # Deploy to naadi.ma/business
+  npm run deploy:partner-web # Deploy to naadi.ma/partner
   ```
 
 ## License

@@ -5,7 +5,7 @@ import { ApiError } from '../../utils/apiError';
 /**
  * Gets statistics for a studio
  * @param studioId ID of the studio
- * @param businessId ID of the business requesting the stats
+ * @param businessId ID of the partner requesting the stats
  * @returns Studio statistics
  */
 export async function getStudioStats(studioId: string, businessId: string): Promise<StudioStatsResponse> {
@@ -16,11 +16,11 @@ export async function getStudioStats(studioId: string, businessId: string): Prom
     }
     
     if (!businessId) {
-      throw new ApiError('Business ID is required', 400);
+      throw new ApiError('Partner ID is required', 400);
     }
     
     // In a real application, we would:
-    // 1. Check if the studio exists and belongs to the business
+    // 1. Check if the studio exists and belongs to the partner
     // 2. Query for bookings, classes, revenue, etc.
     
     // For now, return mock data

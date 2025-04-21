@@ -17,7 +17,7 @@ The Naadi testing strategy is built around these key principles:
 ### 2.1 Directory Structure
 
 ```
-naadi-business/tests/
+naadi-partner/tests/
 ├── mock-api.js                 # Mock API implementation
 ├── run-all-tests.js            # Test runner
 ├── test-auth-endpoints.js      # Authentication tests
@@ -105,11 +105,11 @@ function mockGetStudiosEndpoint(req, res) {
     const userId = API.getUserIdFromToken(token);
     const user = API.getDocument('users', userId);
     
-    if (!user || user.role !== 'business') {
+    if (!user || user.role !== 'partner') {
       return res.setStatus(403).json({ error: 'Not authorized' });
     }
     
-    // Get studios for this business
+    // Get studios for this partner
     const studios = Object.values(API.mockData.studios)
       .filter(studio => studio.businessId === userId);
     
@@ -130,8 +130,8 @@ async function testGetStudiosEndpoint() {
   // Set up test data
   const businessUser = {
     id: 'user-123',
-    email: 'business@example.com',
-    role: 'business'
+    email: 'partner@example.com',
+    role: 'partner'
   };
   
   const studio1 = {
@@ -227,7 +227,7 @@ The test suite provides comprehensive coverage of:
 - Create staff (add new staff)
 
 ### 4.3 Studio Management Endpoints
-- List studios (get all studios for a business)
+- List studios (get all studios for a partner)
 - Create studio (add new studio)
 - Get studio by ID (retrieve specific studio)
 - Update studio (modify studio details)

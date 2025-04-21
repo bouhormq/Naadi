@@ -33,7 +33,7 @@ async function setupTestData() {
   // Create a test studio
   const studioData = {
     id: studioId,
-    businessId: 'test-business-' + Math.random().toString(36).substring(2, 10),
+    businessId: 'test-partner-' + Math.random().toString(36).substring(2, 10),
     name: 'Test Yoga Studio',
     location: { lat: 37.7749, lng: -122.4194 },
     address: '123 Main St, San Francisco, CA',

@@ -12,9 +12,9 @@ const testUser = {
 };
 
 const testBusiness = {
-  email: 'test-business@example.com',
+  email: 'test-partner@example.com',
   password: 'Test@123456',
-  displayName: 'Test Business',
+  displayName: 'Test Partner',
   businessName: 'Test Studio',
   businessType: 'yoga',
   location: {

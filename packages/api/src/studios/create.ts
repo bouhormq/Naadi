@@ -5,7 +5,7 @@ import { ApiError } from '../../utils/apiError';
 /**
  * Creates a new studio
  * @param data CreateStudioRequest data from client
- * @param businessId ID of the business creating the studio
+ * @param businessId ID of the partner creating the studio
  * @returns Created studio object
  */
 export async function createStudio(data: CreateStudioRequest, businessId: string) {
@@ -18,7 +18,7 @@ export async function createStudio(data: CreateStudioRequest, businessId: string
     }
     
     if (!businessId) {
-      throw new ApiError('Business ID is required', 400);
+      throw new ApiError('Partner ID is required', 400);
     }
     
     // Validate location

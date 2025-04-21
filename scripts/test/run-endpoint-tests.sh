@@ -10,9 +10,9 @@ echo -e "${YELLOW}==================================${NC}"
 echo -e "${YELLOW}  Naadi API Endpoint Tests Runner ${NC}"
 echo -e "${YELLOW}==================================${NC}"
 
-# Run business app tests
-echo -e "\n${YELLOW}Running Business App Tests...${NC}"
-cd "$(dirname "$0")/../../naadi-business" || exit
+# Run partner app tests
+echo -e "\n${YELLOW}Running Partner App Tests...${NC}"
+cd "$(dirname "$0")/../../naadi-partner" || exit
 node tests/run-all-tests.js
 BUSINESS_TESTS_RESULT=$?
 
@@ -28,9 +28,9 @@ echo -e "${YELLOW}          Test Summary            ${NC}"
 echo -e "${YELLOW}==================================${NC}"
 
 if [ $BUSINESS_TESTS_RESULT -eq 0 ]; then
-  echo -e "${GREEN}✓ Business App Tests: PASSED${NC}"
+  echo -e "${GREEN}✓ Partner App Tests: PASSED${NC}"
 else
-  echo -e "${RED}✗ Business App Tests: FAILED${NC}"
+  echo -e "${RED}✗ Partner App Tests: FAILED${NC}"
 fi
 
 if [ $USER_TESTS_RESULT -eq 0 ]; then

@@ -19,7 +19,7 @@ const authResult = await login({ email: 'user@example.com', password: 'password'
 // Create a booking
 const booking = await createBooking({ userId: 'user123', classId: 'class456' });
 
-// Create a studio (business only)
+// Create a studio (partner only)
 const studio = await createStudio({
   name: 'Yoga Studio',
   location: { lat: 37.7749, lng: -122.4194 },
@@ -33,8 +33,8 @@ const studio = await createStudio({
 ### Authentication
 
 - `signup(data: SignupRequest)`: Register a new user
-- `businessSignup(data: BusinessSignupRequest)`: Register a new business
-- `login(data: LoginRequest)`: Authenticate a user or business
+- `businessSignup(data: BusinessSignupRequest)`: Register a new partner
+- `login(data: LoginRequest)`: Authenticate a user or partner
 
 ### Bookings
 

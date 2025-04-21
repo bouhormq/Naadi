@@ -10,7 +10,7 @@ const { createClass, updateClass, deleteClass } = require('../dist/src/index');
 const { db } = require('../dist/utils/firestore');
 
 // Random IDs for our test
-const businessId = 'test-business-' + Math.random().toString(36).substring(2, 10);
+const businessId = 'test-partner-' + Math.random().toString(36).substring(2, 10);
 const studioId = 'test-studio-' + Math.random().toString(36).substring(2, 10);
 
 // We need a studio to exist in Firestore for this test to work

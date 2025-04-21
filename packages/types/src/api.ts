@@ -31,7 +31,7 @@ export interface AuthResponse {
   user: {
     uid: string;
     email: string;
-    role: 'user' | 'business';
+    role: 'user' | 'partner';
     displayName?: string;
     businessName?: string;
     phoneNumber?: string;

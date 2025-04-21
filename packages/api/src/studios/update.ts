@@ -5,7 +5,7 @@ import { ApiError } from '../../utils/apiError';
 /**
  * Updates an existing studio
  * @param data UpdateStudioRequest data from client
- * @param businessId ID of the business updating the studio
+ * @param businessId ID of the partner updating the studio
  * @returns Updated studio object
  */
 export async function updateStudio(data: UpdateStudioRequest, businessId: string) {
@@ -18,7 +18,7 @@ export async function updateStudio(data: UpdateStudioRequest, businessId: string
     }
     
     if (!businessId) {
-      throw new ApiError('Business ID is required', 400);
+      throw new ApiError('Partner ID is required', 400);
     }
     
     // Check if the studio exists
@@ -28,7 +28,7 @@ export async function updateStudio(data: UpdateStudioRequest, businessId: string
       throw new ApiError('Studio not found', 404);
     }
     
-    // Check if the business owns this studio
+    // Check if the partner owns this studio
     if (studio.businessId !== businessId) {
       throw new ApiError('You do not have permission to update this studio', 403);
     }

@@ -2,7 +2,7 @@
 
 This guide outlines the steps to implement the API layers in the Naadi project, following the three-layer architecture:
 
-1. **packages/api**: Core business logic shared between apps
+1. **packages/api**: Core partner logic shared between apps
 2. **naadi/app/api**: Server-side API endpoints using Expo's file routing
 3. **naadi/api**: Client-side wrappers that call server endpoints
 
@@ -56,7 +56,7 @@ This guide outlines the steps to implement the API layers in the Naadi project, 
 - Update API reference documentation
 - Document usage patterns
 
-## Phase 2: Implement naadi-user/app/api and naadi-business/app/api
+## Phase 2: Implement naadi-user/app/api and naadi-partner/app/api
 
 ### 1. Authentication Routes
 - Implement server endpoints that use the packages/api functionality
@@ -69,12 +69,12 @@ This guide outlines the steps to implement the API layers in the Naadi project, 
 
 ### 3. Studios Routes
 - Implement studio-related endpoints
-- Add business-specific routes in naadi-business
+- Add partner-specific routes in naadi-partner
 - Add user-specific routes in naadi-user
 
 ### 4. Classes Routes
 - Implement class management endpoints
-- Different access patterns for business vs user apps
+- Different access patterns for partner vs user apps
 
 ### 5. Bookings Routes
 - Implement booking management endpoints

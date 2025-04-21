@@ -5,7 +5,7 @@ import { ApiError } from '../../utils/apiError';
 /**
  * Creates a new class
  * @param data CreateClassRequest data from client
- * @param businessId ID of the business creating the class
+ * @param businessId ID of the partner creating the class
  * @returns Created class object
  */
 export async function createClass(data: CreateClassRequest, businessId: string) {
@@ -28,10 +28,10 @@ export async function createClass(data: CreateClassRequest, businessId: string) 
     }
     
     if (!businessId) {
-      throw new ApiError('Business ID is required', 400);
+      throw new ApiError('Partner ID is required', 400);
     }
     
-    // Check if studio exists and belongs to this business
+    // Check if studio exists and belongs to this partner
     const studio = await getDocument<Studio>('studios', studioId);
     
     if (!studio) {

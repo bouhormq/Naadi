@@ -5,7 +5,7 @@ import { getAuth, createUserWithEmailAndPassword } from 'firebase/auth';
 import { getApp } from 'firebase/app';
 
 /**
- * Handles business signup
+ * Handles partner signup
  * @param data BusinessSignupRequest data from client
  * @returns User object with auth token
  */
@@ -29,11 +29,11 @@ export async function businessSignup(data: BusinessSignupRequest): Promise<AuthR
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
     const uid = userCredential.user.uid;
     
-    // Create business user document in Firestore
+    // Create partner user document in Firestore
     const userData: Omit<User, 'id'> = {
       uid,
       email,
-      role: 'business',
+      role: 'partner',
       businessName,
       contactInfo,
       createdAt: new Date().toISOString()
@@ -48,13 +48,13 @@ export async function businessSignup(data: BusinessSignupRequest): Promise<AuthR
       user: {
         uid,
         email,
-        role: 'business',
+        role: 'partner',
         businessName: userData.businessName,
       },
       token
     };
   } catch (error) {
-    console.error('Business signup error:', error);
+    console.error('Partner signup error:', error);
     
     if (error instanceof Error) {
       // Handle Firebase auth errors
@@ -71,6 +71,6 @@ export async function businessSignup(data: BusinessSignupRequest): Promise<AuthR
       throw new ApiError(error.message, 400);
     }
     
-    throw new ApiError('Failed to create business account', 500);
+    throw new ApiError('Failed to create partner account', 500);
   }
 } 

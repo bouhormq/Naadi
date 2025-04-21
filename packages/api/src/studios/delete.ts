@@ -5,7 +5,7 @@ import { ApiError } from '../../utils/apiError';
 /**
  * Deletes a studio
  * @param studioId ID of the studio to delete
- * @param businessId ID of the business deleting the studio
+ * @param businessId ID of the partner deleting the studio
  * @returns Success message
  */
 export async function deleteStudio(studioId: string, businessId: string) {
@@ -16,7 +16,7 @@ export async function deleteStudio(studioId: string, businessId: string) {
     }
     
     if (!businessId) {
-      throw new ApiError('Business ID is required', 400);
+      throw new ApiError('Partner ID is required', 400);
     }
     
     // Check if the studio exists
@@ -26,7 +26,7 @@ export async function deleteStudio(studioId: string, businessId: string) {
       throw new ApiError('Studio not found', 404);
     }
     
-    // Check if the business owns this studio
+    // Check if the partner owns this studio
     if (studio.businessId !== businessId) {
       throw new ApiError('You do not have permission to delete this studio', 403);
     }
