@@ -1,0 +1,59 @@
+{
+  "cli": {
+    "version": ">= 5.9.1" 
+  },
+  "build": {
+    "development-main": {
+      "extends": "development",
+      "env": {
+        "EXPO_PUBLIC_APP_VARIANT": "main"
+      }
+    },
+    "development-partner": {
+      "extends": "development",
+      "env": {
+        "EXPO_PUBLIC_APP_VARIANT": "partner" 
+      }
+    },
+    "preview-main": {
+      "extends": "preview",
+      "env": {
+        "EXPO_PUBLIC_APP_VARIANT": "main"
+      }
+    },
+    "preview-partner": {
+      "extends": "preview",
+      "env": {
+        "EXPO_PUBLIC_APP_VARIANT": "partner"
+      }
+    },
+    "production-main": {
+      "extends": "production",
+      "env": {
+        "EXPO_PUBLIC_APP_VARIANT": "main"
+      }
+    },
+    "production-partner": {
+      "extends": "production",
+      "env": {
+        "EXPO_PUBLIC_APP_VARIANT": "partner"
+      }
+    },
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal"
+    },
+    "preview": {
+      "distribution": "internal"
+    },
+    "production": {
+      "distribution": "store"
+    }
+  },
+  "submit": {
+    "production-main": {
+    },
+    "production-partner": {
+    }
+  }
+}
