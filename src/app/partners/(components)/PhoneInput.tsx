@@ -179,16 +179,21 @@ const PhoneInput: React.FC<PhoneInputProps> = ({
 
   // Close dropdown when clicking outside (web only)
   useEffect(() => {
-     if (Platform.OS === 'web') {
-        const handleClickOutside = (event: MouseEvent) => {
-            if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node) && isDropdownOpen) {
-               toggleDropdown();
-            }
-        };
-        document.addEventListener('mousedown', handleClickOutside);
-        return () => document.removeEventListener('mousedown', handleClickOutside);
-     }
-  }, [isDropdownOpen]); // Dependency only on isDropdownOpen
+    if (Platform.OS === 'web') {
+       const handleClickOutside = (event: MouseEvent) => {
+           // Cast dropdownRef.current to unknown first, then to HTMLElement
+           // This tells TypeScript that in the web environment, this ref *will*
+           // point to a DOM element that has the 'contains' method.
+           const currentRef = dropdownRef.current as unknown as HTMLElement;
+
+           if (currentRef && !currentRef.contains(event.target as Node) && isDropdownOpen) {
+              toggleDropdown();
+           }
+       };
+       document.addEventListener('mousedown', handleClickOutside);
+       return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+ }, [isDropdownOpen]); // Dependency only on isDropdownOpen
 
   // console.log(`PhoneInput Rendering - Internal number: '${phoneNumber}', Country: ${selectedCountry.code}, Received isValid prop: ${isValid}`);
 
