@@ -26,7 +26,7 @@ const App = () => {
           useNativeDriver: true,
         }).start();
       });
-    }, 3000); // Total 2.5 seconds per word
+    }, 2750); // Total 2.5 seconds per word
 
     // Clean up interval on unmount
     return () => clearInterval(wordChangeInterval);

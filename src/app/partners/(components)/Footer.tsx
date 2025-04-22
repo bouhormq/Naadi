@@ -1,10 +1,12 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   TouchableOpacity,
   Image,
+  ScrollView, // Import ScrollView
+  Platform // Import Platform for potential platform-specific styles
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
@@ -22,8 +24,7 @@ export default function Footer() {
     { code: 'en', name: 'English' },
     { code: 'fr', name: 'Français' },
     { code: 'ma', name: 'Darija' },
-    { code: 'ar', name: 'العربية' },
-    { code: 'es', name: 'Español' }
+    { code: 'es', name: 'Español' },
   ];
 
   const [selectedLanguage, setSelectedLanguage] = useState(languages[0]);
@@ -71,19 +72,21 @@ export default function Footer() {
       </View>
 
       {/* Language Section */}
-      <View style={styles.section}>
+      <View style={[styles.section, styles.languageSection]}> {/* Added languageSection style */}
         <Text style={styles.sectionTitle}>Language</Text>
-        <View>
-          <TouchableOpacity
-            style={styles.languageSelector}
-            onPress={toggleLanguageDropdown}
-          >
-            <Text style={styles.linkText}>{selectedLanguage.name}</Text>
-            <Ionicons name="chevron-down" size={16} color="#fff" style={styles.chevron} />
-          </TouchableOpacity>
+        {/* Language Selector */}
+        <TouchableOpacity
+          style={styles.languageSelector}
+          onPress={toggleLanguageDropdown}
+        >
+          <Text style={styles.linkText}>{selectedLanguage.name}</Text>
+          <Ionicons name={isLanguageDropdownVisible ? "chevron-up" : "chevron-down"} size={16} color="#fff" style={styles.chevron} />
+        </TouchableOpacity>
 
-          {isLanguageDropdownVisible && (
-            <View style={styles.dropdownContainer}>
+        {/* Language Dropdown */}
+        {isLanguageDropdownVisible && (
+           <View style={styles.dropdownContainer}>
+            <ScrollView style={styles.dropdownScrollView}>
               {languages.map((language, index) => (
                 <TouchableOpacity
                   key={index}
@@ -99,9 +102,9 @@ export default function Footer() {
                   )}
                 </TouchableOpacity>
               ))}
-            </View>
-          )}
-        </View>
+            </ScrollView>
+          </View>
+        )}
       </View>
 
       {/* Mobile App Section */}
@@ -131,11 +134,17 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     flexDirection: 'row',
     flexWrap: 'wrap',
-    justifyContent: 'space-between'
+    justifyContent: 'space-between',
+    zIndex: 1, // Ensure footer has a zIndex if needed
   },
   section: {
     width: '23%',
     marginBottom: 30,
+  },
+  languageSection: {
+    // Make the language section a positioning context for the absolute dropdown
+    position: 'relative',
+    zIndex: 10, // Ensure the language section has a good zIndex
   },
   sectionTitle: {
     fontSize: 16,
@@ -158,19 +167,33 @@ const styles = StyleSheet.create({
     borderRadius: 4,
     backgroundColor: '#000',
     justifyContent: 'space-between',
+    borderWidth: 1,
+    zIndex: 1, // Ensure selector is above other elements in the section
   },
   chevron: {
     marginLeft: 5,
   },
   dropdownContainer: {
     position: 'absolute',
-    top: 40, // Adjust based on the height of the language selector
+    top: '100%', // Position below the language selector
     left: 0,
     right: 0,
     backgroundColor: '#222',
     borderRadius: 5,
-    overflow: 'hidden',
-    zIndex: 10,
+    zIndex: 999, // Use a very high zIndex for the dropdown
+    maxHeight: 150, // Added a max height for scrollability
+    ...Platform.select({ // Added platform-specific elevation for Android zIndex
+      android: {
+        elevation: 20,
+      },
+    }),
+    // Ensure the dropdown container can receive touch events - box-none allows touches on children
+     pointerEvents: 'box-none',
+  },
+   dropdownScrollView: {
+    flexGrow: 1,
+    // Added paddingBottom to ensure the last item is fully visible above the scrollbar
+    paddingBottom: 5,
   },
   languageOption: {
     paddingVertical: 10,
@@ -186,18 +209,12 @@ const styles = StyleSheet.create({
     color: '#fff',
   },
   selectedLanguage: {
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
   },
   mobileSection: {
     width: '100%',
     marginTop: 30,
     marginBottom: 30,
-  },
-  mobileSectionTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#fff',
-    marginBottom: 15,
   },
   appButtons: {
     flexDirection: 'row',
@@ -209,26 +226,10 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     overflow: 'hidden',
   },
-  bottomSection: {
-    width: '100%',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  socialIcons: {
-    flexDirection: 'row',
-  },
-  socialIcon: {
-    marginRight: 20,
-  },
-  legalLinks: {
-    flexDirection: 'row',
-  },
-  legalItem: {
-    marginLeft: 20,
-  },
-  legalText: {
-    fontSize: 14,
+  mobileSectionTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
     color: '#fff',
-  },
+    marginBottom: 15,
+  }
 });

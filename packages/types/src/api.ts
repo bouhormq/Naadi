@@ -2,6 +2,8 @@
  * Authentication API Types
  */
 
+import { PhoneInfo } from "./firestore";
+
 
 
 export interface SignupRequest {
@@ -10,7 +12,9 @@ export interface SignupRequest {
   displayName?: string;
 }
 
-export interface BusinessSignupRequest {
+
+
+export interface PartnerSignupRequest {
   email: string;
   firstName: string;
   lastName: string;
@@ -18,7 +22,7 @@ export interface BusinessSignupRequest {
   website: string;
   businessType: string;
   location: string;
-  phone: string;
+  phone: PhoneInfo; 
   consent: boolean;
 }
 

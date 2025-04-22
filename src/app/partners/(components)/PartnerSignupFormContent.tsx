@@ -14,33 +14,14 @@ import {
   ScrollView
 } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
+import { PartnerSignupRequest, PhoneInfo } from '@naadi/types'; // Assuming these types exist
 // Import PhoneInput and its exported countriesData
 import PhoneInput, { countriesData } from './PhoneInput'; // Adjust path if needed
 
-export interface PhoneInfo {
-  code: string;
-  name: string;
-  number: string;
-  dialCode: string;
-}
-
-export interface PartnerContactFormData {
-  email: string;
-  firstName: string;
-  lastName: string;
-  businessName: string;
-  website: string;
-  businessType: string; // Assuming this might still be relevant for a partner contact
-  location: string;
-  phone: PhoneInfo;
-  message: string; // Added message field
-  consent: boolean;
-}
-
-export default function ContactForm() {
+export default function PartnerSignupFormContent() {
   const defaultCountryData = countriesData.find(country => country.code === 'MA') || countriesData[0];
 
-  const [formData, setFormData] = useState<PartnerContactFormData>({
+  const [formData, setFormData] = useState<PartnerSignupRequest>({
     email: '',
     firstName: '',
     lastName: '',
@@ -54,7 +35,6 @@ export default function ContactForm() {
       number: '', // Raw number
       dialCode: defaultCountryData.dialCode,
     },
-    message: '', // Initialize message field
     consent: false,
   });
   const [loading, setLoading] = useState(false);
@@ -90,6 +70,7 @@ export default function ContactForm() {
        country: typeof countriesData[0],
        rawNumber: string
    ) => {
+      // console.log('Parent handlePhoneInputChange: Received', { formattedText, countryCode: country.code, rawNumber });
       const phoneInfo: PhoneInfo = {
           code: country.code,
           name: country.name,
@@ -128,6 +109,7 @@ export default function ContactForm() {
   };
 
   const handleSubmit = async () => {
+    // console.log('handleSubmit triggered');
     setError(null);
     setSuccessMessage(null);
     setValidationErrors({});
@@ -150,7 +132,6 @@ export default function ContactForm() {
     if (!formData.location) currentValidationErrors.location = true;
     if (!formData.businessType) currentValidationErrors.businessType = true;
     if (!formData.phone.number.trim()) currentValidationErrors.phone = true;
-    if (!formData.message.trim()) currentValidationErrors.message = true;
 
     if (Object.keys(currentValidationErrors).length > 0) {
         firstErrorMessage = 'Please fill out all required fields (*).';
@@ -172,11 +153,15 @@ export default function ContactForm() {
             const isPhoneNumberValid = rawPhoneNumber.length >= 8 && rawPhoneNumber.length <= 15;
 
             if (!isPhoneNumberValid) {
+                // console.log('Phone validation failed:', rawPhoneNumber);
                 setPhoneValid(false); // Update state for styling prop
                 currentValidationErrors.phone = true; // Mark field for border
                 firstErrorMessage = 'Please enter a valid phone number.';
                 isSubmissionValid = false;
             }
+            // else {
+            //     console.log('Phone validation passed:', rawPhoneNumber);
+            // }
         }
     }
 
@@ -186,13 +171,15 @@ export default function ContactForm() {
     // If any validation failed, set the error message and stop
     if (!isSubmissionValid) {
         setError(firstErrorMessage);
+        console.log('Validation failed:', firstErrorMessage, 'Fields with errors:', currentValidationErrors);
         return;
     }
 
     // --- Proceed with API Call ---
+    // console.log('Validation passed. Submitting:', formData);
     setLoading(true);
     try {
-      const response = await fetch('https://api-3k2a2q5awq-no.a.run.app/partner-contact-request', {
+      const response = await fetch('https://api-3k2a2q5awq-no.a.run.app/partner-register-request', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
@@ -203,16 +190,20 @@ export default function ContactForm() {
          try {
              const errorBody = await response.text(); // Try reading text body
              if (errorBody) errorDetail += ` - ${errorBody}`;
+             console.error('API error response body:', errorBody);
          } catch (parseError) { console.error('Failed to parse API error body:', parseError); }
         throw new Error(errorDetail);
       }
 
-      setSuccessMessage('Thank you for your message! We will be in touch shortly.');
+      // const result = await response.json(); // Assuming JSON response on success
+      // console.log('Signup successful:', result);
+
+      setSuccessMessage('Thank you for signing up! We will be in touch shortly.');
       setSuccessfullySubmitted(true);
       // Reset form
       setFormData({
         email: '', firstName: '', lastName: '', businessName: '', website: '',
-        businessType: '', location: '', message: '',
+        businessType: '', location: '',
         phone: { code: defaultCountryData.code, name: defaultCountryData.name, number: '', dialCode: defaultCountryData.dialCode },
         consent: false,
       });
@@ -220,9 +211,9 @@ export default function ContactForm() {
       setPhoneValid(true); // Reset validity state
 
     } catch (err) {
-      console.error('Contact form submission error:', err);
+      console.error('Signup error:', err);
       // Don't show HTTP errors directly to the user generally
-      setError(err instanceof Error && err.message.startsWith('HTTP error!') ? 'Failed to submit form. Please try again later.' : (err instanceof Error ? err.message : 'An unexpected error occurred.'));
+      setError(err instanceof Error && err.message.startsWith('HTTP error!') ? 'Failed to sign up. Please try again later.' : (err instanceof Error ? err.message : 'An unexpected error occurred.'));
       setSuccessMessage(null);
       setSuccessfullySubmitted(false);
       // Decide whether to keep validation errors shown or clear them on API error
@@ -251,8 +242,8 @@ export default function ContactForm() {
     <View style={styles.formWrapper}>
       <View style={styles.formContainer}>
         <View style={styles.formHeader}>
-          <Text style={styles.formTitle}>Get in touch with our partner team</Text>
-          <Text style={styles.formSubtitle}>We look forward to hearing from you.</Text>
+          <Text style={styles.formTitle}>Ready to grow your business?</Text>
+          <Text style={styles.formSubtitle}>Fill out the form below to see what Naadi can do for your company.</Text>
         </View>
 
         <View style={styles.form}>
@@ -385,23 +376,9 @@ export default function ContactForm() {
             </View>
           </View>
 
-          {/* Message Field (Added) */}
-          <View style={styles.formGroup}>
-            <Text style={styles.label}>Message <Text style={styles.required}>*</Text></Text>
-            <TextInput
-              style={[styles.input, styles.textArea, validationErrors.message ? styles.inputError : null]}
-              value={formData.message}
-              onChangeText={(text) => handleChange('message', text)}
-              placeholder="Your message"
-              placeholderTextColor="#9ca3af"
-              multiline
-              numberOfLines={4}
-              textAlignVertical="top"
-            />
-          </View>
-
           {/* Consent Checkbox */}
           <View style={styles.checkboxContainer}>
+             {/* ... checkbox logic ... */}
              {Platform.OS === 'web' ? (
               <input
                 type="checkbox"
@@ -436,7 +413,7 @@ export default function ContactForm() {
             style={[styles.submitButton, loading && styles.submitButtonDisabled]}
             onPress={handleSubmit}
             disabled={loading} >
-            {loading ? <ActivityIndicator color="#fff" size="small" /> : <Text style={styles.submitButtonText}>Submit</Text>}
+            {loading ? <ActivityIndicator color="#fff" size="small" /> : <Text style={styles.submitButtonText}>Get started</Text>}
           </TouchableOpacity>
         </View>
       </View>
@@ -444,16 +421,14 @@ export default function ContactForm() {
   );
 }
 
-// Styles (Updated to include textArea style for message field)
+// Styles (Updated formGroupFullMobile and formRowMobile)
 const styles = StyleSheet.create({
   formWrapper: {
     width: '100%',
-    maxWidth: 550,
+    maxWidth: 500,
     alignSelf: 'center',
     marginTop: 'auto',
     marginBottom: 'auto',
-    paddingHorizontal: 20,
-    paddingVertical: 40
   },
   formContainer: {
     backgroundColor: '#fff',
@@ -482,7 +457,7 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
   form: {
-    zIndex: 1, // Keep form elements above container background
+       zIndex: 1, // Keep form elements above container background
   },
   formGroup: {
     marginBottom: 18,
@@ -495,12 +470,18 @@ const styles = StyleSheet.create({
   formRowMobile: {
     flexDirection: 'column',
     justifyContent: 'flex-start',
+    // REMOVED marginBottom here
+    // marginBottom: 18,
   },
   formGroupHalf: {
     width: '48%',
+    // REMOVED general marginBottom here
+    // marginBottom: 18,
   },
   formGroupFullMobile: {
     width: '100%',
+    // REMOVED marginBottom from here
+    // marginBottom: 18,
   },
   label: {
     fontSize: 14,
@@ -533,11 +514,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     minHeight: 40,
   },
-  textArea: {
-    minHeight: 100,
-    textAlignVertical: 'top',
-    paddingTop: 10,
-  },
   inputError: {
     borderColor: '#ef4444', // Red border for error state
   },
@@ -549,8 +525,9 @@ const styles = StyleSheet.create({
     minHeight: 40,
     justifyContent: 'center',
     overflow: 'hidden',
-    zIndex: 1,
+     zIndex: 1,
   },
+  // pickerWrapperError is handled by applying inputError style directly
   picker: {
     height: Platform.OS === 'ios' ? undefined : 40,
     width: '100%',
@@ -561,20 +538,21 @@ const styles = StyleSheet.create({
     paddingVertical: 0,
   },
   phoneContainer: {
-    marginBottom: 18,
-    zIndex: 10, // Keep high for dropdown visibility
+     marginBottom: 18,
+     zIndex: 10, // Keep high for dropdown visibility
   },
   phoneInputWrapper: { // Added wrapper for PhoneInput border control
-    borderWidth: 1,
-    borderColor: '#d1d5db', // Default border
-    borderRadius: 8,
+      borderWidth: 1,
+      borderColor: '#d1d5db', // Default border
+      borderRadius: 8,
   },
+  // phoneInputWrapperError is handled by applying inputError style directly
   checkboxContainer: {
     flexDirection: 'row',
     alignItems: 'flex-start',
     marginBottom: 10,
     marginTop: 10,
-    zIndex: 0,
+     zIndex: 0,
   },
   checkbox: {
     marginRight: 10,
@@ -600,8 +578,12 @@ const styles = StyleSheet.create({
     color: '#007bff',
     textDecorationLine: 'underline',
   },
-  errorText: {
+  errorText: { // Style for the single error message below
     color: '#ef4444',
+    // No background/border needed here, just text color
+    // backgroundColor: '#fef2f2', // Optional light red background
+    // borderColor: '#fecaca', // Optional light red border
+    // borderWidth: 1,
     borderRadius: 6,
     paddingVertical: 8,
     paddingHorizontal: 12,
@@ -614,6 +596,9 @@ const styles = StyleSheet.create({
   },
   successText: {
     color: '#28a745', // Green success color
+    // backgroundColor: '#f0fdf4', // Optional light green background
+    // borderColor: '#bbf7d0', // Optional light green border
+    // borderWidth: 1,
     borderRadius: 6,
     paddingVertical: 8,
     paddingHorizontal: 12,
@@ -622,7 +607,7 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     overflow: 'hidden',
     marginTop: 10, // Space above the message
-    zIndex: 0,
+     zIndex: 0,
   },
   submitButton: {
     backgroundColor: '#007bff',
@@ -635,7 +620,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.2,
     shadowRadius: 4,
     elevation: 4,
-    zIndex: 0,
+     zIndex: 0,
   },
   submitButtonDisabled: {
     backgroundColor: '#adb5bd',

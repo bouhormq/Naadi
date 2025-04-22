@@ -43,7 +43,7 @@ const signupData: SignupRequest = {
 
 ### API Request/Response Types
 
-- Authentication: `SignupRequest`, `BusinessSignupRequest`, `LoginRequest`
+- Authentication: `SignupRequest`, `PartnerSignupRequest`, `LoginRequest`
 - Bookings: `CreateBookingRequest`, `CancelBookingRequest`, `ConfirmPaymentRequest`
 - Studios: `CreateStudioRequest`, `UpdateStudioRequest`, `StudioStatsResponse`
 - Classes: `CreateClassRequest`, `UpdateClassRequest`

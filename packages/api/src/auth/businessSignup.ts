@@ -1,4 +1,4 @@
-import { BusinessSignupRequest, User, AuthResponse } from '@naadi/types';
+import { PartnerSignupRequest, User, AuthResponse } from '@naadi/types';
 import { createDocument } from '../../utils/firestore';
 import { ApiError } from '../../utils/apiError';
 import { getAuth, createUserWithEmailAndPassword } from 'firebase/auth';
@@ -6,10 +6,10 @@ import { getApp } from 'firebase/app';
 
 /**
  * Handles partner signup
- * @param data BusinessSignupRequest data from client
+ * @param data PartnerSignupRequest data from client
  * @returns User object with auth token
  */
-export async function businessSignup(data: BusinessSignupRequest): Promise<AuthResponse> {
+export async function businessSignup(data: PartnerSignupRequest): Promise<AuthResponse> {
   try {
     const { email, password, businessName, contactInfo } = data;
     

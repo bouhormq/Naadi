@@ -33,7 +33,7 @@ const studio = await createStudio({
 ### Authentication
 
 - `signup(data: SignupRequest)`: Register a new user
-- `businessSignup(data: BusinessSignupRequest)`: Register a new partner
+- `businessSignup(data: PartnerSignupRequest)`: Register a new partner
 - `login(data: LoginRequest)`: Authenticate a user or partner
 
 ### Bookings

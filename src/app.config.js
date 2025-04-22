@@ -11,7 +11,7 @@ console.log(`app.config.js: Configuring for variant: ${appVariant}`);
 
 const mainConfig = {
   name: 'Naadi', // App name for the main app
-  slug: 'naadi-main', // Unique slug for main app (used for URL scheme)
+  slug: 'naadi', // Unique slug for main app (used for URL scheme)
   identifier: 'ma.naadi.app', // << NEW Unique Bundle ID / Package Name for main app
   icon: './app/(main)/(assets)/icon-main.png', // << CREATE THIS ICON FILE
   adaptiveIconForeground: './app/(main)/(assets)/adaptive-icon-main.png', // << CREATE THIS ICON FILE
@@ -81,10 +81,10 @@ export default {
       // Add any other plugins here
     ],
     extra: {
+      "eas": {
+        "projectId": "d2e1171b-6b0e-4bc9-bd2e-650a1c79a669"
+      }
       // Keep your EAS Project ID
-      eas: {
-        projectId: '84bada40-a73f-4380-a8fa-b5d668d19905',
-      },
       // You could pass the variant here too if needed elsewhere, but EXPO_PUBLIC_* is preferred
       // appVariant: appVariant
     },

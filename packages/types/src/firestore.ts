@@ -99,7 +99,15 @@ export interface BusinessContactFormData {
   website: string;
   businessType: string; // Assuming this might still be relevant for a partner contact
   location: string;
-  phone: string;
+  phone: PhoneInfo;
   message: string; // Added message field
   consent: boolean;
+}
+
+
+export interface PhoneInfo {
+  code: string;
+  name: string;
+  number: string;
+  dialCode: string;
 }

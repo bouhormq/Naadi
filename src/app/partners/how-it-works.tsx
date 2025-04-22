@@ -1,14 +1,14 @@
-import { View, StyleSheet, ScrollView } from 'react-native';
-import { BusinessSignupRequest } from '@naadi/types';
+import { StyleSheet, ScrollView } from 'react-native';
+import { PartnerSignupRequest } from '@naadi/types';
 import HeroSection from './(components)/HeroSection';
-import BusinessSignupForm from './(components)/BusinessSignupForm';
+import PartnerSignupForm from './(components)/PartnerSignupForm';
 import SmartToolsSection from './(components)/SmartTools';
 import FAQSection from './(components)/FAQSection';
 import CTASection from './(components)/CTASection';
 import Footer from './(components)/Footer';
 export default function SignupScreen() {
 
-  const handleSubmit = async (data: BusinessSignupRequest) => {
+  const handleSubmit = async (data: PartnerSignupRequest) => {
     try {
       console.log('Submitting partner signup data:', data);
 
@@ -37,7 +37,7 @@ export default function SignupScreen() {
     <ScrollView contentContainerStyle={styles.container}>
       <HeroSection /> 
       <SmartToolsSection />
-      <BusinessSignupForm onSubmit={handleSubmit} />
+      <PartnerSignupForm />
       <FAQSection />
       <CTASection />
       <Footer />

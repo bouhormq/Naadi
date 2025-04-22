@@ -1,5 +1,4 @@
 // ... existing code ...
-import React from 'react';
 import { 
   View, 
   Text, 
@@ -12,7 +11,7 @@ import { useRouter, usePathname } from 'expo-router';
 export default function CTASection() {
   const router = useRouter();
   const pathname = usePathname()
-  const isHomePage = pathname === '/'; // Check if the current route is '/'
+  const isHomePage = pathname === '/partners'; // Check if the current route is '/'
 
   return (
     <View style={[

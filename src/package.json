@@ -10,11 +10,14 @@
     "dev": "expo start --web",
     "build": "eas build",
     "deploy:web": "eas deploy --platform web",
+    "deploy:web:prod": "eas deploy --prod",
+    "export:web": "npx expo export --platform web",
     "test:api": "node tests/run-all-tests.js"
   },
   "dependencies": {
     "@naadi/api": "../packages/types/src/api",
     "@naadi/types": "../packages/types/src/types",
+    "@react-native-picker/picker": "2.9.0",
     "expo": "~52.0.0",
     "expo-constants": "~16.0.0",
     "expo-linking": "~7.0.0",
@@ -24,11 +27,11 @@
     "react": "18.2.0",
     "react-dom": "18.2.0",
     "react-native": "0.73.0",
+    "react-native-international-phone-number": "^0.9.2",
     "react-native-picker": "^4.3.7",
     "react-native-safe-area-context": "4.9.0",
     "react-native-screens": "~3.29.0",
-    "react-native-web": "~0.19.10",
-    "@react-native-picker/picker": "2.9.0"
+    "react-native-web": "~0.19.10"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",
