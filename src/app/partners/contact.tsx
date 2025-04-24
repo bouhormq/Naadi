@@ -1,7 +1,8 @@
-import { StyleSheet, ScrollView, Text, View } from 'react-native';
+import { StyleSheet, ScrollView, View } from 'react-native';
 import Footer from './(components)/Footer'; // Assuming this path is correct
 // Import the PartnerSignupFormContent component
 import ContactForm from './(components)/ContactForm'; // Adjust this path based on your file structure
+import CustomText from 'components/CustomText';
 
 export default function ContactScreen() {
 
@@ -14,12 +15,12 @@ export default function ContactScreen() {
     <ScrollView contentContainerStyle={styles.container}>
       <View style={styles.header}>
         {/* Updated header text for a partner contact form */}
-        <Text style={styles.title}>
-          Contact Us for Business <Text style={styles.highlight}>Inquiries</Text>
-        </Text>
-        <Text style={styles.subtitle}>
+        <CustomText style={styles.title}>
+          Contact Us for Business <CustomText style={styles.highlight}>Inquiries</CustomText>
+        </CustomText>
+        <CustomText style={styles.subtitle}>
           Have questions about listing your business or partnering with Naadi? Fill out the form below.
-        </Text>
+        </CustomText>
       </View>
       <ContactForm />
       <Footer />

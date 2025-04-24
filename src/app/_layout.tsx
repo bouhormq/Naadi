@@ -1,102 +1,107 @@
+// app/_layout.js
 import { Stack, usePathname, useRouter, SplashScreen } from 'expo-router';
-import { useEffect } from 'react'; // No need for useState(isReady) here
-import { Platform } from 'react-native';
-import 'dotenv/config'; // Optional: for local testing with a .env file
+import { useEffect, useCallback } from 'react';
+import { Platform, View } from 'react-native';
+import { useFonts } from 'expo-font';
 
-// Prevent the splash screen from auto-hiding before we determine the route.
+// Prevent the splash screen from auto-hiding immediately
 SplashScreen.preventAutoHideAsync();
+
 
 export default function RootLayout() {
   const router = useRouter();
   const pathname = usePathname();
 
+  // --- Font Loading ---
+  const [fontsLoaded, fontError] = useFonts({
+    // Map simple names to the actual file paths.
+    'SFProText-Regular': require('../assets/fonts/SF-Pro-Text-Regular.otf'),
+    'SFProText-Medium': require('../assets/fonts/SF-Pro-Text-Medium.otf'),
+    'SFProText-Semibold': require('../assets/fonts/SF-Pro-Text-Semibold.otf'),
+    'SFProText-Bold': require('../assets/fonts/SF-Pro-Text-Bold.otf'),
+    'SFProDisplay-Regular': require('../assets/fonts/SF-Pro-Display-Regular.otf'),
+    'SFProDisplay-Medium': require('../assets/fonts/SF-Pro-Display-Medium.otf'),
+    'SFProDisplay-Semibold': require('../assets/fonts/SF-Pro-Display-Semibold.otf'),
+    'SFProDisplay-Bold': require('../assets/fonts/SF-Pro-Display-Bold.otf'),
+    'SFProRounded-Regular': require('../assets/fonts/SF-Pro-Rounded-Regular.otf'),
+    'SFProRounded-Medium': require('../assets/fonts/SF-Pro-Rounded-Medium.otf'),
+    'SFProRounded-Semibold': require('../assets/fonts/SF-Pro-Rounded-Semibold.otf'),
+    'SFProRounded-Bold': require('../assets/fonts/SF-Pro-Rounded-Bold.otf'),
+    'AppleColorEmoji': require('../assets/fonts/AppleColorEmoji.ttf'),
+  });
+
+  // Log font loading status for debugging
   useEffect(() => {
-    // This effect runs once on initial load to determine the correct starting route.
+    if (fontsLoaded) {
+      console.log("All fonts loaded successfully!");
+    } else if (fontError) {
+      console.error("Font loading error:", fontError);
+    }
+  }, [fontsLoaded, fontError]);
+
+  // --- Splash Screen Hiding and Initial Route Logic ---
+  useEffect(() => {
+    if (fontsLoaded || fontError) {
+      // Fonts are loaded, now signal the root view is ready to potentially hide splash screen
+    }
+  }, [fontsLoaded, fontError]);
+
+  // Define the callback for the root view's layout event
+  const onLayoutRootView = useCallback(async () => {
+    // Only hide the splash screen if fonts are loaded OR if there was a font loading error.
+    if (fontsLoaded || fontError) {
+      console.log("Root view layout complete. Hiding splash screen.");
+      await SplashScreen.hideAsync(); // Hide the splash screen
+    }
+  }, [fontsLoaded, fontError]); // Depend on font status
+
+  // Your existing initial route determination logic
+  useEffect(() => {
     console.log("Determining initial route...");
+    let targetRoute: string | null = null;
 
-    let targetRoute: string | null = null; // Use a different name than initialRoute
-
-    if (Platform.OS === 'web') {
-      // --- Web Logic ---
-      if (typeof window !== 'undefined') {
-        const hostname = window.location.hostname;
-        const currentPath = window.location.pathname; // Check the actual path
-
-        // Only try to redirect if we are exactly at the web root '/'
-        if (currentPath === '/') {
-            if (hostname === 'localhost') {
-                // Localhost testing: Use query param or default to main
-                const searchParams = new URLSearchParams(window.location.search);
-                if (searchParams.get('mode') === 'partner') {
-                    console.log("Web localhost: Redirecting to /partners");
-                    targetRoute = '/partners';
-                } else {
-                    console.log("Web localhost: Redirecting to /(main)");
-                    targetRoute = '/(main)';
-                }
-            } else if (hostname === 'naadi.ma') {
-                // Production: naadi.ma root goes to main
-                console.log("Web naadi.ma: Redirecting to /(main)");
-                targetRoute = '/(main)';
-            } else {
-                // Default unknown hostnames at root '/' to main
-                console.log(`Web other hostname (${hostname}): Redirecting to /(main)`);
-                targetRoute = '/(main)';
-            }
-        } else {
-             // If not at the root '/', let Expo Router handle the path directly.
-             // e.g., if the user directly visits naadi.ma/partners, it should load the partner route.
-             console.log(`Web: Pathname is ${currentPath}, letting Expo Router handle it.`);
-             // targetRoute remains null, no redirection needed
-        }
-      }
-    } else {
-      // --- Native Logic ---
-      // Use an environment variable set during the build process
+    if (Platform.OS !== 'web'){ // Note: Your code had Platform.OS === 'web', changed to !== 'web' for native logic
       const appVariant = process.env.EXPO_PUBLIC_APP_VARIANT;
       console.log(`Native: App Variant detected: ${appVariant}`);
 
       if (appVariant === 'partners') {
         targetRoute = '/partners';
       } else {
-        // Default to 'main' if the variant is 'main' or not set
         targetRoute = '/(main)';
       }
     }
 
-    // Perform the redirection if a target route was determined AND we are currently at the root '/'
-    // The check `pathname === '/'` is crucial here to prevent infinite redirects
-    // if the targetRoute happens to be '/' itself or a path that resolves back to '/'.
-    // However, based on your logic, targetRoute will always be '/(main)' or '/partners',
-    // so the check ensures we only replace the initial root.
-    if (targetRoute && pathname === '/') {
+     if (targetRoute && pathname === '/') {
         console.log(`Redirecting from '/' to ${targetRoute}`);
         router.replace(targetRoute);
     } else {
-         // If targetRoute is null or we aren't at the root '/', just hide splash screen.
-         // Expo Router will handle rendering based on the current path.
         console.log(`No redirection needed or not at root '/' (current: ${pathname})`);
     }
 
-    // Hide the splash screen once the initial route logic is complete
-    // (whether a redirect happened or not).
-    SplashScreen.hideAsync();
+  }, [pathname, router]);
 
-  }, [pathname]); // Added pathname to dependency array - though for initial load [], might be sufficient, but including pathname makes the intention clearer if logic were more complex later. If this causes issues, revert to []. The core fix is always rendering Stack.
 
-  // --- Always render the Stack navigator ---
-  // This ensures Expo Router's core navigation structure is present from the start.
+  // --- Conditional Rendering based on Font Loading State ---
+  if (!fontsLoaded && !fontError) {
+    console.log("Fonts not loaded, returning null to keep splash screen visible.");
+    return null;
+  }
+
+  // --- Handle Font Loading Errors ---
+  if (fontError) {
+    console.error("Displaying font loading error UI.");
+  }
+
+  // --- Render the main app content (Stack Navigator) when fonts are ready ---
+  console.log("Fonts loaded, rendering Stack navigator.");
   return (
-    // Stack navigator containing both main and partner route groups
-    <Stack screenOptions={{ headerShown: false }}>
-      {/*
-         Render your route groups. Expo Router will automatically render the
-         correct initial screen based on the URL/initial route path,
-         or the path you redirect to via router.replace().
-      */}
-      <Stack.Screen name="(main)" />
-      <Stack.Screen name="partners" />
-      {/* Add other top-level modal screens etc. here if needed */}
-    </Stack>
+    // Wrap your main navigation structure with a View that has the onLayout callback.
+    <View style={{ flex: 1 }} onLayout={onLayoutRootView}>
+      <Stack screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="(main)" />
+        <Stack.Screen name="partners" />
+        {/* Add other top-level modal screens etc. here if needed */}
+      </Stack>
+    </View>
   );
 }

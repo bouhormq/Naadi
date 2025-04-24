@@ -1,7 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import {
   View,
-  Text,
   StyleSheet,
   TextInput,
   TouchableOpacity,
@@ -10,6 +9,7 @@ import {
   Animated,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons'; // Ensure this import works in your setup
+import CustomText from 'components/CustomText';
 
 export const countriesData = [
     { "code": "MA", "name": "Morocco", "flag": "🇲🇦", "dialCode": "+212" },
@@ -205,8 +205,8 @@ const PhoneInput: React.FC<PhoneInputProps> = ({
       ]}>
         {/* Country Selector Button */}
         <TouchableOpacity style={styles.countryButton} onPress={toggleDropdown} activeOpacity={0.7}>
-          <Text style={styles.flagText}>{selectedCountry.flag}</Text>
-          <Text style={styles.dialCodeText}>{selectedCountry.dialCode}</Text>
+          <CustomText style={styles.flagText}>{selectedCountry.flag}</CustomText>
+          <CustomText style={styles.dialCodeText}>{selectedCountry.dialCode}</CustomText>
           <Ionicons name={isDropdownOpen ? "chevron-up" : "chevron-down"} size={16} color="#6b7280" />
         </TouchableOpacity>
 
@@ -255,9 +255,9 @@ const PhoneInput: React.FC<PhoneInputProps> = ({
                   style={[styles.countryItem, selectedCountry.code === country.code && styles.selectedCountryItem]}
                   onPress={() => selectCountry(country)}
                 >
-                  <Text style={styles.countryFlag}>{country.flag}</Text>
-                  <Text style={styles.countryName} numberOfLines={1}>{country.name}</Text>
-                  <Text style={styles.countryDialCode}>{country.dialCode}</Text>
+                  <CustomText style={styles.countryFlag}>{country.flag}</CustomText>
+                  <CustomText style={styles.countryName} numberOfLines={1}>{country.name}</CustomText>
+                  <CustomText style={styles.countryDialCode}>{country.dialCode}</CustomText>
                 </TouchableOpacity>
               ))}
           </ScrollView>

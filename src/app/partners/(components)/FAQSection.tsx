@@ -1,11 +1,11 @@
 import { useState } from 'react';
 import { 
   View, 
-  Text, 
   StyleSheet,
   TouchableOpacity
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import CustomText from 'components/CustomText';
 
 export default function FAQSection() {
   const [openIndex, setOpenIndex] = useState(null);
@@ -36,7 +36,7 @@ export default function FAQSection() {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>Frequently asked questions</Text>
+        <CustomText style={styles.title}>Frequently asked questions</CustomText>
       </View>
 
       <View style={styles.faqContainer}>
@@ -46,7 +46,7 @@ export default function FAQSection() {
               style={styles.faqQuestion}
               onPress={() => toggleFAQ(index)}
             >
-              <Text style={styles.questionText}>{faq.question}</Text>
+              <CustomText style={styles.questionText}>{faq.question}</CustomText>
               <Ionicons 
                 name={openIndex === index ? "chevron-up" : "chevron-down"} 
                 size={20} 
@@ -55,7 +55,7 @@ export default function FAQSection() {
             </TouchableOpacity>
             {openIndex === index && (
               <View style={styles.faqAnswer}>
-                <Text style={styles.answerText}>{faq.answer}</Text>
+                <CustomText style={styles.answerText}>{faq.answer}</CustomText>
               </View>
             )}
           </View>

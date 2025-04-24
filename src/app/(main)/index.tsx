@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
-import { Animated, ScrollView, StyleSheet, View, Text, Platform } from 'react-native';
-
+import { Animated, ScrollView, StyleSheet, View, Platform } from 'react-native';
+import CustomText from 'components/CustomText';
 
 const App = () => {
   // Rotating business words
@@ -18,7 +18,6 @@ const App = () => {
       }).start(() => {
         // Change word when fully faded out
         setCurrentWordIndex((prevIndex) => (prevIndex + 1) % businessWords.length);
-
         // Start fade in
         Animated.timing(fadeAnim, {
           toValue: 1,
@@ -27,24 +26,26 @@ const App = () => {
         }).start();
       });
     }, 2750); // Total 2.5 seconds per word
-
+    
     // Clean up interval on unmount
     return () => clearInterval(wordChangeInterval);
   }, [fadeAnim, businessWords.length]);
 
+
   return (
     <ScrollView contentContainerStyle={styles.container}>
-       <View style={styles.textContainer}> {/* Added a container for centering */}
-         <Text style={[styles.mainTitle]}>
-         🛠️ Coming soon... One app for all things{' '}
+      <View style={styles.textContainer}>
+        <CustomText style={styles.mainTitle}>
+          <CustomText>🛠️</CustomText> Coming soon... One app for all things{' '}
           <Animated.View style={{ opacity: fadeAnim, display: 'inline' }}>
-            <Text style={styles.freeText}>{businessWords[currentWordIndex]}</Text>
+            <CustomText style={styles.freeText}>{businessWords[currentWordIndex]}</CustomText>
           </Animated.View>
-          ✨
-        </Text>
-        <Text style={[styles.mainSubtitle]}>
+          {' '}<CustomText>✨</CustomText>
+        </CustomText>
+        
+        <CustomText style={styles.mainSubtitle}>
           Naadi gives you access to hundreds of top-rated gyms, fitness studios, salons and spas in Morocco.
-        </Text>
+        </CustomText>
       </View>
     </ScrollView>
   );
@@ -58,21 +59,21 @@ const styles = StyleSheet.create({
     alignItems: 'center', // Horizontally center the content block
     paddingHorizontal: 20, // Add some horizontal padding
   },
-   textContainer: {
+  textContainer: {
     // This view acts as a container for the text elements
     // Its width will be determined by its content or maxWidth
     // We already centered its parent in the container style
     maxWidth: 750, // Limit the width of the text block
     width: '100%', // Allow the container to take full width up to maxWidth
   },
-  headerSection:{
+  headerSection: {
     width: '100%',
     // Centering content within the header section
     justifyContent: 'center',
     alignItems: 'center', // Align text left (wide) or center (narrow)
     paddingHorizontal: 20, // Use percentage padding? Or fixed.
     paddingVertical: 40, // Add vertical padding
-    marginBottom:  30, // Space below header on narrow screens
+    marginBottom: 30, // Space below header on narrow screens
   },
   mainTitle: {
     fontSize: Platform.OS === 'web' ? 57.6 : 48, // Responsive font size
@@ -81,7 +82,6 @@ const styles = StyleSheet.create({
     marginBottom: 15,
     lineHeight: Platform.OS === 'web' ? 57.6 : 54, // Responsive line height
     textAlign: 'center', // Center the text horizontally
-    // maxWidth: 650, // Moved maxWidth to textContainer
   },
   freeText: {
     color: '#007bff',
@@ -96,7 +96,6 @@ const styles = StyleSheet.create({
     color: '#4b5563',
     lineHeight: 24,
     textAlign: 'center', // Center the text horizontally
-    // maxWidth: 650, // Moved maxWidth to textContainer
   },
 });
 

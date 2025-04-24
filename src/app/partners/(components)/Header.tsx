@@ -1,12 +1,11 @@
 import { 
   View, 
-  Text, 
   StyleSheet, 
   TouchableOpacity, 
   useWindowDimensions,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-
+import CustomText from 'components/CustomText';
 export default function Header() {
   const router = useRouter();
   const { width } = useWindowDimensions();
@@ -15,19 +14,19 @@ export default function Header() {
   return (
     <View style={styles.header}>
       <TouchableOpacity onPress={() => router.push('/partners')} style={styles.logoContainer}>
-        <Text style={styles.logo}>naadi</Text>
+        <CustomText style={styles.logo}>naadi</CustomText>
       </TouchableOpacity>
       <View style={styles.headerButtons}>
         {width > 360 && (
           <TouchableOpacity onPress={() => router.push('/partners/how-it-works')} style={styles.headerButton}>
-            <Text style={styles.menuItemText}>How it works</Text>
+            <CustomText style={styles.menuItemText}>How it works</CustomText>
           </TouchableOpacity>
         )}
         <TouchableOpacity onPress={() => router.push('/partners/signup')} style={styles.headerButton}>
-          <Text style={styles.menuItemText}>Sign up</Text>
+          <CustomText style={styles.menuItemText}>Sign up</CustomText>
         </TouchableOpacity>
         <TouchableOpacity style={styles.button}>
-          <Text style={styles.buttonText}>Log in</Text>
+          <CustomText style={styles.buttonText}>Log in</CustomText>
         </TouchableOpacity>
       </View>
     </View>

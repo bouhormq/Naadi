@@ -6,6 +6,7 @@ import {
   useWindowDimensions,
   Animated, // Import the hook
 } from 'react-native';
+import CustomText from 'components/CustomText';
 
 // Import the new component
 import PartnerSignupFormContent from './PartnerSignupFormContent';
@@ -65,16 +66,16 @@ export default function PartnerSignupForm() {
   return (
     <View style={styles.container}>
       <View style={headerSectionStyle}>
-        <Text style={styles.title}>
+        <CustomText style={styles.title}>
           List your{' '}
           <Animated.View style={{ opacity: fadeAnim, display: 'inline' }}>
-            <Text style={styles.highlight}>{businessWords[currentWordIndex]}</Text>
+            <CustomText style={styles.highlight}>{businessWords[currentWordIndex]}</CustomText>
           </Animated.View>
-          {' '}on Naadi for <Text style={styles.highlight}>free</Text> to start earning more today.
-        </Text>
-        <Text style={styles.subtitle}>
+          {' '}on Naadi for <CustomText style={styles.highlight}>free</CustomText> to start earning more today.
+        </CustomText>
+        <CustomText style={styles.subtitle}>
           List your business on Naadi to reach thousands of new customers, fill unbooked spots, and maximize your revenue.
-        </Text>
+        </CustomText>
       </View>
 
       {/* Use the new component here - formWrapper with margins is inside it */}

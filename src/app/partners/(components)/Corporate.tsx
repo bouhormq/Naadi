@@ -1,18 +1,18 @@
 import { 
   View, 
-  Text, 
   StyleSheet,
   Image
 } from 'react-native';
+import CustomText from 'components/CustomText';
 
 
 export default function Corporate() {
   return (
     <View style={styles.container}>
-      <Text style={styles.title}><Text style={styles.scaleText}>Unlock</Text> even more revenue with{'\n'} corporate clients</Text>
-      <Text style={styles.subtitle}>
+      <CustomText style={styles.title}><CustomText style={styles.scaleText}>Unlock</CustomText> even more revenue with{'\n'} corporate clients</CustomText>
+      <CustomText style={styles.subtitle}>
         Many companies will soon offer Naadi as a benefit to employees, meaning you’ll{'\n'} get more eyes on your business and more cash in your pocket.
-      </Text>
+      </CustomText>
       <Image 
         source={require('../(assets)/corp.png')} // Path to your image
         style={styles.corporateImage} // Apply styling

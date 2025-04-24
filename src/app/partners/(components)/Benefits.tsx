@@ -1,11 +1,11 @@
 import {
   View,
-  Text,
   StyleSheet,
   Image,
   FlatList,
   useWindowDimensions,
 } from 'react-native';
+import CustomText from 'components/CustomText';
 
 // --- Card Data ---
 const businessCardData = [
@@ -57,16 +57,16 @@ export default function Benefits() {
         style={[styles.cardImage, !isDesktopLayout && styles.cardImageMobile]}
         resizeMode="cover"
       />
-      <Text style={styles.cardTitle}>{item.title}</Text>
-      <Text style={styles.cardText}>{item.text}</Text>
+      <CustomText style={styles.cardTitle}>{item.title}</CustomText>
+      <CustomText style={styles.cardText}>{item.text}</CustomText>
     </View>
   );
 
   return (
     <View style={styles.container}>
       <View style={styles.content}>
-        <Text style={styles.title}>
-        <Text style={styles.scaleText}>Scale</Text> your business without{'\n'} breaking a sweat</Text>
+        <CustomText style={styles.title}>
+        <CustomText style={styles.scaleText}>Scale</CustomText> your business without{'\n'} breaking a sweat</CustomText>
         {/* --- Cards using FlatList --- */}
         <FlatList
           key={numColumns}

@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import {
   View,
-  Text,
   StyleSheet,
   TextInput,
   TouchableOpacity,
@@ -11,12 +10,12 @@ import {
   Platform,
   useWindowDimensions,
   Linking,
-  ScrollView
 } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import { PartnerSignupRequest, PhoneInfo } from '@naadi/types'; // Assuming these types exist
 // Import PhoneInput and its exported countriesData
 import PhoneInput, { countriesData } from './PhoneInput'; // Adjust path if needed
+import CustomText from 'components/CustomText';
 
 export default function PartnerSignupFormContent() {
   const defaultCountryData = countriesData.find(country => country.code === 'MA') || countriesData[0];
@@ -242,14 +241,14 @@ export default function PartnerSignupFormContent() {
     <View style={styles.formWrapper}>
       <View style={styles.formContainer}>
         <View style={styles.formHeader}>
-          <Text style={styles.formTitle}>Ready to grow your business?</Text>
-          <Text style={styles.formSubtitle}>Fill out the form below to see what Naadi can do for your company.</Text>
+          <CustomText style={styles.formTitle}>Ready to grow your business?</CustomText>
+          <CustomText style={styles.formSubtitle}>Fill out the form below to see what Naadi can do for your company.</CustomText>
         </View>
 
         <View style={styles.form}>
           {/* Email Field */}
           <View style={styles.formGroup}>
-            <Text style={styles.label}>Email <Text style={styles.required}>*</Text></Text>
+            <CustomText style={styles.label}>Email <CustomText style={styles.required}>*</CustomText></CustomText>
             <TextInput
               style={[styles.input, validationErrors.email ? styles.inputError : null]}
               value={formData.email}
@@ -269,7 +268,7 @@ export default function PartnerSignupFormContent() {
                 isSmallScreen && styles.formGroupFullMobile,
                 isSmallScreen && { marginBottom: 18 } // Apply margin below First Name in mobile
             ]}>
-              <Text style={styles.label}>First name <Text style={styles.required}>*</Text></Text>
+              <CustomText style={styles.label}>First name <CustomText style={styles.required}>*</CustomText></CustomText>
               <TextInput
                 style={[styles.input, validationErrors.firstName ? styles.inputError : null]}
                 value={formData.firstName}
@@ -280,7 +279,7 @@ export default function PartnerSignupFormContent() {
             </View>
             {/* Last Name Group */}
             <View style={[formGroupHalfStyle, isSmallScreen && styles.formGroupFullMobile, { marginRight: 0 }]}>
-              <Text style={styles.label}>Last name <Text style={styles.required}>*</Text></Text>
+              <CustomText style={styles.label}>Last name <CustomText style={styles.required}>*</CustomText></CustomText>
               <TextInput
                 style={[styles.input, validationErrors.lastName ? styles.inputError : null]}
                 value={formData.lastName}
@@ -293,7 +292,7 @@ export default function PartnerSignupFormContent() {
 
           {/* Business Name */}
           <View style={styles.formGroup}>
-            <Text style={styles.label}>Business name <Text style={styles.required}>*</Text></Text>
+            <CustomText style={styles.label}>Business name <CustomText style={styles.required}>*</CustomText></CustomText>
             <TextInput
               style={[styles.input, validationErrors.businessName ? styles.inputError : null]}
               value={formData.businessName}
@@ -305,7 +304,7 @@ export default function PartnerSignupFormContent() {
 
           {/* Business Type */}
           <View style={styles.formGroup}>
-            <Text style={styles.label}>Business type <Text style={styles.required}>*</Text></Text>
+            <CustomText style={styles.label}>Business type <CustomText style={styles.required}>*</CustomText></CustomText>
             <View style={[styles.pickerWrapper, validationErrors.businessType ? styles.inputError : null]}>
               <Picker
                 selectedValue={formData.businessType}
@@ -322,7 +321,7 @@ export default function PartnerSignupFormContent() {
 
           {/* Website */}
           <View style={styles.formGroup}>
-            <Text style={styles.label}>Website <Text style={styles.optional}>(Optional)</Text></Text>
+            <CustomText style={styles.label}>Website <CustomText style={styles.optional}>(Optional)</CustomText></CustomText>
             <TextInput
               style={styles.input}
               value={formData.website}
@@ -336,7 +335,7 @@ export default function PartnerSignupFormContent() {
 
           {/* Location */}
           <View style={styles.formGroup}>
-            <Text style={styles.label}>Location <Text style={styles.required}>*</Text></Text>
+            <CustomText style={styles.label}>Location <CustomText style={styles.required}>*</CustomText></CustomText>
             <View style={[styles.pickerWrapper, validationErrors.location ? styles.inputError : null]}>
               <Picker
                 selectedValue={formData.location}
@@ -358,7 +357,7 @@ export default function PartnerSignupFormContent() {
 
           {/* Phone Field */}
           <View style={styles.phoneContainer}>
-            <Text style={styles.label}>Phone <Text style={styles.required}>*</Text></Text>
+            <CustomText style={styles.label}>Phone <CustomText style={styles.required}>*</CustomText></CustomText>
             {/* Wrapper gets border based on validationErrors */}
             <View style={[styles.phoneInputWrapper, validationErrors.phone ? styles.inputError : null]}>
                 <PhoneInput
@@ -393,27 +392,27 @@ export default function PartnerSignupFormContent() {
                 style={styles.checkbox} />
             )}
             <View style={styles.checkboxTextContainer}>
-              <Text style={styles.checkboxText}>
+              <CustomText style={styles.checkboxText}>
                 I agree to receive marketing and other communications from Naadi PR Group, and/or its affiliates.{' '}
-              </Text>
-              <Text style={styles.checkboxSubtext}>
+              </CustomText>
+              <CustomText style={styles.checkboxSubtext}>
                 You can unsubscribe from these communications at any time. For more information, please review our{' '}
-                <Text style={styles.link} onPress={() => Linking.openURL('#')}>Terms of Use</Text> and{' '}
-                <Text style={styles.link} onPress={() => Linking.openURL('#')}>Privacy Policy</Text>.
-              </Text>
+                <CustomText style={styles.link}>Terms of Use</CustomText> and{' '}
+                <CustomText style={styles.link}>Privacy Policy</CustomText>.
+              </CustomText>
             </View>
           </View>
 
           {/* Error & Success Messages */}
-          {error && <Text style={styles.errorText}>{error}</Text>}
-          {successMessage && <Text style={styles.successText}>{successMessage}</Text>}
+          {error && <CustomText style={styles.errorText}>{error}</CustomText>}
+          {successMessage && <CustomText style={styles.successText}>{successMessage}</CustomText>}
 
           {/* Submit Button */}
           <TouchableOpacity
             style={[styles.submitButton, loading && styles.submitButtonDisabled]}
             onPress={handleSubmit}
             disabled={loading} >
-            {loading ? <ActivityIndicator color="#fff" size="small" /> : <Text style={styles.submitButtonText}>Get started</Text>}
+            {loading ? <ActivityIndicator color="#fff" size="small" /> : <CustomText style={styles.submitButtonText}>Get started</CustomText>}
           </TouchableOpacity>
         </View>
       </View>

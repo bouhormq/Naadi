@@ -1,11 +1,11 @@
 // ... existing code ...
 import { 
   View, 
-  Text, 
   StyleSheet,
   TouchableOpacity
 } from 'react-native';
 import { useRouter, usePathname } from 'expo-router';
+import CustomText from 'components/CustomText';
 
 
 export default function CTASection() {
@@ -18,12 +18,12 @@ export default function CTASection() {
       styles.container,
       isHomePage ? styles.homeContainer : null // Apply different style if it's the home page
     ]}>
-      <Text style={styles.title}>What are you waiting for?</Text>
-      <Text style={styles.subtitle}>
+      <CustomText style={styles.title}>What are you waiting for?</CustomText>
+      <CustomText style={styles.subtitle}>
         Join other businesses who trust Naadi to reduce costs and increase revenue.
-      </Text>
+      </CustomText>
       <TouchableOpacity style={styles.button} onPress={() => router.push('/partners/signup')}>
-        <Text style={styles.buttonText}>Get Started</Text>
+        <CustomText style={styles.buttonText}>Get Started</CustomText>
       </TouchableOpacity>
     </View>
   );

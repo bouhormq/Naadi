@@ -1,11 +1,11 @@
 import {
   View,
-  Text,
   StyleSheet,
   Image,
   // Dimensions, // No longer needed
   useWindowDimensions, // Import the hook
 } from 'react-native';
+import CustomText from 'components/CustomText';
 
 // Define a breakpoint for switching layouts (adjust as needed)
 const TWO_COLUMN_BREAKPOINT = 768; // Example: Tablets and wider get 2 columns
@@ -19,12 +19,12 @@ export default function SmartToolsSection() {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>
-          SmartTools <Text style={styles.highlight}>101</Text>
-        </Text>
-        <Text style={styles.subtitle}>
+        <CustomText style={styles.title}>
+          SmartTools <CustomText style={styles.highlight}>101</CustomText>
+        </CustomText>
+        <CustomText style={styles.subtitle}>
           SmartTools, an intelligent spot management system, uses real-time data to predict empty spots and adjust rates to fill them.
-        </Text>
+        </CustomText>
       </View>
 
       {/* Apply conditional styles to the container */}
@@ -42,12 +42,12 @@ export default function SmartToolsSection() {
             style={styles.toolImage}
             resizeMode="cover" // Added resizeMode for better image handling
           />
-          <Text style={styles.toolTitle}>
-            Smart<Text style={styles.highlight}>Spot</Text>
-          </Text>
-          <Text style={styles.toolDescription}>
+          <CustomText style={styles.toolTitle}>
+            Smart<CustomText style={styles.highlight}>Spot</CustomText>
+          </CustomText>
+          <CustomText style={styles.toolDescription}>
             By analyzing historic booking patterns, SmartSpot only lists spots that you're less likely to fill on your own, so you can protect your direct clientele.
-          </Text>
+          </CustomText>
         </View>
 
         <View style={[
@@ -59,12 +59,12 @@ export default function SmartToolsSection() {
             style={styles.toolImage}
             resizeMode="cover" // Added resizeMode for better image handling
           />
-          <Text style={styles.toolTitle}>
-            Smart<Text style={styles.highlight}>Rate</Text>
-          </Text>
-          <Text style={styles.toolDescription}>
+          <CustomText style={styles.toolTitle}>
+            Smart<CustomText style={styles.highlight}>Rate</CustomText>
+          </CustomText>
+          <CustomText style={styles.toolDescription}>
             SmartRate dynamically prices your available spots based on factors like popularity, location and time to help you optimize your revenue.
-          </Text>
+          </CustomText>
         </View>
       </View>
     </View>

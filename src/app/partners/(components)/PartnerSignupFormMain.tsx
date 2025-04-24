@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import {
   View,
-  Text,
   StyleSheet,
   useWindowDimensions,
   Platform,
@@ -10,6 +9,7 @@ import {
 } from 'react-native';
 // Removed PartnerSignupRequest import as it's not used here anymore
 import PartnerSignupFormContent from './PartnerSignupFormContent'; // Ensure the import path is correct
+import CustomText from 'components/CustomText';
 
 // Define image source - ADJUST THE PATH AS NEEDED
 const columnBackgroundImage = require('../(assets)/hero-background.webp');
@@ -90,16 +90,16 @@ export default function PartnerSignupFormMain() {
     <View style={pageContainerStyle}>
       {/* Left Column / Header Section */}
       <View style={headerSectionStyle}>
-         <Text style={[styles.mainTitle, { textAlign: isWideScreen ? 'left' : 'center' }]}>
+         <CustomText style={[styles.mainTitle, { textAlign: isWideScreen ? 'left' : 'center' }]}>
           Increase the revenue of your{' '}
           <Animated.Text style={[styles.freeText, { opacity: fadeAnim }]}>
             {businessWords[currentWordIndex]}
           </Animated.Text>
-          {' '}for <Text style={styles.freeText}>free</Text> with <Text style={styles.brandText}>Naadi</Text>
-        </Text>
-        <Text style={[styles.mainSubtitle, { textAlign: isWideScreen ? 'left' : 'center' }]}>
+          {' '}for <CustomText style={styles.freeText}>free</CustomText> with <CustomText style={styles.brandText}>Naadi</CustomText>
+        </CustomText>
+        <CustomText style={[styles.mainSubtitle, { textAlign: isWideScreen ? 'left' : 'center' }]}>
           List your business on Naadi to reach thousands of new customers, fill unbooked spots, and maximize your revenue.
-        </Text>
+        </CustomText>
       </View>
 
       {/* Right Column / Form Section (ImageBackground) */}

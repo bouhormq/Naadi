@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { View, Text, TextInput, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
+import CustomText from 'components/CustomText';
 
 export default function BusinessLoginScreen() {
   const router = useRouter();
@@ -34,9 +35,9 @@ export default function BusinessLoginScreen() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Partner Login</Text>
+      <CustomText style={styles.title}>Partner Login</CustomText>
       
-      {error && <Text style={styles.error}>{error}</Text>}
+      {error && <CustomText style={styles.error}>{error}</CustomText>}
       
       <TextInput
         style={styles.input}
@@ -64,7 +65,7 @@ export default function BusinessLoginScreen() {
         {loading ? (
           <ActivityIndicator color="#fff" />
         ) : (
-          <Text style={styles.buttonText}>Log In</Text>
+          <CustomText style={styles.buttonText}>Log In</CustomText>
         )}
       </TouchableOpacity>
       
@@ -72,7 +73,7 @@ export default function BusinessLoginScreen() {
         style={styles.linkButton}
         onPress={() => router.push('/partners/signup')}
       >
-        <Text style={styles.linkText}>Need an account? Sign Up Your Partner</Text>
+        <CustomText style={styles.linkText}>Need an account? Sign Up Your Partner</CustomText>
       </TouchableOpacity>
     </View>
   );

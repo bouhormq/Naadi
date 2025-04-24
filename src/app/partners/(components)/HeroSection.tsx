@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import {
   View,
-  Text,
   StyleSheet,
   TouchableOpacity,
   Image,
@@ -9,6 +8,7 @@ import {
   useWindowDimensions,
 } from 'react-native';
 import { useRouter } from 'expo-router';
+import CustomText from 'components/CustomText';
 
 // --- Card Data ---
 const businessCardData = [
@@ -103,18 +103,18 @@ export default function HeroSection() {
         style={[styles.cardImage, !isDesktopLayout && styles.cardImageMobile]}
         resizeMode="cover"
       />
-      <Text style={styles.cardTitle}>{item.title}</Text>
-      <Text style={styles.cardText}>{item.text}</Text>
+      <CustomText style={styles.cardTitle}>{item.title}</CustomText>
+      <CustomText style={styles.cardText}>{item.text}</CustomText>
     </View>
   );
 
   return (
     <View style={styles.container}>
       <View style={styles.content}>
-        <Text style={styles.title}>How partnering with Naadi works</Text>
-        <Text style={styles.subtitle}>
+        <CustomText style={styles.title}>How partnering with Naadi works</CustomText>
+        <CustomText style={styles.subtitle}>
           Find out how to list your classes and appointments on Naadi to scale your business.
-        </Text>
+        </CustomText>
 
         {/* --- Updated Tabs --- */}
         <View style={styles.tabContainer}>
@@ -127,7 +127,7 @@ export default function HeroSection() {
               ]}
               onPress={() => setActiveTab('partneres')}
             >
-              <Text 
+              <CustomText 
                 style={[
                   styles.tabText,
                   { 
@@ -141,7 +141,7 @@ export default function HeroSection() {
                 ellipsizeMode="tail" // Add ellipsis if text is too long
               >
                 For partneres
-              </Text>
+              </CustomText>
             </TouchableOpacity>
             <TouchableOpacity
               style={[
@@ -151,7 +151,7 @@ export default function HeroSection() {
               ]}
               onPress={() => setActiveTab('members')}
             >
-              <Text 
+              <CustomText 
                 style={[
                   styles.tabText,
                   { 
@@ -165,7 +165,7 @@ export default function HeroSection() {
                 ellipsizeMode="tail" // Add ellipsis if text is too long
               >
                 For Naadi members
-              </Text>
+              </CustomText>
             </TouchableOpacity>
           </View>
         </View>
@@ -181,7 +181,7 @@ export default function HeroSection() {
           scrollEnabled={true}
           ListFooterComponent={() => (
             <TouchableOpacity style={styles.button} onPress={() => router.push('/partners/signup')}>
-              <Text style={styles.buttonText}>Get Started</Text>
+              <CustomText style={styles.buttonText}>Get Started</CustomText>
             </TouchableOpacity>
           )}
           columnWrapperStyle={numColumns > 1 ? styles.columnWrapper : null}

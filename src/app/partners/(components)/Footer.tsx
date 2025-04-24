@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import {
   View,
-  Text,
   StyleSheet,
   TouchableOpacity,
   Image,
@@ -11,6 +10,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { router } from 'expo-router';
+import CustomText from 'components/CustomText';
 
 // Replace with your actual PNG paths
 const appleStorePng = require('../(assets)/appleStore.png');
@@ -43,43 +43,43 @@ export default function Footer() {
     <View style={styles.container}>
       {/* Company Section */}
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Company</Text>
+        <CustomText style={styles.sectionTitle}>Company</CustomText>
         <TouchableOpacity style={styles.linkItem}>
-          <Text onPress={() => router.push('/partners')} style={styles.linkText}>About us</Text>
+          <CustomText onPress={() => router.push('/partners')} style={styles.linkText}>About us</CustomText>
         </TouchableOpacity>
         <TouchableOpacity style={styles.linkItem}>
-          <Text onPress={() => router.push('/partners/how-it-works')} style={styles.linkText}>How it works</Text>
+          <CustomText onPress={() => router.push('/partners/how-it-works')} style={styles.linkText}>How it works</CustomText>
         </TouchableOpacity>
       </View>
 
       {/* Support Section */}
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Support</Text>
+        <CustomText style={styles.sectionTitle}>Support</CustomText>
         <TouchableOpacity style={styles.linkItem}>
-          <Text onPress={() => router.push('/partners/contact')} style={styles.linkText}>Contact Us</Text>
+          <CustomText onPress={() => router.push('/partners/contact')} style={styles.linkText}>Contact Us</CustomText>
         </TouchableOpacity>
         <TouchableOpacity style={styles.linkItem}>
-          <Text onPress={() => router.push('/partners/faq')} style={styles.linkText}>FAQ</Text>
+          <CustomText onPress={() => router.push('/partners/faq')} style={styles.linkText}>FAQ</CustomText>
         </TouchableOpacity>
       </View>
 
       {/* Partners Section */}
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Partners</Text>
+        <CustomText style={styles.sectionTitle}>Partners</CustomText>
         <TouchableOpacity style={styles.linkItem}>
-          <Text onPress={() => router.push('/partners/signup')} style={styles.linkText}>Become a Partner</Text>
+          <CustomText onPress={() => router.push('/partners/signup')} style={styles.linkText}>Become a Partner</CustomText>
         </TouchableOpacity>
       </View>
 
       {/* Language Section */}
       <View style={[styles.section, styles.languageSection]}> {/* Added languageSection style */}
-        <Text style={styles.sectionTitle}>Language</Text>
+        <CustomText style={styles.sectionTitle}>Language</CustomText>
         {/* Language Selector */}
         <TouchableOpacity
           style={styles.languageSelector}
           onPress={toggleLanguageDropdown}
         >
-          <Text style={styles.linkText}>{selectedLanguage.name}</Text>
+          <CustomText style={styles.linkText}>{selectedLanguage.name}</CustomText>
           <Ionicons name={isLanguageDropdownVisible ? "chevron-up" : "chevron-down"} size={16} color="#fff" style={styles.chevron} />
         </TouchableOpacity>
 
@@ -96,7 +96,7 @@ export default function Footer() {
                   ]}
                   onPress={() => changeLanguage(language)}
                 >
-                  <Text style={styles.languageOptionText}>{language.name}</Text>
+                  <CustomText style={styles.languageOptionText}>{language.name}</CustomText>
                   {selectedLanguage.code === language.code && (
                     <Ionicons name="checkmark" size={18} color="#4CAF50" />
                   )}
@@ -109,7 +109,7 @@ export default function Footer() {
 
       {/* Mobile App Section */}
       <View style={styles.mobileSection}>
-        <Text style={styles.mobileSectionTitle}>Enjoy fitness on the go</Text>
+        <CustomText style={styles.mobileSectionTitle}>Enjoy fitness on the go</CustomText>
         <View style={styles.appButtons}>
           <TouchableOpacity style={styles.appButton}>
             <View style={styles.svgContainer}>

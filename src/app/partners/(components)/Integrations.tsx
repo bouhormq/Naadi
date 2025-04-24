@@ -1,10 +1,11 @@
 import {
   View,
-  Text,
   StyleSheet,
   Image,
   useWindowDimensions,
 } from 'react-native';
+import CustomText from 'components/CustomText';
+
 
 // Define a threshold for switching layouts
 const DESKTOP_BREAKPOINT = 768;
@@ -19,12 +20,12 @@ export default function Integrations() {
     <View style={styles.container}>
       <View style={[styles.contentWrapper, isDesktop ? styles.desktopLayout : styles.mobileLayout]}>
         <View style={[styles.textContainer, isDesktop ? styles.textDesktop : styles.textMobile]}>
-          <Text style={[styles.title, isDesktop ? styles.titleLeft : styles.titleCenter]}>
-            <Text style={styles.scaleText}>Easily</Text> integrate your booking system
-          </Text>
-          <Text style={[styles.subtitle, isDesktop ? styles.subtitleLeft : styles.subtitleCenter]}>
+          <CustomText style={[styles.title, isDesktop ? styles.titleLeft : styles.titleCenter]}>
+            <CustomText style={styles.scaleText}>Easily</CustomText> integrate your booking system
+          </CustomText>
+          <CustomText style={[styles.subtitle, isDesktop ? styles.subtitleLeft : styles.subtitleCenter]}>
             Naadi seamlessly integrates with your booking systems, making it easy for you to sync your schedule and avoid overbooking.
-          </Text>
+          </CustomText>
         </View>
         <View style={[styles.imageContainer, isDesktop ? styles.imageDesktop : styles.imageMobile]}>
           <Image

@@ -1,12 +1,12 @@
 import {
   View,
-  Text,
   StyleSheet,
   Image,
   useWindowDimensions,
   TouchableOpacity
 } from 'react-native';
 import { useRouter } from 'expo-router';
+import CustomText from 'components/CustomText';
 
 
 // --- Card Data ---
@@ -64,8 +64,8 @@ export default function Steps() {
           resizeMode="contain"
         />
       </View>
-      <Text style={styles.cardTitle}>{item.title}</Text>
-      <Text style={styles.cardText}>{item.text}</Text>
+      <CustomText style={styles.cardTitle}>{item.title}</CustomText>
+      <CustomText style={styles.cardText}>{item.text}</CustomText>
     </View>
   );
 
@@ -78,15 +78,15 @@ export default function Steps() {
         styles.content,
         isDesktop ? styles.contentDesktop : styles.contentMobile
       ]}>
-        <Text style={styles.title}>
+        <CustomText style={styles.title}>
           How it works 
-        </Text>
-        <Text style={[
+        </CustomText>
+        <CustomText style={[
           styles.subtitle,
           isDesktop ? styles.subtitleDesktop : styles.subtitleMobile
         ]}>
           Naadi uses SmartTools, an intelligent spot management system, to dynamically price classes and appointments and maximize your revenue.
-        </Text>
+        </CustomText>
         
         {/* Cards container - explicitly set to wrap properly */}
         <View style={[
@@ -107,7 +107,7 @@ export default function Steps() {
           onPress={() => router.push('/partners/how-it-works')} 
           style={styles.button}
         >
-          <Text style={styles.buttonText}>Learn More</Text>
+          <CustomText style={styles.buttonText}>Learn More</CustomText>
         </TouchableOpacity>
       </View>
     </View>

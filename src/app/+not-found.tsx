@@ -1,5 +1,6 @@
 import { Link, router, Stack } from 'expo-router';
-import { StyleSheet, Text, View, Platform, TouchableOpacity } from 'react-native';
+import { StyleSheet, View, Platform, TouchableOpacity } from 'react-native';
+import CustomText from 'components/CustomText';
 
 export default function NotFoundScreen() {
   return (
@@ -7,20 +8,20 @@ export default function NotFoundScreen() {
       <Stack.Screen options={{ title: 'Oops! This screen doesn\'t exist.' }} />
       <View style={styles.header}>
       <TouchableOpacity onPress={() => router.push('/')} style={styles.logoContainer}>
-        <Text style={styles.logo}>naadi</Text>
+        <CustomText style={styles.logo}>naadi</CustomText>
       </TouchableOpacity>
       <View style={styles.headerButtons}>
         <TouchableOpacity style={styles.headerButton}>
-          <Text style={styles.menuItemText}>Sign up</Text>
+          <CustomText style={styles.menuItemText}>Sign up</CustomText>
         </TouchableOpacity>
         <TouchableOpacity style={styles.button}>
-          <Text style={styles.buttonText}>Log in</Text>
+          <CustomText style={styles.buttonText}>Log in</CustomText>
         </TouchableOpacity>
       </View>
       </View>
       <View style={styles.container}>
-        <Text style={styles.title}>🚧 Oops! Page<Text style={styles.notFound}> Not Found...</Text></Text>
-        <Text style={[styles.mainSubtitle]}> Great choice of page tho, too bad it doesn’t exist.</Text>
+        <CustomText style={styles.title}>🚧 Oops! Page<CustomText style={styles.notFound}> Not Found...</CustomText></CustomText>
+        <CustomText style={[styles.mainSubtitle]}> Great choice of page tho, too bad it doesn’t exist.</CustomText>
       </View>
     </>
   );

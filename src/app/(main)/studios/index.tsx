@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { View, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import CustomText from 'components/CustomText';
 
 // This would be replaced with a real hook to fetch studios
 const useBusinessStudios = () => {
@@ -36,8 +37,8 @@ export default function StudiosScreen() {
   if (error) {
     return (
       <View style={styles.centered}>
-        <Text style={styles.errorText}>Failed to load studios.</Text>
-        <Text style={styles.errorSubText}>{error.message}</Text>
+        <CustomText style={styles.errorText}>Failed to load studios.</CustomText>
+        <CustomText style={styles.errorSubText}>{error.message}</CustomText>
       </View>
     );
   }
@@ -49,16 +50,16 @@ export default function StudiosScreen() {
         onPress={navigateToAddStudio}
       >
         <Ionicons name="add" size={20} color="#fff" />
-        <Text style={styles.addButtonText}>Add New Studio</Text>
+        <CustomText style={styles.addButtonText}>Add New Studio</CustomText>
       </TouchableOpacity>
 
       {studios.length === 0 ? (
         <View style={styles.emptyState}>
           <Ionicons name="partner-outline" size={64} color="#ccc" />
-          <Text style={styles.emptyStateText}>No Studios Yet</Text>
-          <Text style={styles.emptyStateSubText}>
+          <CustomText style={styles.emptyStateText}>No Studios Yet</CustomText>
+          <CustomText style={styles.emptyStateSubText}>
             Add your first studio to get started
-          </Text>
+          </CustomText>
         </View>
       ) : (
         <FlatList
@@ -70,8 +71,8 @@ export default function StudiosScreen() {
               onPress={() => navigateToStudioDetail(item.id)}
             >
               <View style={styles.studioInfo}>
-                <Text style={styles.studioName}>{item.name}</Text>
-                <Text style={styles.studioAddress} numberOfLines={1}>{item.address}</Text>
+                <CustomText style={styles.studioName}>{item.name}</CustomText>
+                <CustomText style={styles.studioAddress} numberOfLines={1}>{item.address}</CustomText>
               </View>
               <Ionicons name="chevron-forward" size={24} color="#999" />
             </TouchableOpacity>
