@@ -13,9 +13,11 @@ import {
   ScrollView
 } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
-import CustomText from 'components/CustomText';
+import CustomText from '@/components/CustomText';
 // Import PhoneInput and its exported countriesData
 import PhoneInput, { countriesData } from './PhoneInput'; // Adjust path if needed
+// Import the new API helper function
+import { submitPartnerContactRequest } from '../../../api/partner'; // Adjust path if needed
 
 export interface PhoneInfo {
   code: string;
@@ -189,46 +191,37 @@ export default function ContactForm() {
         return;
     }
 
-    // --- Proceed with API Call ---
+    // --- Proceed with API Call using Callable Function ---
     setLoading(true);
     try {
-      const response = await fetch('https://api-3k2a2q5awq-no.a.run.app/partner-contact-request', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
-      });
+      // Call the helper function instead of fetch
+      const result = await submitPartnerContactRequest(formData);
 
-      if (!response.ok) {
-        let errorDetail = `HTTP error! status: ${response.status}`;
-         try {
-             const errorBody = await response.text(); // Try reading text body
-             if (errorBody) errorDetail += ` - ${errorBody}`;
-         } catch (parseError) { console.error('Failed to parse API error body:', parseError); }
-        throw new Error(errorDetail);
+      // Assuming result contains { success: boolean, message: string }
+      if (result.success) {
+          setSuccessMessage(result.message || 'Thank you for your message! We will be in touch shortly.');
+          setSuccessfullySubmitted(true);
+          // Reset form
+          setFormData({
+            email: '', firstName: '', lastName: '', businessName: '', website: '',
+            businessType: '', location: '', message: '',
+            phone: { code: defaultCountryData.code, name: defaultCountryData.name, number: '', dialCode: defaultCountryData.dialCode },
+            consent: false,
+          });
+          setValidationErrors({});
+          setPhoneValid(true);
+      } else {
+           setError(result.message || 'Submission failed. Please try again.');
+           setSuccessfullySubmitted(false);
       }
 
-      setSuccessMessage('Thank you for your message! We will be in touch shortly.');
-      setSuccessfullySubmitted(true);
-      // Reset form
-      setFormData({
-        email: '', firstName: '', lastName: '', businessName: '', website: '',
-        businessType: '', location: '', message: '',
-        phone: { code: defaultCountryData.code, name: defaultCountryData.name, number: '', dialCode: defaultCountryData.dialCode },
-        consent: false,
-      });
-      setValidationErrors({});
-      setPhoneValid(true); // Reset validity state
-
-    } catch (err) {
-      console.error('Contact form submission error:', err);
-      // Don't show HTTP errors directly to the user generally
-      setError(err instanceof Error && err.message.startsWith('HTTP error!') ? 'Failed to submit form. Please try again later.' : (err instanceof Error ? err.message : 'An unexpected error occurred.'));
+    } catch (err: any) { // Catch errors thrown by the helper function or httpsCallable
+      console.error('Contact form submission error (callable):', err);
+      setError(err.message || 'An unexpected error occurred.');
       setSuccessMessage(null);
       setSuccessfullySubmitted(false);
-      // Decide whether to keep validation errors shown or clear them on API error
-      // Clearing them might be less confusing if it's a server issue
-       setValidationErrors({});
-       setPhoneValid(true);
+      setValidationErrors({});
+      setPhoneValid(true);
     } finally {
       setLoading(false);
     }

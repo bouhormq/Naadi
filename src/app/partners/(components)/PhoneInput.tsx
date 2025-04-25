@@ -9,7 +9,7 @@ import {
   Animated,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons'; // Ensure this import works in your setup
-import CustomText from 'components/CustomText';
+import CustomText from '@/components/CustomText';
 
 export const countriesData = [
     { "code": "MA", "name": "Morocco", "flag": "🇲🇦", "dialCode": "+212" },

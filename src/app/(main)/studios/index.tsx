@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import CustomText from 'components/CustomText';
+import CustomText from '@/components/CustomText';
 
 // This would be replaced with a real hook to fetch studios
 const useBusinessStudios = () => {

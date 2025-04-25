@@ -5,7 +5,7 @@ import {
   TouchableOpacity
 } from 'react-native';
 import { useRouter, usePathname } from 'expo-router';
-import CustomText from 'components/CustomText';
+import CustomText from '@/components/CustomText';
 
 
 export default function CTASection() {

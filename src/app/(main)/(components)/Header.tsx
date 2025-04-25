@@ -5,12 +5,19 @@ import {
   useWindowDimensions,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import CustomText from 'components/CustomText';
+import CustomText from '@/components/CustomText';
 
 export default function Header() {
   const router = useRouter();
   const { width } = useWindowDimensions();
 
+  const navigateToLogin = () => {
+    router.push('/login');
+  };
+
+  const navigateToSignup = () => {
+    router.push('/signup'); // Assuming you have a general user signup page at /signup
+  };
 
   return (
     <View style={styles.header}>
@@ -18,10 +25,10 @@ export default function Header() {
         <CustomText style={styles.logo}>naadi</CustomText>
       </TouchableOpacity>
       <View style={styles.headerButtons}>
-        <TouchableOpacity style={styles.headerButton}>
+        <TouchableOpacity style={styles.headerButton} onPress={navigateToSignup}>
           <CustomText style={styles.menuItemText}>Sign up</CustomText>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.button}>
+        <TouchableOpacity style={styles.button} onPress={navigateToLogin}> 
           <CustomText style={styles.buttonText}>Log in</CustomText>
         </TouchableOpacity>
       </View>

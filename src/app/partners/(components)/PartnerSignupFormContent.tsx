@@ -15,7 +15,9 @@ import { Picker } from '@react-native-picker/picker';
 import { PartnerSignupRequest, PhoneInfo } from '@naadi/types'; // Assuming these types exist
 // Import PhoneInput and its exported countriesData
 import PhoneInput, { countriesData } from './PhoneInput'; // Adjust path if needed
-import CustomText from 'components/CustomText';
+import CustomText from '@/components/CustomText';
+// Import the new API helper function
+import { submitPartnerRegistrationRequest } from '../../../api/partner'; // Adjust path if needed
 
 export default function PartnerSignupFormContent() {
   const defaultCountryData = countriesData.find(country => country.code === 'MA') || countriesData[0];
@@ -174,51 +176,39 @@ export default function PartnerSignupFormContent() {
         return;
     }
 
-    // --- Proceed with API Call ---
-    // console.log('Validation passed. Submitting:', formData);
+    // --- Proceed with API Call using Callable Function --- 
     setLoading(true);
     try {
-      const response = await fetch('https://api-3k2a2q5awq-no.a.run.app/partner-register-request', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
-      });
+      // Call the helper function instead of fetch
+      const result = await submitPartnerRegistrationRequest(formData);
 
-      if (!response.ok) {
-        let errorDetail = `HTTP error! status: ${response.status}`;
-         try {
-             const errorBody = await response.text(); // Try reading text body
-             if (errorBody) errorDetail += ` - ${errorBody}`;
-             console.error('API error response body:', errorBody);
-         } catch (parseError) { console.error('Failed to parse API error body:', parseError); }
-        throw new Error(errorDetail);
+      // Assuming result contains { success: boolean, message: string }
+      if (result.success) {
+          setSuccessMessage(result.message || 'Thank you for signing up! We will be in touch shortly.');
+          setSuccessfullySubmitted(true);
+          // Reset form
+          setFormData({
+            email: '', firstName: '', lastName: '', businessName: '', website: '',
+            businessType: '', location: '',
+            phone: { code: defaultCountryData.code, name: defaultCountryData.name, number: '', dialCode: defaultCountryData.dialCode },
+            consent: false,
+          });
+          setValidationErrors({});
+          setPhoneValid(true); 
+      } else {
+          // Handle cases where the function itself indicates failure (though errors are usually thrown)
+          setError(result.message || 'Submission failed. Please try again.');
+          setSuccessfullySubmitted(false);
       }
 
-      // const result = await response.json(); // Assuming JSON response on success
-      // console.log('Signup successful:', result);
-
-      setSuccessMessage('Thank you for signing up! We will be in touch shortly.');
-      setSuccessfullySubmitted(true);
-      // Reset form
-      setFormData({
-        email: '', firstName: '', lastName: '', businessName: '', website: '',
-        businessType: '', location: '',
-        phone: { code: defaultCountryData.code, name: defaultCountryData.name, number: '', dialCode: defaultCountryData.dialCode },
-        consent: false,
-      });
-      setValidationErrors({});
-      setPhoneValid(true); // Reset validity state
-
-    } catch (err) {
-      console.error('Signup error:', err);
-      // Don't show HTTP errors directly to the user generally
-      setError(err instanceof Error && err.message.startsWith('HTTP error!') ? 'Failed to sign up. Please try again later.' : (err instanceof Error ? err.message : 'An unexpected error occurred.'));
+    } catch (err: any) { // Catch errors thrown by the helper function or httpsCallable
+      console.error('Signup error (callable):', err);
+      setError(err.message || 'An unexpected error occurred during signup.');
       setSuccessMessage(null);
       setSuccessfullySubmitted(false);
-      // Decide whether to keep validation errors shown or clear them on API error
-      // Clearing them might be less confusing if it's a server issue
-       setValidationErrors({});
-       setPhoneValid(true);
+      // Clear validation errors on server-side error
+      setValidationErrors({});
+      setPhoneValid(true);
     } finally {
       setLoading(false);
     }

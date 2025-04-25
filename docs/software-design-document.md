@@ -4,283 +4,135 @@
 
 ### 1.1 Purpose
 
-This Software Design Document (SDD) details the architecture and implementation of "Naadi," a platform that connects users to fitness studios via map-based browsing and enables partneres to manage their offerings. It ensures the system meets the needs of a user app (accessible via naadi.ma) and a partner app (accessible via naadi.ma/partner), leveraging Expo EAS Hosting and Firebase Firestore.
+This Software Design Document (SDD) details the architecture and implementation of "Naadi," a platform connecting users to fitness studios and enabling partners to manage their offerings. It outlines a single Expo application project that builds two distinct app variants: a user-facing app ('main') and a partner-facing app ('partner'), configured dynamically. The system utilizes Expo Router for navigation and Firebase Firestore for backend data.
 
 ### 1.2 Scope
 
-Naadi consists of two applications:
+Naadi consists of a single codebase building two app variants:
 
-- **Naadi User**: Allows users to browse studios on a map, book classes, and manage bookings, available on mobile and naadi.ma (web).
-- **Naadi Partner**: Enables studio owners to manage studios, classes, and bookings, available on mobile and naadi.ma/partner (web).
+- **Naadi (main variant)**: Allows users to browse studios, book classes, and manage bookings. Available on mobile and potentially web.
+- **Naadi Partner (partner variant)**: Enables studio owners to manage studios, classes, and bookings. Available on mobile and potentially web.
 
 Key features include:
-
-- A web entry at naadi.ma with a "For partneres" button linking to naadi.ma/partner.
-- A partner signup form at naadi.ma/partner collecting contact info.
-- Role-based login redirecting to the appropriate app.
-- Map-based studio browsing in the user app.
+- Dynamic configuration based on the `EXPO_PUBLIC_APP_VARIANT` environment variable.
+- Role-based access control within the application logic.
+- Map-based studio browsing in the user variant.
+- Management features in the partner variant.
 
 ### 1.3 Terminology
 
-- **EAS**: Expo Application Services, for building and hosting apps.
-- **Expo Router**: File-based routing for navigation and API endpoints.
+- **EAS**: Expo Application Services, for building and deploying app variants.
+- **Expo Router**: File-based routing for navigation within the app.
 - **Firestore**: NoSQL database for data storage.
-- **Subrepo**: Git subrepository for modular package management.
+- **App Variant**: A specific build configuration of the app (e.g., 'main' or 'partner') determined at build time.
+- **API Helpers**: Functions located in `src/api` used to interact with backend services (e.g., Firebase Functions or a separate API).
 
 ## 2. System Overview
 
 ### 2.1 System Architecture
 
-Naadi uses a client-server architecture within a monorepo:
+Naadi uses a client-server architecture within a single Expo project:
 
-- **Frontend**: Expo-based apps (naadi-user, naadi-partner) for mobile and web, built with React Native and Expo Router.
-- **Backend**: Firebase Firestore for data, with server-side logic in EAS-hosted API routes.
-- **Shared Packages**: packages/types/ for type definitions and packages/api/ for API logic, both as subrepos.
+- **Frontend**: A single Expo app codebase (`app/`) using React Native and Expo Router for navigation. Builds are configured into 'main' or 'partner' variants via `src/app.config.js` and `eas.json`.
+- **Backend**: Firebase Firestore for data storage and Firebase Authentication. Business logic requiring server-side execution resides in Firebase Functions (or a separate dedicated backend API), *not* Expo Router API routes.
+- **API Interaction**: Client-side API calls are managed through helper functions located in `src/api`.
 
 ### 2.2 High-Level Design
 
 ```
-+------------------+       +------------------+       +------------------+
-| naadi.ma         |       | naadi.ma/partner|       | EAS Hosting      |
-| (naadi-user)     |       | (naadi-partner) |       | (API + Web)      |
-| - Home w/ Button |<----->| - Signup Form    |<----->| - API Routes     |
-| - Map Browsing   |       | - Login          |       | - Web Deployment |
-| - Login/Signup   |       | - Partner Feat. |       |                  |
-+------------------+       +------------------+       +------------------+
-         |                            |                      |
-         v                            v                      v
-+------------------+       +------------------+       +------------------+
-| Mobile App       |       | Mobile App       |       | Firebase         |
-| (naadi-user)     |       | (naadi-partner) |       | - Firestore      |
-| - Map/Browse     |       | - Manage Studios |       | - Authentication |
-+------------------+       +------------------+       +------------------+
++---------------------+       +------------------------+       +---------------------+
+| Expo App (Variant)  |       | src/api Helper Functions |       | Firebase Services   |
+| - UI (React Native) | ----> | - Fetch/Mutate Data    | ----> | - Firestore         |
+| - Navigation (Expo) |       | - Business Logic Calls |       | - Authentication    |
+| - Variant Config    |       +------------------------+       | - Functions (Cloud) |
++---------------------+                                        +---------------------+
+       |                                                            ^
+       | Build Variants via EAS                                     | (Direct SDK or Functions)
+       v
++---------------------+       +---------------------+
+| Naadi App (Main)    |       | Naadi Partner App   |
+| (iOS, Android, Web) |       | (iOS, Android, Web) |
++---------------------+       +---------------------+
 ```
 
 ## 3. System Components
 
 ### 3.1 Folder Structure
 
+The project follows a standard Expo project structure, adapted for variants:
+
 ```
 naadi/
-├── packages/              # Subrepo packages
-│   ├── types/             # Shared types (subrepo)
-│   └── api/               # Shared API routes (subrepo)
-├── naadi-user/            # User app (mobile + naadi.ma)
-├── naadi-partner/        # Partner app (mobile + naadi.ma/partner)
-└── package.json           # Root monorepo config
+├── cloud-functions/      # Firebase functions project
+│   ├── functions/        # Functions source code
+│   │   ├── src/          # Example TS source folder
+│   │   ├── utils/        # Shared logic for functions
+│   │   └── ...
+│   ├── firebase.json     # Firebase config
+│   ├── package.json      # Dependencies for functions
+│   └── ...
+├── docs/                 # Project documentation
+│   ├── software-design-document.md
+│   └── ...
+├── src/                  # Expo app source code
+│   ├── app/              # Expo Router: Screens, Layouts ((main), (partners), etc.)
+│   │   ├── (main)/       # Screens/components specific to the main user app
+│   │   │   ├── (tabs)/   # Example: Tab navigation layout for main app
+│   │   │   │   └── ...
+│   │   │   ├── (assets)/ # Assets specific to main variant (icon, splash)
+│   │   │   └── ...       # Other main app screens/routes
+│   │   ├── partners/     # Screens/components specific to the partner app
+│   │   │   ├── (tabs)/   # Example: Tab navigation layout for partner app
+│   │   │   │   └── ...
+│   │   │   ├── (assets)/ # Assets specific to partner variant (icon, splash)
+│   │   │   └── ...       # Other partner app screens/routes
+│   │   ├── _layout.tsx   # Root layout, potentially handling variant logic
+│   │   └── ...           # Other shared screens/routes
+│   ├── api/              # Client-side API helper functions (calling Cloud Functions)
+│   │   ├── firebase.js   # Firebase initialization
+│   │   ├── auth.js       # Authentication functions (login, signup)
+│   │   ├── studios.js    # Studio data functions
+│   │   └── ...           # Other API modules
+│   ├── components/       # Shared UI components
+│   ├── assets/           # Shared assets (fonts, generic images)
+│   ├── hooks/            # Shared custom React hooks
+│   ├── contexts/         # Shared React contexts (e.g., AuthContext)
+│   ├── utils/            # Shared utility functions
+│   ├── app.config.js     # Expo configuration, dynamically selects variant settings
+│   ├── eas.json          # EAS build configuration (defines variants/profiles)
+│   ├── tsconfig.json     # TypeScript config for the Expo app
+│   └── ...               # Other source files (tsconfig.json etc.)
+├── types/                # Shared TypeScript types (used by src/ and cloud-functions/)
+│   ├── index.ts
+│   └── ...
+├── .gitignore
+├── LICENSE
+├── package.json          # Dependencies and scripts for the Expo app
+├── package-lock.json
+└── README.md             # Project README file
 ```
+*Note: The exact structure within `app/` and `cloud-functions/functions/` depends on the chosen layout strategy.*
 
-#### 3.1.1 packages/types
+#### 3.1.1 `src/app.config.js`
 
-- **Purpose**: Defines Firestore schemas and API payloads as a subrepo.
-- **Structure**:
+- **Purpose**: Configures the Expo build based on the `EXPO_PUBLIC_APP_VARIANT` environment variable. Dynamically sets app name, bundle identifier, icons, splash screens, etc., for each variant ('main', 'partner').
+- **Key Logic**: Reads `process.env.EXPO_PUBLIC_APP_VARIANT` and selects the appropriate configuration object (`mainConfig` or `partnerConfig`) to export.
 
-```
-packages/types/
-├── src/
-│   ├── firestore.ts       # Firestore schemas
-│   ├── api.ts            # API request/response types
-│   └── index.ts          # Exports
-├── .git/                 # Subrepo Git folder
-├── package.json
-├── tsconfig.json
-└── dist/
-```
+#### 3.1.2 `src/api/`
 
-#### 3.1.2 packages/api
+- **Purpose**: Houses JavaScript/TypeScript modules containing functions that interact with backend services (like Firebase Firestore, Authentication, and Cloud Functions). These are *not* API routes served by Expo, but rather client-side helpers.
+- **Example Modules**: `auth.js`, `firestore.js`, `studios.js`, `bookings.js`. Functions typically handle data fetching, data mutation, and communication with the backend.
 
-- **Purpose**: Contains shared Expo Router API route logic, hosted by EAS, managed as a subrepo.
-- **Structure**:
+#### 3.1.3 `app/` Directory (Expo Router)
 
-```
-packages/api/
-├── src/
-│   ├── auth/
-│   │   ├── signup.ts      # User signup
-│   │   ├── businessSignup.ts # Partner signup
-│   │   └── login.ts       # Login
-│   ├── bookings/
-│   │   ├── create.ts
-│   │   ├── cancel.ts
-│   │   └── confirmPayment.ts
-│   ├── studios/
-│   │   ├── create.ts
-│   │   ├── update.ts
-│   │   ├── delete.ts
-│   │   └── stats.ts
-│   ├── classes/
-│   │   ├── create.ts
-│   │   ├── update.ts
-│   │   └── delete.ts
-│   ├── users/
-│   │   ├── update.ts
-│   │   └── delete.ts
-│   └── feedback/
-│       └── submit.ts
-├── utils/
-│   ├── firestore.ts       # Firestore helpers
-│   ├── payment.ts         # Payment processing
-│   ├── signupCode.ts      # Signup code validation
-│   └── apiError.ts        # Error handling
-├── .git/                 # Subrepo Git folder
-├── package.json
-├── tsconfig.json
-└── dist/
-```
+- **Purpose**: Defines the application's screens, navigation structure, and layouts using Expo Router's file-based routing conventions.
+- **Structure**: Organized potentially using route groups like `(main)` and `(partners)` to separate variant-specific UI flows. Shared layouts (`_layout.tsx`) and screens can exist at higher levels. Asset folders like `(assets)` within variant groups hold variant-specific images.
 
-#### 3.1.3 naadi-user
+#### 3.1.4 `eas.json`
 
-- **Purpose**: User app for mobile and web (naadi.ma), featuring map-based studio browsing.
-- **Structure**:
+- **Purpose**: Configures Expo Application Services (EAS) builds. Defines build profiles (e.g., `production-main`, `production-partner`, `preview-main`) that set environment variables like `EXPO_PUBLIC_APP_VARIANT` to trigger the correct configuration in `app.config.js`.
 
-```
-naadi-user/
-├── app/
-│   ├── api/
-│   │   ├── auth/
-│   │   │   ├── signup.ts  # From packages/api
-│   │   │   └── login.ts   # From packages/api
-│   │   ├── bookings/
-│   │   │   ├── create.ts
-│   │   │   └── cancel.ts
-│   │   ├── users/
-│   │   │   ├── update.ts
-│   │   │   └── delete.ts
-│   │   └── feedback/
-│   │       └── submit.ts
-│   ├── _layout.tsx        # Root layout with header
-│   ├── index.tsx          # naadi.ma home
-│   ├── index.web.tsx
-│   ├── login.tsx          # Redirects to user app
-│   ├── login.web.tsx
-│   ├── signup.tsx
-│   ├── signup.web.tsx
-│   ├── (main)/
-│   │   ├── _layout.tsx
-│   │   ├── _layout.web.tsx
-│   │   ├── _layout.native.tsx
-│   │   ├── studios/
-│   │   │   ├── _layout.tsx
-│   │   │   ├── index.tsx      # List view
-│   │   │   ├── index.web.tsx
-│   │   │   ├── mapped.tsx     # Map-based browsing
-│   │   │   ├── mapped.web.tsx
-│   │   │   ├── [id].tsx       # Studio detail
-│   │   │   └── [id].web.tsx
-│   │   ├── classes/
-│   │   │   ├── _layout.tsx
-│   │   │   ├── index.tsx
-│   │   │   ├── index.web.tsx
-│   │   │   ├── [id].tsx
-│   │   │   └── [id].web.tsx
-│   │   ├── search/
-│   │   │   ├── _layout.tsx
-│   │   │   ├── index.tsx
-│   │   │   └── index.web.tsx
-│   │   ├── upcoming/
-│   │   │   ├── _layout.tsx
-│   │   │   ├── index.tsx
-│   │   │   └── index.web.tsx
-│   │   └── profile/
-│   │       ├── _layout.tsx
-│   │       ├── index.tsx
-│   │       └── index.web.tsx
-│   └── settings/
-│       ├── _layout.tsx
-│       ├── index.tsx
-│       └── index.web.tsx
-├── components/
-│   ├── Header.tsx         # "For partneres" button
-│   ├── MapView.tsx        # Map component for browsing
-├── hooks/
-│   ├── useStudios.tsx     # Fetches studios for map
-├── utils/
-├── assets/
-├── app.json
-├── eas.json
-├── tsconfig.json
-├── package.json
-└── metro.config.js
-```
-
-#### 3.1.4 naadi-partner
-
-- **Purpose**: Partner app for mobile and web (naadi.ma/partner).
-- **Structure**:
-
-```
-naadi-partner/
-├── app/
-│   ├── api/
-│   │   ├── auth/
-│   │   │   ├── signup.ts      # From packages/api
-│   │   │   └── login.ts       # From packages/api
-│   │   ├── bookings/
-│   │   │   ├── create.ts
-│   │   │   ├── cancel.ts
-│   │   │   └── confirmPayment.ts
-│   │   ├── studios/
-│   │   │   ├── create.ts
-│   │   │   ├── update.ts
-│   │   │   ├── delete.ts
-│   │   │   └── stats.ts
-│   │   ├── classes/
-│   │   │   ├── create.ts
-│   │   │   ├── update.ts
-│   │   │   └── delete.ts
-│   │   ├── users/
-│   │   │   ├── update.ts
-│   │   │   └── delete.ts
-│   │   └── feedback/
-│   │       └── submit.ts
-│   ├── _layout.tsx
-│   ├── index.tsx          # naadi.ma/partner home
-│   ├── index.web.tsx
-│   ├── login.tsx          # Redirects to partner app
-│   ├── login.web.tsx
-│   ├── signup.tsx         # Partner signup form
-│   ├── signup.web.tsx
-│   ├── (main)/
-│   │   ├── _layout.tsx
-│   │   ├── _layout.web.tsx
-│   │   ├── _layout.native.tsx
-│   │   ├── index.tsx
-│   │   ├── index.web.tsx
-│   │   ├── studios/
-│   │   │   ├── _layout.tsx
-│   │   │   ├── index.tsx
-│   │   │   ├── index.web.tsx
-│   │   │   ├── add.tsx
-│   │   │   ├── add.web.tsx
-│   │   │   ├── [id]/
-│   │   │   │   ├── _layout.tsx
-│   │   │   │   ├── index.tsx
-│   │   │   │   ├── index.web.tsx
-│   │   │   │   ├── reservations.tsx
-│   │   │   │   ├── reservations.web.tsx
-│   │   │   │   ├── stats.tsx
-│   │   │   │   └── stats.web.tsx
-│   │   └── profile/
-│   │       ├── _layout.tsx
-│   │       ├── index.tsx
-│   │       └── index.web.tsx
-│   └── settings/
-│       ├── _layout.tsx
-│       ├── index.tsx
-│       └── index.web.tsx
-├── components/
-│   ├── BusinessSignupForm.tsx
-├── hooks/
-├── utils/
-├── assets/
-├── app.json
-├── eas.json
-├── tsconfig.json
-├── package.json
-└── metro.config.js
-```
-
-### 3.2 Data Models
+### 3.2 Data Model (Firestore)
 
 #### 3.2.1 Firestore Collections
 
@@ -317,156 +169,92 @@ naadi-partner/
 
 - **classes**, **bookings**, **signupCodes**, **feedback**: (Unchanged.)
 
-## 4. System Design
+### 3.4 API Design (Helper Functions)
 
-### 4.1 User Flow
+The application interacts with the backend (primarily Firebase) through helper functions defined in the `src/api/` directory. These functions encapsulate the logic for specific operations.
 
-- **naadi.ma (naadi-user)**:
-  - Home (app/index.tsx) includes a "For partneres" button linking to naadi.ma/partner.
-  - Map browsing (app/(main)/studios/mapped.tsx) displays studios using location data.
-  - Login (app/login.tsx) redirects to /(main) for user, or naadi.ma/partner for partner.
-  - Signup (app/signup.tsx) creates a user account.
-- **naadi.ma/partner (naadi-partner)**:
-  - Home (app/index.tsx) offers signup/login.
-  - Signup (app/signup.tsx) collects contact info, calls /api/auth/businessSignup, redirects to /(main).
-  - Login (app/login.tsx) redirects to /(main) for partner, or naadi.ma for user.
+#### 3.4.1 Authentication (`src/api/auth.js`)
 
-### 4.2 API Endpoints
+- `signInWithEmail(email, password)`: Authenticates a user.
+- `signUpUser(email, password, userData)`: Creates a new user account.
+- `signUpPartner(email, password, partnerData)`: Creates a new partner account.
+- `signOutUser()`: Signs out the current user.
+- `getCurrentUser()`: Retrieves the current authenticated user state.
 
-- **Hosted by EAS**:
-  - `/api/auth/signup`: POST, user signup.
-  - `/api/auth/businessSignup`: POST, partner signup with contact info.
-  - `/api/auth/login`: POST, authentication.
-  - `/api/bookings/create`: POST, booking creation.
-  - `/api/studios/stats`: GET, partner stats.
+#### 3.4.2 Studio Management (`src/api/studios.js`)
 
-### 4.3 Map Browsing
+- `fetchStudios(queryParams)`: Retrieves a list of studios (potentially filtered).
+- `fetchStudioById(studioId)`: Gets details for a specific studio.
+- `createStudio(studioData)`: Creates a new studio (partner action).
+- `updateStudio(studioId, updateData)`: Updates studio details (partner action).
 
-- **Component**: naadi-user/components/MapView.tsx uses a library (e.g., react-native-maps) to render studios.
-- **Data**: Fetches studios collection via useStudios.tsx, plotting location.lat and location.lng.
-- **Route**: app/(main)/studios/mapped.tsx integrates the map view.
+## 5. Deployment
 
-**naadi-user/hooks/useStudios.tsx (example)**:
-```typescript
-import { useState, useEffect } from 'react';
-import { collection, getDocs } from 'firebase/firestore';
-import { Studio } from '@naadi/types';
-import { db } from '../utils/firebase/firestore';
+### 5.1 Build Process (EAS)
 
-export function useStudios() {
-  const [studios, setStudios] = useState<Studio[]>([]);
+Builds are managed using EAS CLI and configured in `eas.json`. Different build profiles are defined for each variant and environment (e.g., development, preview, production).
 
-  useEffect(() => {
-    const fetchStudios = async () => {
-      const snapshot = await getDocs(collection(db, 'studios'));
-      setStudios(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Studio)));
-    };
-    fetchStudios();
-  }, []);
+Example `eas.json` structure:
 
-  return studios;
+```json
+{
+  "cli": { ... },
+  "build": {
+    "development-main": {
+      "developmentClient": true,
+      "distribution": "internal",
+      "env": {
+        "EXPO_PUBLIC_APP_VARIANT": "main"
+      }
+    },
+    "development-partner": {
+       "developmentClient": true,
+       "distribution": "internal",
+       "env": {
+         "EXPO_PUBLIC_APP_VARIANT": "partner"
+       }
+    },
+    "preview-main": {
+       "distribution": "internal",
+       "env": {
+         "EXPO_PUBLIC_APP_VARIANT": "main"
+       }
+       // ... other preview settings
+    },
+    "preview-partner": {
+       "distribution": "internal",
+       "env": {
+         "EXPO_PUBLIC_APP_VARIANT": "partner"
+       }
+       // ... other preview settings
+    },
+    "production-main": {
+      "env": {
+        "EXPO_PUBLIC_APP_VARIANT": "main"
+      }
+      // ... iOS/Android specific production settings
+    },
+    "production-partner": {
+      "env": {
+        "EXPO_PUBLIC_APP_VARIANT": "partner"
+      }
+      // ... iOS/Android specific production settings
+    }
+  },
+  "submit": { ... } // Submission profiles likely variant-specific too
 }
+
 ```
 
-### 4.4 Security
+To build a specific variant:
+`eas build --profile production-main`
+`eas build --profile production-partner`
 
-#### 4.4.1 Firebase Security Rules
+### 5.2 Hosting
 
-```javascript
-rules_version = '2';
-service cloud.firestore {
-  match /databases/{database}/documents {
-    function isRole(role) {
-      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == role;
-    }
-
-    match /users/{userId} {
-      allow read: if request.auth.uid == userId;
-      allow create: if request.auth.token.firebase.sign_in_provider == 'custom';
-      allow update: if request.auth.uid == userId || request.auth.token.firebase.sign_in_provider == 'custom';
-      allow delete: if request.auth.uid == userId;
-    }
-
-    match /studios/{studioId} {
-      allow read: if request.auth != null; // Public for map browsing
-      allow create, update, delete: if request.auth.token.firebase.sign_in_provider == 'custom' && isRole('partner');
-    }
-
-    match /classes/{classId} {
-      allow read: if request.auth != null;
-      allow create, update, delete: if request.auth.token.firebase.sign_in_provider == 'custom' && isRole('partner');
-    }
-
-    match /bookings/{bookingId} {
-      allow read: if request.auth.uid == resource.data.userId || isRole('partner');
-      allow create, update: if request.auth.token.firebase.sign_in_provider == 'custom';
-      allow delete: if false;
-    }
-
-    match /signupCodes/{codeId} {
-      allow read, update: if request.auth.token.firebase.sign_in_provider == 'custom' && isRole('partner');
-      allow create, delete: if false;
-    }
-
-    match /feedback/{feedbackId} {
-      allow create: if request.auth != null;
-      allow read: if request.auth.token.firebase.sign_in_provider == 'custom';
-      allow update, delete: if false;
-    }
-  }
-}
-```
-
-## 5. Implementation Details
-
-### 5.1 Technology Stack
-
-- **Frontend**: React Native, Expo SDK 52, Expo Router v3, react-native-maps for map browsing.
-- **Backend**: Firebase Firestore, Firebase Authentication.
-- **Hosting**: EAS (mobile + web/API).
-- **Subrepos**: Git subrepos for packages/types and packages/api.
-
-### 5.2 Deployment
-
-- **Subrepos**:
-  - git subrepo clone <types-repo-url> packages/types.
-  - git subrepo clone <api-repo-url> packages/api.
-  - Build: cd packages/types && npm run build, cd packages/api && npm run build.
-- **naadi-user**: eas build (mobile), eas deploy --platform web (naadi.ma).
-- **naadi-partner**: eas build (mobile), eas deploy --platform web (naadi.ma/partners).
-
-### 5.3 Cost Estimates
-
-- **1M Ops**: ~$0.96 (Firestore + EAS free tier).
-- **10M Ops**: ~$108.60 (Firestore + EAS Growth Plan).
-
-### 5.4 Testing Strategy
-
-- **Mock API Testing**: A mock implementation of Firebase API that allows testing without real database connections.
-- **Endpoint Tests**: Comprehensive tests for all API endpoints:
-  - Authentication (signup, login, me, signout)
-  - User Management (staff operations)
-  - Studios (list, create, retrieve, update, delete)
-  - Classes (list, create, update, delete)
-  - Bookings (get by studio, get by ID, update status)
-  - Feedback (retrieve for studios and classes)
-  - Analytics (daily, weekly, financial)
-- **Test Structure**:
-  - Mock endpoint implementations
-  - Test functions for each API endpoint
-  - Centralized test runner (run-all-tests.js)
-- **Coverage**:
-  - Authentication and authorization checks
-  - Input validation
-  - Error handling
-  - Partner logic validation
-  - Access control
-- **Benefits**:
-  - Isolation from external dependencies
-  - Fast execution without network calls
-  - Comprehensive coverage of API functionality
-  - Early detection of regressions
-  - Documentation of expected behavior
+- **Mobile Apps**: Deployed to app stores (Apple App Store, Google Play Store) via EAS Submit.
+- **Web App**: Can be deployed using various static hosting providers (Vercel, Netlify, Firebase Hosting) or potentially EAS Web Hosting if suitable. The `web.config.expoRouter.origin` in `app.config.js` should be set correctly for the deployed web URL.
+- **Backend**: Firebase services (Firestore, Authentication, Functions) are managed through the Firebase console.
 
 ## 6. Constraints and Assumptions
 
@@ -488,4 +276,4 @@ service cloud.firestore {
 
 ## 8. Conclusion
 
-Naadi's design ensures a seamless experience for users browsing studios via a map and partneres managing their offerings, all within a lean monorepo with subrepos for shared logic. The structure supports naadi.ma and naadi.ma/partner efficiently, meeting all requirements.
+Naadi's design ensures a seamless experience for users browsing studios via a map and partneres managing their offerings, all within a single Expo project utilizing build variants and client-side API helpers. The structure supports distinct user and partner experiences efficiently, meeting all requirements.

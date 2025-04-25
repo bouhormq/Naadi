@@ -1,14 +1,39 @@
 {
-  "extends": "../config/tsconfig.base.json",
   "compilerOptions": {
-    "baseUrl": ".",
+    "target": "es2020",
+    "module": "commonjs",
+    "lib": [
+      "es2020",
+      "dom"
+    ],
+    "jsx": "react-jsx",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "moduleResolution": "node",
+    "allowSyntheticDefaultImports": true,
     "paths": {
-      "@naadi/api": ["../packages/api/src"],
-      "@naadi/api/*": ["../packages/api/src/*"],
-      "@naadi/types": ["../packages/types/src"],
-      "@naadi/types/*": ["../packages/types/src/*"]
+      "@naadi/types": [
+        "../types"
+      ],
+      "@naadi/types/*": [
+        "../types/*"
+      ],
+      "@/components/*": [
+        "./components/*"
+      ]
     }
   },
-  "include": ["**/*.ts", "**/*.tsx"],
-  "exclude": ["node_modules"]
-} 
+  "extends": "expo/tsconfig.base",
+  "include": [
+    "**/*.ts",
+    "**/*.tsx",
+    "env.d.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist"
+  ]
+}

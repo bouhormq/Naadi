@@ -2,7 +2,7 @@ import { StyleSheet, ScrollView, View } from 'react-native';
 import Footer from './(components)/Footer'; // Assuming this path is correct
 // Import the PartnerSignupFormContent component
 import ContactForm from './(components)/ContactForm'; // Adjust this path based on your file structure
-import CustomText from 'components/CustomText';
+import CustomText from '@/components/CustomText';
 
 export default function ContactScreen() {
 

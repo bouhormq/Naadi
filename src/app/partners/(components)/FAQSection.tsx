@@ -5,7 +5,7 @@ import {
   TouchableOpacity
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import CustomText from 'components/CustomText';
+import CustomText from '@/components/CustomText';
 
 export default function FAQSection() {
   const [openIndex, setOpenIndex] = useState(null);

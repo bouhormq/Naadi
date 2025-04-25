@@ -9,7 +9,7 @@ import {
 } from 'react-native';
 // Removed PartnerSignupRequest import as it's not used here anymore
 import PartnerSignupFormContent from './PartnerSignupFormContent'; // Ensure the import path is correct
-import CustomText from 'components/CustomText';
+import CustomText from '@/components/CustomText';
 
 // Define image source - ADJUST THE PATH AS NEEDED
 const columnBackgroundImage = require('../(assets)/hero-background.webp');

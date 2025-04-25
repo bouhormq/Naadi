@@ -1,114 +1,63 @@
-# Firebase Platform Registration Checklist
+# Firebase Setup Checklist for Naadi (Single Project)
 
-Use this checklist to track your progress in setting up Firebase for all platforms in the Naadi project.
+Use this checklist to track your progress in setting up Firebase for the single Naadi Expo project, its variants, and Cloud Functions.
 
-## Environment Files Setup
-- [ ] Created root `.env.local` file in project root
-- [ ] Created `naadi-user/.env.local` file for User app
-- [ ] Created `naadi-partner/.env.local` file for Partner app
+## 1. Firebase Project Setup
+- [ ] Created Firebase Project in the [Firebase Console](https://console.firebase.google.com/).
+- [ ] Upgraded to Blaze plan (Pay-as-you-go) if using Cloud Functions or other paid services beyond free tier.
 
-## Service Account Setup
-- [ ] Generated Firebase Admin service account key
-- [ ] Added service account credentials to root `.env.local`
+## 2. Expo App Firebase Integration
 
-## Web Platform (Two Separate Apps)
+### 2.1 Register Native Apps (One Registration Per Platform)
+- **iOS App:**
+  - [ ] Registered an iOS app in Firebase (Project Settings > General > Your apps > Add app).
+  - [ ] Used a base Bundle ID (e.g., `ma.naadi.app` - `app.config.js` will use this for the 'main' variant and `ma.naadi.partner` for the 'partner' variant during builds).
+  - [ ] Downloaded `GoogleService-Info.plist`.
+  - [ ] Placed `GoogleService-Info.plist` in the project root or `src/` directory (ensure `.gitignore` does *not* commit it if it contains sensitive info, though it usually doesn't).
+- **Android App:**
+  - [ ] Registered an Android app in Firebase.
+  - [ ] Used a base package name (e.g., `ma.naadi.app` - `app.config.js` will handle variants).
+  - [ ] Added SHA-1 certificate fingerprint(s) (debug and release) for Google Sign-In, Phone Auth, etc.
+  - [ ] Downloaded `google-services.json`.
+  - [ ] Placed `google-services.json` in the project root or `src/` directory (ensure `.gitignore` does *not* commit it).
 
-### User Web App
-- [ ] Registered User Web app in Firebase Console
-- [ ] Copied Web config to `naadi-user/.env.local`
-- [ ] Added deployment domain (naadi.ma) to Authorized Domains
+### 2.2 Register Web App (One Registration Generally Sufficient)
+- [ ] Registered a Web app (</>) in Firebase.
+- [ ] Noted the `firebaseConfig` values (apiKey, authDomain, projectId, etc.).
+- [ ] Added deployment domains (e.g., `naadi.ma`, potentially `partner.naadi.ma` or localhost variants) to Authorized Domains in Firebase Authentication settings.
 
-### Partner Web App
-- [ ] Registered Partner Web app in Firebase Console
-- [ ] Copied Web config to `naadi-partner/.env.local`
-- [ ] Verified that APP_ID and MEASUREMENT_ID are different from User Web app
+### 2.3 Configure Expo App (`src/app.config.js` & Environment Variables)
+- [ ] Verified `src/app.config.js` correctly sets `ios.bundleIdentifier` and `android.package` based on `EXPO_PUBLIC_APP_VARIANT`.
+- [ ] Ensured native config files (`GoogleService-Info.plist`, `google-services.json`) are referenced correctly (Expo CLI often finds them automatically if placed in standard locations like root or `src/`).
+- [ ] Added necessary Firebase Web SDK config values (`apiKey`, `authDomain`, etc.) as environment variables (e.g., in `.env` file, loaded via `dotenv`).
+    - **Important:** Use the `EXPO_PUBLIC_` prefix for variables needed client-side (e.g., `EXPO_PUBLIC_FIREBASE_API_KEY`).
+    - Consider managing secrets via EAS Secrets (`eas secret:create`) for build-time environment variables rather than committing `.env` files.
+- [ ] Added necessary Firebase plugins (e.g., `@react-native-firebase/app`, `@react-native-firebase/auth`) to `app.config.js` or `app.json` (if still using parts of it).
 
-### Web Authentication Settings
-- [ ] Configured reCAPTCHA for Phone Authentication (if using)
-- [ ] Set up OAuth redirect domains for User app (https://naadi.ma/__/auth/handler)
-- [ ] Set up OAuth redirect domains for Partner app (https://naadi.ma/partner/__/auth/handler)
+## 3. Cloud Functions (`cloud-functions/`)
+- [ ] Initialized Firebase project within `cloud-functions/` using `firebase init functions` (if not already done).
+- [ ] Installed necessary dependencies in `cloud-functions/functions/package.json` (e.g., `firebase-admin`, `firebase-functions`).
+- [ ] Configured `cloud-functions/firebase.json` (e.g., functions runtime, source directory).
+- [ ] Set up necessary Firebase Admin service account access (e.g., via Application Default Credentials in Cloud Functions environment, or manually setting `GOOGLE_APPLICATION_CREDENTIALS` locally for emulators).
+- [ ] Configured environment variables for Cloud Functions if needed (e.g., API keys for third-party services) using `firebase functions:config:set mykey.id=key_id mykey.secret=key_secret`.
 
-## iOS Platform (Two Separate Apps)
+## 4. Enable Firebase Services
+- [ ] Enabled Authentication methods (Email/Password, Phone, Google, etc.) in Firebase Console.
+- [ ] Configured platform-specific Auth settings (OAuth redirects, SHA-1 keys, URL schemes, reCAPTCHA for web) as needed.
+- [ ] Created Firestore Database.
+- [ ] Configured Firestore Security Rules (initially permissive for development/emulators, secure for production).
+- [ ] Enabled Cloud Functions (implicitly done by deploying).
+- [ ] Enabled other services as needed (Storage, etc.).
 
-### User iOS App
-- [ ] Registered User iOS app with bundle ID `com.naadi.user`
-- [ ] Downloaded GoogleService-Info.plist for User app
-- [ ] Placed GoogleService-Info.plist in `naadi-user/` directory
-- [ ] Added iOS configuration to naadi-user/app.json:
-  ```json
-  "ios": {
-    "bundleIdentifier": "com.naadi.user",
-    "googleServicesFile": "./GoogleService-Info.plist"
-  }
-  ```
+## 5. Testing & Verification
+- [ ] Verified Firebase client SDK initialization in the Expo app.
+- [ ] Tested authentication flows (signup, login, logout) for both variants using different methods.
+- [ ] Tested API helper functions (`src/api/`) making calls to Cloud Functions (use emulators locally).
+- [ ] Tested Cloud Function logic (unit tests, integration tests with emulators).
+- [ ] Verified data is written to/read from Firestore correctly via app interactions and function executions.
+- [ ] Verified Firestore Security Rules are working as expected.
 
-### Partner iOS App
-- [ ] Registered Partner iOS app with bundle ID `com.naadi.partner`
-- [ ] Downloaded GoogleService-Info.plist for Partner app
-- [ ] Placed GoogleService-Info.plist in `naadi-partner/` directory
-- [ ] Added iOS configuration to naadi-partner/app.json:
-  ```json
-  "ios": {
-    "bundleIdentifier": "com.naadi.partner",
-    "googleServicesFile": "./GoogleService-Info.plist"
-  }
-  ```
-
-### iOS Authentication Settings
-- [ ] Set up URL schemes for OAuth providers
-- [ ] Configured Sign in with Apple (if using)
-
-## Android Platform (Two Separate Apps)
-
-### User Android App
-- [ ] Registered User Android app with package name `com.naadi.user`
-- [ ] Added SHA-1 certificate fingerprint(s)
-- [ ] Downloaded google-services.json for User app
-- [ ] Placed google-services.json in `naadi-user/` directory
-- [ ] Added Android configuration to naadi-user/app.json:
-  ```json
-  "android": {
-    "package": "com.naadi.user",
-    "googleServicesFile": "./google-services.json"
-  }
-  ```
-
-### Partner Android App
-- [ ] Registered Partner Android app with package name `com.naadi.partner`
-- [ ] Added SHA-1 certificate fingerprint(s)
-- [ ] Downloaded google-services.json for Partner app
-- [ ] Placed google-services.json in `naadi-partner/` directory
-- [ ] Added Android configuration to naadi-partner/app.json:
-  ```json
-  "android": {
-    "package": "com.naadi.partner",
-    "googleServicesFile": "./google-services.json"
-  }
-  ```
-
-## Authentication Methods
-- [ ] Enabled Email/Password authentication
-- [ ] Enabled Phone authentication
-- [ ] Enabled Google authentication
-- [ ] Enabled Facebook authentication (if using)
-- [ ] Enabled Apple authentication (if using)
-
-## Firestore Setup
-- [ ] Created Firestore database
-- [ ] Configured Firestore rules
-- [ ] Set up initial collections (if needed)
-
-## Testing
-- [ ] Tested authentication on User Web app
-- [ ] Tested authentication on Partner Web app
-- [ ] Tested authentication on User iOS app
-- [ ] Tested authentication on Partner iOS app
-- [ ] Tested authentication on User Android app
-- [ ] Tested authentication on Partner Android app
-- [ ] Verified data writing to Firestore
-- [ ] Verified data reading from Firestore
-
-## Build & Deploy
-- [ ] Successfully built API package
-- [ ] Successfully deployed User app
-- [ ] Successfully deployed Partner app 
+## 6. Build & Deploy Considerations
+- [ ] Ensured EAS Build profiles (`eas.json`) correctly set necessary environment variables (`EXPO_PUBLIC_APP_VARIANT`, potentially Firebase web keys via EAS Secrets) for each variant build.
+- [ ] Verified deployed Cloud Functions are working correctly.
+- [ ] Ensured production Firestore Security Rules are active and secure. 

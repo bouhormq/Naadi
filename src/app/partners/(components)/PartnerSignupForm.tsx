@@ -1,12 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
 import {
   View,
-  Text,
   StyleSheet,
   useWindowDimensions,
   Animated, // Import the hook
 } from 'react-native';
-import CustomText from 'components/CustomText';
+import CustomText from '@/components/CustomText';
 
 // Import the new component
 import PartnerSignupFormContent from './PartnerSignupFormContent';

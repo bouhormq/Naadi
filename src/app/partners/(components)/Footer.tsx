@@ -10,7 +10,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { router } from 'expo-router';
-import CustomText from 'components/CustomText';
+import CustomText from '@/components/CustomText';
 
 // Replace with your actual PNG paths
 const appleStorePng = require('../(assets)/appleStore.png');

@@ -6,7 +6,7 @@ import {
   TouchableOpacity
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import CustomText from 'components/CustomText';
+import CustomText from '@/components/CustomText';
 
 
 // --- Card Data ---

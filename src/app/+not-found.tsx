@@ -1,6 +1,6 @@
 import { Link, router, Stack } from 'expo-router';
 import { StyleSheet, View, Platform, TouchableOpacity } from 'react-native';
-import CustomText from 'components/CustomText';
+import CustomText from '@/components/CustomText';
 
 export default function NotFoundScreen() {
   return (

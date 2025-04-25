@@ -4,8 +4,7 @@ import Header from './(components)/Header';
 const PartnerLayout = () => {
   return (
     <>
-      <Header />
-      <Stack screenOptions={{ headerShown: false }}>
+      <Stack screenOptions={{ headerShown: false, header: () => <Header /> }}>
       </Stack>
     </>
   );

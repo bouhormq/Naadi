@@ -1,52 +1,71 @@
 import { useEffect, useRef, useState } from 'react';
-import { Animated, ScrollView, StyleSheet, View, Platform } from 'react-native';
-import CustomText from 'components/CustomText';
+import { Animated, ScrollView, StyleSheet, Platform } from 'react-native';
+import CustomText from '@/components/CustomText';
 
 const App = () => {
+  // Overall container fade-in
+  const containerFadeAnim = useRef(new Animated.Value(0)).current; // Start fully transparent
+
   // Rotating business words
   const businessWords = ['fitness', 'wellness', 'beauty'];
   const [currentWordIndex, setCurrentWordIndex] = useState(0);
-  const fadeAnim = useRef(new Animated.Value(1)).current; // Initial opacity 1
+  const wordFadeAnim = useRef(new Animated.Value(1)).current; // Initial opacity 1 for word
 
   useEffect(() => {
+    // Animate the container fade-in on mount
+    Animated.timing(containerFadeAnim, {
+      toValue: 1,
+      duration: 900, // Adjust duration as needed
+      useNativeDriver: true,
+    }).start();
+
+    // Existing word rotation logic
     const wordChangeInterval = setInterval(() => {
-      // Start fade out
-      Animated.timing(fadeAnim, {
+      Animated.timing(wordFadeAnim, { // Use wordFadeAnim here
         toValue: 0,
-        duration: 500, // Fade out over 0.5 seconds
+        duration: 500,
         useNativeDriver: true,
       }).start(() => {
-        // Change word when fully faded out
         setCurrentWordIndex((prevIndex) => (prevIndex + 1) % businessWords.length);
-        // Start fade in
-        Animated.timing(fadeAnim, {
+        Animated.timing(wordFadeAnim, { // Use wordFadeAnim here
           toValue: 1,
-          duration: 500, // Fade in over 0.5 seconds
+          duration: 500,
           useNativeDriver: true,
         }).start();
       });
-    }, 2750); // Total 2.5 seconds per word
-    
-    // Clean up interval on unmount
+    }, 2750);
+
     return () => clearInterval(wordChangeInterval);
-  }, [fadeAnim, businessWords.length]);
+  }, [containerFadeAnim, wordFadeAnim, businessWords.length]); // Add dependencies
 
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      <View style={styles.textContainer}>
+      {/* Wrap content in Animated.View for fade-in */}
+      <Animated.View style={[styles.textContainer, { opacity: containerFadeAnim }]}>
         <CustomText style={styles.mainTitle}>
-          <CustomText>🛠️</CustomText> Coming soon... One app for all things{' '}
-          <Animated.View style={{ opacity: fadeAnim, display: 'inline' }}>
-            <CustomText style={styles.freeText}>{businessWords[currentWordIndex]}</CustomText>
-          </Animated.View>
-          {' '}<CustomText>✨</CustomText>
+          {/* Wrap emoji in Animated.Text and apply fade */}
+          <Animated.Text style={{ opacity: containerFadeAnim }}>
+            <CustomText>🛠️</CustomText>
+          </Animated.Text>
+          {/* Static text part will fade with the container */}
+          {' '}
+          Coming soon... One app for all things{' '}
+          {/* Rotating word with its own animation */}
+          <Animated.Text style={[styles.freeText, { opacity: wordFadeAnim }]}>
+            {businessWords[currentWordIndex]}
+          </Animated.Text>
+          {' '}
+          {/* Wrap emoji in Animated.Text and apply fade */}
+          <Animated.Text style={{ opacity: containerFadeAnim }}>
+            <CustomText>✨</CustomText>
+          </Animated.Text>
         </CustomText>
         
         <CustomText style={styles.mainSubtitle}>
           Naadi gives you access to hundreds of top-rated gyms, fitness studios, salons and spas in Morocco.
         </CustomText>
-      </View>
+      </Animated.View>
     </ScrollView>
   );
 };

@@ -5,7 +5,7 @@ import {
   FlatList,
   useWindowDimensions,
 } from 'react-native';
-import CustomText from 'components/CustomText';
+import CustomText from '@/components/CustomText';
 
 // --- Card Data ---
 const businessCardData = [

@@ -1,312 +1,166 @@
 # Naadi Testing Strategy
 
-This document outlines the testing approach for the Naadi platform, focusing on API endpoint testing with a mock implementation.
+This document outlines the testing approach for the Naadi platform, encompassing the Expo frontend application (with its variants) and the Firebase Cloud Functions backend.
 
 ## 1. Testing Philosophy
 
-The Naadi testing strategy is built around these key principles:
+- **Confidence:** Ensure application correctness and prevent regressions.
+- **Isolation:** Unit tests should focus on single components/functions.
+- **Integration:** Verify interactions between different parts (frontend helpers <-> backend functions).
+- **Maintainability:** Tests should be clear, concise, and easy to update.
+- **Automation:** Tests should be runnable in CI/CD pipelines.
 
-1. **Isolation**: Tests should run without external dependencies
-2. **Completeness**: All API endpoints should be tested
-3. **Reliability**: Tests should be deterministic and repeatable
-4. **Maintainability**: Tests should be easy to understand and update
-5. **Speed**: Tests should execute quickly to support rapid development
+## 2. Testing Layers & Tools
 
-## 2. Testing Architecture
+We employ a multi-layered testing strategy:
 
-### 2.1 Directory Structure
+1.  **Expo Frontend (`src/` directory):**
+    *   **Unit/Integration Tests:** Using **Jest** and **React Native Testing Library** (`@testing-library/react-native`).
+    *   **Focus:** Testing individual components, hooks, utility functions, context providers, and screen logic in isolation.
+    *   **Location:** Likely within `src/tests/` or alongside components (`*.test.tsx`).
 
+2.  **API Helper Functions (`src/api/`):**
+    *   **Unit Tests:** Using **Jest**.
+    *   **Focus:** Testing the logic within each helper function, mocking external dependencies (Firebase SDK calls, `fetch`).
+    *   **Location:** Likely within `src/api/tests/` or alongside helpers (`*.test.ts`).
+
+3.  **Cloud Functions (`cloud-functions/functions/`):**
+    *   **Unit Tests:** Using **Jest** or **Mocha/Chai**. Test framework choice depends on `cloud-functions/functions/package.json`.
+    *   **Focus:** Testing individual Cloud Function logic and shared utilities (`cloud-functions/functions/utils/`) in isolation, mocking Firebase Admin SDK calls.
+    *   **Integration Tests:** Using the **Firebase Emulator Suite** and a test runner (Jest/Mocha).
+    *   **Focus:** Testing the behavior of functions interacting with emulated Firestore, Auth, etc. Verifying database changes, responses, and triggers.
+    *   **Location:** Within `cloud-functions/functions/tests/` or similar.
+
+4.  **End-to-End (E2E) Tests (Optional):**
+    *   **Tools:** **Detox** (React Native) or **Maestro**. **Playwright/Cypress** if focusing heavily on the web version.
+    *   **Focus:** Simulating real user flows across the entire application (both variants), potentially interacting with emulated or staging backend services.
+    *   **Location:** A separate `e2e/` directory at the project root.
+
+## 3. Implementation Examples
+
+### 3.1 Frontend Component Test (`src/components/MyButton.test.tsx`)
+
+```typescript
+import React from 'react';
+import { render, fireEvent } from '@testing-library/react-native';
+import MyButton from './MyButton';
+
+it('calls onPress when clicked', () => {
+  const mockOnPress = jest.fn();
+  const { getByText } = render(<MyButton title="Click Me" onPress={mockOnPress} />);
+
+  fireEvent.press(getByText('Click Me'));
+
+  expect(mockOnPress).toHaveBeenCalledTimes(1);
+});
 ```
-naadi-partner/tests/
-├── mock-api.js                 # Mock API implementation
-├── run-all-tests.js            # Test runner
-├── test-auth-endpoints.js      # Authentication tests
-├── test-analytics-endpoints.js # Analytics tests
-├── test-users-endpoints.js     # User management tests
-├── test-studios-endpoints.js   # Studio management tests
-├── test-classes-endpoints.js   # Class management tests
-├── test-bookings-endpoints.js  # Booking tests
-└── test-feedback-endpoints.js  # Feedback tests
-```
 
-### 2.2 Mock API Implementation
+### 3.2 API Helper Unit Test (`src/api/studios.test.ts`)
 
-The mock API simulates Firebase functionality without requiring actual Firebase connections:
+```typescript
+import { fetchStudios } from './studios'; // Assuming studios helper
+import { collection, getDocs } from 'firebase/firestore'; // Mock these
 
-```javascript
-// Simplified example from mock-api.js
-const API = {
-  mockData: {
-    users: {},
-    studios: {},
-    classes: {},
-    bookings: {},
-    feedback: {}
-  },
-  
-  getDocument: (collection, id) => {
-    return API.mockData[collection][id];
-  },
-  
-  getUserIdFromToken: (token) => {
-    // Extract user ID from token
-    // Handles both dot-separated and custom formats
-  },
-  
-  mockEndpoint: (handler) => {
-    return async (path, options = {}) => {
-      const req = {
-        url: path,
-        method: options.method || 'GET',
-        headers: options.headers || {},
-        body: options.body
-      };
-      
-      const res = {
-        status: null,
-        body: null,
-        setStatus: function(status) { this.status = status; return this; },
-        json: function(data) { this.body = data; return this; }
-      };
-      
-      await handler(req, res);
-      return res;
+// Mock the entire firestore module
+jest.mock('firebase/firestore', () => ({
+  collection: jest.fn(),
+  getDocs: jest.fn(),
+  // ... other mocked functions
+}));
+
+describe('fetchStudios', () => {
+  it('should fetch and return studios', async () => {
+    const mockSnapshot = {
+      docs: [
+        { id: 's1', data: () => ({ name: 'Studio A' }) },
+        { id: 's2', data: () => ({ name: 'Studio B' }) },
+      ],
     };
-  },
-  
-  makeRequest: async (endpoint, path, options = {}) => {
-    const response = await endpoint(path, options);
-    return {
-      status: response.status,
-      body: response.body,
-      ok: response.status >= 200 && response.status < 300
-    };
-  }
-};
+    (getDocs as jest.Mock).mockResolvedValue(mockSnapshot);
+
+    const studios = await fetchStudios();
+
+    expect(getDocs).toHaveBeenCalledWith(expect.anything()); // Check if called
+    expect(studios).toHaveLength(2);
+    expect(studios[0].name).toBe('Studio A');
+  });
+});
 ```
 
-## 3. Test Implementation Pattern
+### 3.3 Cloud Function Integration Test (`cloud-functions/functions/tests/myFunction.test.ts`)
 
-Each test file follows a consistent pattern:
+```typescript
+import * as admin from 'firebase-admin';
+import * as functionsTest from 'firebase-functions-test';
 
-### 3.1 Mock Endpoint Implementation
+// Initialize the test environment (offline mode)
+const testEnv = functionsTest(); // Potentially with project config & service account key
 
-```javascript
-// Example mock endpoint
-function mockGetStudiosEndpoint(req, res) {
-  // Check authorization
-  const token = req.headers.authorization?.split('Bearer ')[1];
-  if (!token) {
-    return res.setStatus(401).json({ error: 'Not authenticated' });
-  }
-  
-  try {
-    // Get user from token
-    const userId = API.getUserIdFromToken(token);
-    const user = API.getDocument('users', userId);
-    
-    if (!user || user.role !== 'partner') {
-      return res.setStatus(403).json({ error: 'Not authorized' });
-    }
-    
-    // Get studios for this partner
-    const studios = Object.values(API.mockData.studios)
-      .filter(studio => studio.businessId === userId);
-    
-    return res.setStatus(200).json({ studios });
-  } catch (error) {
-    return res.setStatus(500).json({ error: 'Server error' });
-  }
-}
+// Import the function to test (adjust path as needed)
+import { myFirestoreTrigger } from '../src/index'; // Assuming index.ts exports functions
+
+describe('Cloud Functions Integration Tests', () => {
+  let wrapped;
+
+  beforeAll(() => {
+    // Wrap the function
+    wrapped = testEnv.wrap(myFirestoreTrigger);
+  });
+
+  afterAll(() => {
+    // Clean up the test environment
+    testEnv.cleanup();
+    // Optionally clear emulator data
+  });
+
+  it('should process Firestore document creation correctly', async () => {
+    // Use Admin SDK (connected to emulator) to set up test data
+    const firestore = admin.firestore();
+    const ref = firestore.collection('testData').doc('doc1');
+    await ref.set({ initialValue: 'hello' });
+
+    // Create a snapshot representing the document creation
+    const beforeSnap = testEnv.firestore.makeDocumentSnapshot({}, 'testData/doc1');
+    const afterSnap = testEnv.firestore.makeDocumentSnapshot({ initialValue: 'hello' }, 'testData/doc1');
+
+    // Call the wrapped function with the trigger data
+    await wrapped(afterSnap, { params: { docId: 'doc1' } });
+
+    // Use Admin SDK to assert expected changes in the emulator
+    const updatedDoc = await firestore.collection('results').doc('doc1').get();
+    expect(updatedDoc.exists).toBe(true);
+    expect(updatedDoc.data()?.processedValue).toBe('HELLO'); // Example assertion
+  });
+});
 ```
 
-### 3.2 Test Function
+## 4. Running Tests
 
-```javascript
-// Example test function
-async function testGetStudiosEndpoint() {
-  console.log('  Testing GET /api/studios/list endpoint...');
-  
-  // Set up test data
-  const businessUser = {
-    id: 'user-123',
-    email: 'partner@example.com',
-    role: 'partner'
-  };
-  
-  const studio1 = {
-    id: 'studio-1',
-    businessId: 'user-123',
-    name: 'Test Studio 1'
-  };
-  
-  const studio2 = {
-    id: 'studio-2',
-    businessId: 'user-123',
-    name: 'Test Studio 2'
-  };
-  
-  API.mockData.users['user-123'] = businessUser;
-  API.mockData.studios['studio-1'] = studio1;
-  API.mockData.studios['studio-2'] = studio2;
-  
-  // Create endpoint handler
-  const getStudiosEndpoint = API.mockEndpoint(mockGetStudiosEndpoint);
-  
-  // Test successful request
-  const token = `user-123.token123`;
-  const response = await API.makeRequest(
-    getStudiosEndpoint,
-    '/api/studios/list',
-    { 
-      method: 'GET',
-      headers: { authorization: `Bearer ${token}` }
-    }
-  );
-  
-  // Verify response
-  if (response.status !== 200) {
-    throw new Error(`Expected status 200, got ${response.status}`);
-  }
-  
-  if (!response.body.studios || response.body.studios.length !== 2) {
-    throw new Error('Expected 2 studios in response');
-  }
-  
-  console.log('  ✓ GET /api/studios/list endpoint test passed');
-}
-```
+Specific commands will depend on the setup in `package.json` files (root and `cloud-functions/functions`). Examples:
 
-### 3.3 Run All Tests Function
+- **Run Expo App Tests:**
+  ```bash
+  # From root or src/
+  npm test
+  # or
+  jest
+  ```
 
-```javascript
-// Example run all tests function
-async function runAllTests() {
-  console.log('Starting Studios API Endpoint tests...');
-  
-  try {
-    // Initialize test data
-    API.mockData = {
-      users: {},
-      studios: {},
-      classes: {},
-      bookings: {},
-      feedback: {}
-    };
-    
-    // Run all test functions
-    await testGetStudiosEndpoint();
-    await testCreateStudioEndpoint();
-    await testGetStudioByIdEndpoint();
-    await testUpdateStudioEndpoint();
-    await testDeleteStudioEndpoint();
-    
-    console.log('All Studios API Endpoint tests passed!');
-  } catch (error) {
-    console.error('Test failed:', error.message);
-    process.exit(1);
-  }
-}
-
-// Execute tests
-runAllTests();
-```
-
-## 4. Test Coverage
-
-The test suite provides comprehensive coverage of:
-
-### 4.1 Authentication Endpoints
-- Signup (new user registration)
-- Login (authentication)
-- Me (current user info)
-- Signout (session termination)
-
-### 4.2 User Management Endpoints
-- Get staff (retrieve staff members)
-- Create staff (add new staff)
-
-### 4.3 Studio Management Endpoints
-- List studios (get all studios for a partner)
-- Create studio (add new studio)
-- Get studio by ID (retrieve specific studio)
-- Update studio (modify studio details)
-- Delete studio (remove studio)
-
-### 4.4 Class Management Endpoints
-- List classes (get all classes for a studio)
-- Create class (add new class)
-- Update class (modify class details)
-- Delete class (remove class)
-
-### 4.5 Booking Endpoints
-- Get bookings by studio (retrieve bookings for a studio)
-- Get booking by ID (retrieve specific booking)
-- Update booking status (modify booking)
-
-### 4.6 Feedback Endpoints
-- Get feedback for studio (retrieve all feedback for a studio)
-- Get feedback for class (retrieve feedback for a specific class)
-
-### 4.7 Analytics Endpoints
-- Get daily analytics
-- Get weekly analytics
-- Get financial analytics
-
-## 5. Running Tests
-
-Tests can be run individually or collectively:
-
-### 5.1 Running All Tests
-
+- **Run Cloud Functions Unit Tests:**
 ```bash
-node tests/run-all-tests.js
+  cd cloud-functions/functions
+  npm test # Or mocha, depending on setup
+  cd ../..
 ```
 
-### 5.2 Running Specific Test Files
-
+- **Run Cloud Functions Integration Tests:**
 ```bash
-node tests/test-auth-endpoints.js
-node tests/test-studios-endpoints.js
-# etc.
-```
+  # Requires Firebase Emulator Suite running
+  cd cloud-functions/functions
+  npm run test:integration # Assuming a script is defined
+  cd ../..
+  ```
 
-## 6. Error Scenarios Tested
+## 5. Continuous Integration (CI)
 
-The test suite covers various error scenarios:
-
-1. **Authentication Errors**:
-   - Missing authentication token
-   - Invalid token format
-   - Expired tokens
-
-2. **Authorization Errors**:
-   - Incorrect user role
-   - Accessing resources not owned by the user
-
-3. **Validation Errors**:
-   - Missing required fields
-   - Invalid data types
-   - Malformed requests
-
-4. **Resource Errors**:
-   - Non-existent resources
-   - Already existing resources
-   - Resource conflicts
-
-## 7. Benefits of This Approach
-
-1. **Development Speed**: Fast, isolated tests that don't require deployment
-2. **Confidence**: Comprehensive coverage ensures correctness
-3. **Documentation**: Tests serve as documentation for expected behavior
-4. **Regression Prevention**: Quickly catch breaking changes
-5. **Isolation**: No need for real Firebase, databases, or networks
-6. **Consistent Environment**: Same test behavior regardless of environment
-
-## 8. Future Enhancements
-
-1. **Integration Tests**: Add end-to-end tests with real Firebase
-2. **Test Coverage Reporting**: Add tools to measure code coverage
-3. **Performance Tests**: Add load and stress testing
-4. **Continuous Integration**: Automate test runs in CI/CD pipeline
-5. **Property-Based Testing**: Generate random inputs to find edge cases 
+Tests should be integrated into a CI/CD pipeline (e.g., GitHub Actions) to run automatically on code pushes or pull requests. This includes setting up Node.js, Java (for Firebase emulators), installing dependencies for both the app and functions, and running the respective test commands. 

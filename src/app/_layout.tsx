@@ -1,8 +1,10 @@
 // app/_layout.js
+import '../config/firebase';
 import { Stack, usePathname, useRouter, SplashScreen } from 'expo-router';
 import { useEffect, useCallback } from 'react';
 import { Platform, View } from 'react-native';
 import { useFonts } from 'expo-font';
+import { SessionProvider } from '../ctx';
 
 // Prevent the splash screen from auto-hiding immediately
 SplashScreen.preventAutoHideAsync();
@@ -92,16 +94,22 @@ export default function RootLayout() {
     console.error("Displaying font loading error UI.");
   }
 
-  // --- Render the main app content (Stack Navigator) when fonts are ready ---
-  console.log("Fonts loaded, rendering Stack navigator.");
+  // --- Render the main app content (Stack Navigator) WHEN FONTS ARE READY ---
+  console.log("Fonts loaded, rendering SessionProvider and Stack navigator.");
   return (
-    // Wrap your main navigation structure with a View that has the onLayout callback.
-    <View style={{ flex: 1 }} onLayout={onLayoutRootView}>
-      <Stack screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="(main)" />
-        <Stack.Screen name="partners" />
-        {/* Add other top-level modal screens etc. here if needed */}
-      </Stack>
-    </View>
+    // Wrap the main content with SessionProvider
+    <SessionProvider>
+      {/* Wrap your main navigation structure with a View that has the onLayout callback. */}
+      <View style={{ flex: 1 }} onLayout={onLayoutRootView}>
+        <Stack screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="(main)" />
+          <Stack.Screen name="partners" />
+          {/* Add other top-level modal screens etc. here if needed */}
+          {/* Ensure the 'admin' stack group is defined here or handled by Expo Router conventions */}
+          {/* If 'admin' is a top-level group like '(main)' and 'partners', it might need an entry here */}
+          {/* <Stack.Screen name="admin" /> */}
+        </Stack>
+      </View>
+    </SessionProvider>
   );
 }

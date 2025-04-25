@@ -4,7 +4,7 @@ import {
   Image,
   useWindowDimensions,
 } from 'react-native';
-import CustomText from 'components/CustomText';
+import CustomText from '@/components/CustomText';
 
 
 // Define a threshold for switching layouts

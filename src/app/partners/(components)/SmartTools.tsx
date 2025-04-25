@@ -5,7 +5,7 @@ import {
   // Dimensions, // No longer needed
   useWindowDimensions, // Import the hook
 } from 'react-native';
-import CustomText from 'components/CustomText';
+import CustomText from '@/components/CustomText';
 
 // Define a breakpoint for switching layouts (adjust as needed)
 const TWO_COLUMN_BREAKPOINT = 768; // Example: Tablets and wider get 2 columns

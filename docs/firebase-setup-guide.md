@@ -1,344 +1,149 @@
-# Firebase Setup Guide for Naadi
+# Firebase Setup Guide for Naadi (Single Project Structure)
 
-This guide will help you set up Firebase for your Naadi project across all platforms: Web, iOS, and Android.
+This guide details setting up Firebase for the Naadi project, which uses a single Expo codebase (`src/`) to build two variants ('main' and 'partner') and utilizes Firebase Cloud Functions (`cloud-functions/`) for backend logic.
 
-## 1. Firebase Service Account Setup
+## 1. Initial Firebase Project Setup
 
-### Generate a Service Account Key
-1. Go to the [Firebase Console](https://console.firebase.google.com/)
-2. Select your project
-3. Click on the gear icon (⚙️) next to "Project Overview" to open Project settings
-4. Go to the "Service accounts" tab
-5. Click "Generate new private key" button
-6. Save the JSON file securely
+1.  **Create Project:** Go to the [Firebase Console](https://console.firebase.google.com/) and create a new project (or use an existing one).
+2.  **Billing:** Enable billing (Blaze plan) if you plan to use Cloud Functions beyond the free tier or other paid services.
 
-### Add Service Account to Environment Variables
-Option 1: Use the entire JSON (recommended for development)
-1. Open the downloaded JSON file
-2. Copy the entire contents
-3. In your root `.env.local` file, add:
-   ```
-   FIREBASE_SERVICE_ACCOUNT={"type":"service_account","project_id":"your_project_id",...}
-   ```
-   Replace the JSON value with your actual service account JSON contents
+## 2. Registering Firebase Apps
 
-Option 2: Use individual fields
-1. Open the downloaded JSON file
-2. In your root `.env.local` file, add:
-   ```
-   FIREBASE_PROJECT_ID=your_project_id
-   FIREBASE_CLIENT_EMAIL=your_client_email@your_project_id.iam.gserviceaccount.com
-   FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\nYour Private Key Here\n-----END PRIVATE KEY-----\n"
-   ```
-   Replace the values with the actual values from your service account JSON file
+Unlike the previous structure, we register only **one** iOS app, **one** Android app, and typically **one** Web app within the *same* Firebase project.
 
-## 1.5 Environment Variable File Structure
+### 2.1 Register iOS App
 
-For this project, you need to create **three separate** `.env.local` files:
+1.  **Firebase Console:** Go to Project Settings > General > Your apps > Add app > Select iOS.
+2.  **Bundle ID:** Enter the Bundle ID for your **main** variant (e.g., `ma.naadi.app`). `src/app.config.js` will dynamically change this to `ma.naadi.partner` when building the partner variant.
+3.  **Register & Download:** Complete the registration and download the `GoogleService-Info.plist` file.
+4.  **Place File:** Move the downloaded `GoogleService-Info.plist` into the root of your Expo project (`/Users/salim/Desktop/Naadi/`) or inside the `src/` directory. Expo CLI typically finds it automatically in these locations.
+5.  **`.gitignore`:** Ensure `GoogleService-Info.plist` is *not* committed to Git if it contains sensitive information (though it usually doesn't).
 
-1. **Root `.env.local`** (at the project root): Contains Firebase Admin SDK credentials for server-side operations
-2. **User App `.env.local`** (in naadi-user directory): Contains Firebase Web SDK config for the user app
-3. **Partner App `.env.local`** (in naadi-partner directory): Contains Firebase Web SDK config for the partner app
+### 2.2 Register Android App
 
-### Create the App-Specific .env.local Files
-
-1. **Create the User App environment file**:
+1.  **Firebase Console:** Go to Project Settings > General > Your apps > Add app > Select Android.
+2.  **Package Name:** Enter the package name for your **main** variant (e.g., `ma.naadi.app`). `src/app.config.js` will dynamically change this to `ma.naadi.partner` for the partner variant build.
+3.  **SHA-1 Fingerprints:** Add your SHA-1 certificate fingerprints (both debug and release). You can get the debug SHA-1 using:
    ```bash
-   touch naadi-user/.env.local
-   ```
+    # Inside src/android directory if it exists, or use specific keytool commands
+    # ./gradlew signingReport # If android dir exists
+    # keytool -list -v -keystore ~/.android/debug.keystore -alias androiddebugkey -storepass android -keypass android
+    ```
+    You'll need to generate a release key and get its SHA-1 for production builds.
+4.  **Register & Download:** Complete the registration and download the `google-services.json` file.
+5.  **Place File:** Move the downloaded `google-services.json` into the root of your Expo project (`/Users/salim/Desktop/Naadi/`) or inside the `src/` directory.
+6.  **`.gitignore`:** Ensure `google-services.json` is listed in your `.gitignore` file.
 
-2. **Create the Partner App environment file**:
-   ```bash
-   touch naadi-partner/.env.local
-   ```
+### 2.3 Register Web App
 
-Each app needs its own Firebase configuration because they are registered as separate apps in Firebase. The app-specific files will be populated with the respective Firebase Web SDK configurations in the next steps.
+1.  **Firebase Console:** Go to Project Settings > General > Your apps > Add app > Select Web (</>).
+2.  **Nickname:** Give it a nickname (e.g., "Naadi Web").
+3.  **Register & Config:** Register the app. Copy the `firebaseConfig` object provided. This contains your client-side API keys and project IDs.
+4.  **Authorized Domains:** Go to Authentication > Settings > Authorized domains. Add `localhost` (for development) and your production domains (e.g., `naadi.ma`). If your partner app uses a different subdomain or path on the web, add that authorized domain too if necessary for OAuth redirects.
 
-## 2. Platform Registration - IMPORTANT!
+## 3. Configuring the Expo App (`src/`)
 
-You MUST register each platform separately in your Firebase project.
+### 3.1 Firebase Configuration Values (Client-Side)
 
-### 2.1 Register Web Apps (Two Separate Registrations)
+   The client-side app needs the `firebaseConfig` values from step 2.3 to initialize the Firebase SDK.
 
-#### 2.1.1 Register User Web App
-1. In the Firebase Console, go to Project Overview
-2. Click on the web icon (</>) to add a web app
-3. Register the app with a nickname like "Naadi User Web"
-4. Copy the `firebaseConfig` object values to `naadi-user/.env.local`:
-   ```
-   EXPO_PUBLIC_FIREBASE_API_KEY=your_api_key
-   EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN=your_project_id.firebaseapp.com
-   EXPO_PUBLIC_FIREBASE_PROJECT_ID=your_project_id
-   EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET=your_project_id.appspot.com
-   EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your_messaging_sender_id
-   EXPO_PUBLIC_FIREBASE_APP_ID=your_app_id_for_user_web
-   EXPO_PUBLIC_FIREBASE_MEASUREMENT_ID=your_measurement_id_for_user_web
-   ```
+   **Recommended Method: Environment Variables via `.env` and EAS Secrets:**
 
-#### 2.1.2 Register Partner Web App
-1. Click on the web icon (</>) AGAIN to add a second web app
-2. Register the app with a nickname like "Naadi Partner Web"
-3. Copy the `firebaseConfig` object values to `naadi-partner/.env.local`:
-   ```
-   EXPO_PUBLIC_FIREBASE_API_KEY=your_api_key
-   EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN=your_project_id.firebaseapp.com
-   EXPO_PUBLIC_FIREBASE_PROJECT_ID=your_project_id
-   EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET=your_project_id.appspot.com
-   EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your_messaging_sender_id
-   EXPO_PUBLIC_FIREBASE_APP_ID=your_app_id_for_business_web
-   EXPO_PUBLIC_FIREBASE_MEASUREMENT_ID=your_measurement_id_for_business_web
-   ```
-   
-> **Important**: The `APP_ID` and `MEASUREMENT_ID` will be different for each web app, while the other values will typically be the same.
+   1.  **Create `.env`:** Create a `.env` file in your project root (`/Users/salim/Desktop/Naadi/.env`).
+   2.  **Add Variables:** Add the Firebase config values prefixed with `EXPO_PUBLIC_`:
+      ```dotenv
+      # /Users/salim/Desktop/Naadi/.env
+      EXPO_PUBLIC_FIREBASE_API_KEY=YOUR_API_KEY
+      EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN=YOUR_AUTH_DOMAIN
+      EXPO_PUBLIC_FIREBASE_PROJECT_ID=YOUR_PROJECT_ID
+      EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET=YOUR_STORAGE_BUCKET
+      EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=YOUR_MESSAGING_SENDER_ID
+      EXPO_PUBLIC_FIREBASE_APP_ID=YOUR_WEB_APP_ID
+      EXPO_PUBLIC_FIREBASE_MEASUREMENT_ID=YOUR_MEASUREMENT_ID # Optional
+      ```
+   3.  **`.gitignore`:** **Crucially, add `.env` to your `.gitignore` file** to avoid committing secrets.
+   4.  **Load in App:** Use a library like `dotenv` (install with `npm install dotenv`) early in your app entry point or configuration, or rely on Expo's built-in support for `.env` files.
+   5.  **Initialize Firebase:** Create a Firebase initialization file (e.g., `src/api/firebase.ts`) that reads these environment variables:
+      ```typescript
+      // src/api/firebase.ts
+      import firebase from 'firebase/app'; // Use compat for v8 or import { initializeApp } from 'firebase/app' for v9+
+      import 'firebase/auth';
+      import 'firebase/firestore';
 
-#### 2.1.3 Configure Authorized Domains
-1. Go to Firebase Authentication > Settings > Authorized domains
-2. Add your deployment domain (naadi.ma) to Authorized Domains
+      const firebaseConfig = {
+        apiKey: process.env.EXPO_PUBLIC_FIREBASE_API_KEY,
+        authDomain: process.env.EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN,
+        projectId: process.env.EXPO_PUBLIC_FIREBASE_PROJECT_ID,
+        storageBucket: process.env.EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET,
+        messagingSenderId: process.env.EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+        appId: process.env.EXPO_PUBLIC_FIREBASE_APP_ID,
+        measurementId: process.env.EXPO_PUBLIC_FIREBASE_MEASUREMENT_ID
+      };
 
-### 2.2 Register iOS Apps (Two Separate Registrations)
+      let app;
+      if (firebase.apps.length === 0) { // Use firebase.initializeApp for v8 compat
+        app = firebase.initializeApp(firebaseConfig);
+      } else {
+        app = firebase.app();
+      }
 
-#### 2.2.1 Register User iOS App
-1. In the Firebase Console, go to Project Overview
-2. Click on the iOS icon (Apple icon) to add an iOS app
-3. Enter your iOS Bundle ID: `com.naadi.user`
-   - This matches the `ios.bundleIdentifier` in naadi-user/app.json
-4. Enter an App Nickname (e.g., "Naadi User iOS")
-5. (Optional) Enter the App Store ID if you have one
-6. Click "Register app"
-7. Download the `GoogleService-Info.plist` file
-8. Save this file as `naadi-user/GoogleService-Info.plist`
+      const auth = firebase.auth(); // Use getAuth(app) for v9+
+      const db = firebase.firestore(); // Use getFirestore(app) for v9+
 
-#### 2.2.2 Register Partner iOS App
-1. Click on the iOS icon AGAIN to add a second iOS app
-2. Enter your iOS Bundle ID: `com.naadi.partner`
-   - This matches the `ios.bundleIdentifier` in naadi-partner/app.json
-3. Enter an App Nickname (e.g., "Naadi Partner iOS")
-4. (Optional) Enter the App Store ID if you have one
-5. Click "Register app"
-6. Download the `GoogleService-Info.plist` file
-7. Save this file as `naadi-partner/GoogleService-Info.plist`
+      export { auth, db, app };
+      ```
+   6.  **EAS Secrets (Production):** For production builds, inject these variables securely using EAS Secrets. Add them using `eas secret:create SECRET_NAME=value` and reference them in the `env` section of your build profiles in `eas.json`.
 
-### 2.3 Register Android Apps (Two Separate Registrations)
+### 3.2 Native Configuration (`src/app.config.js`)
 
-#### 2.3.1 Register User Android App
-1. In the Firebase Console, go to Project Overview
-2. Click on the Android icon to add an Android app
-3. Enter your Android package name: `com.naadi.user`
-   - This matches the `android.package` in naadi-user/app.json
-4. Enter an App Nickname (e.g., "Naadi User Android")
-5. (Optional) Enter the SHA-1 debugging certificate
-   - This is required for Google Sign-In on Android
-6. Click "Register app"
-7. Download the `google-services.json` file
-8. Save this file as `naadi-user/google-services.json`
+   *   **Bundle ID / Package Name:** Ensure `app.config.js` correctly sets `ios.bundleIdentifier` and `android.package` for each variant based on `EXPO_PUBLIC_APP_VARIANT`.
+   *   **Native Files:** Confirm that `ios.googleServicesFile` and `android.googleServicesFile` properties are *not* explicitly set in `app.config.js` if you placed the files in standard locations (root or `src/`), allowing Expo CLI to auto-detect them. If you placed them elsewhere, provide the correct relative path.
+   *   **Plugins:** Add necessary Firebase plugins, like `@react-native-firebase/app` (if using RNFirebase) or ensure configuration for the JS SDK is correct.
 
-#### 2.3.2 Register Partner Android App
-1. Click on the Android icon AGAIN to add a second Android app
-2. Enter your Android package name: `com.naadi.partner`
-   - This matches the `android.package` in naadi-partner/app.json
-3. Enter an App Nickname (e.g., "Naadi Partner Android")
-4. (Optional) Enter the SHA-1 debugging certificate
-5. Click "Register app"
-6. Download the `google-services.json` file
-7. Save this file as `naadi-partner/google-services.json`
+## 4. Setting Up Cloud Functions (`cloud-functions/`)
 
-## 3. Configure Expo for Native Platforms (iOS/Android)
+1.  **Navigate:** `cd cloud-functions`
+2.  **Initialize Firebase:** If you haven't already, run `firebase init functions`. Choose TypeScript or JavaScript. Follow the prompts.
+3.  **Install Dependencies:** `cd functions && npm install firebase-admin firebase-functions && cd ..`.
+4.  **Service Account:** Cloud Functions running on Google Cloud automatically use a default service account with necessary permissions. For local testing with the Emulator Suite, you need to provide credentials:
+    *   **Generate Key:** Download a service account key JSON file from Firebase Project Settings > Service accounts.
+    *   **Set Environment Variable:** Point the `GOOGLE_APPLICATION_CREDENTIALS` environment variable to the path of this key file *before* starting the emulators:
+        ```bash
+        export GOOGLE_APPLICATION_CREDENTIALS="/path/to/your/serviceAccountKey.json"
+        firebase emulators:start
+        ```
+    *   **`.gitignore`:** Add the service account key file to your `.gitignore`.
+5.  **Environment Configuration:** If your functions need API keys or other secrets:
+    *   Set them locally using `firebase functions:config:set service.key="YOUR_KEY" service.secret="YOUR_SECRET"`.
+    *   Access them in your code using `functions.config().service.key`.
+    *   These configs get deployed with your functions.
 
-### 3.1 Configure User App
-1. Open `naadi-user/app.json` and update:
+## 5. Enable Authentication & Firestore
 
-```json
-{
-  "expo": {
-    // ... existing config
-    "ios": {
-      "bundleIdentifier": "com.naadi.user",
-      "googleServicesFile": "./GoogleService-Info.plist"
-    },
-    "android": {
-      "package": "com.naadi.user",
-      "googleServicesFile": "./google-services.json"
-    },
-    "plugins": [
-      "@react-native-firebase/app",
-      // other plugins...
-    ]
-  }
-}
-```
-
-### 3.2 Configure Partner App
-1. Open `naadi-partner/app.json` and update:
-
-```json
-{
-  "expo": {
-    // ... existing config
-    "ios": {
-      "bundleIdentifier": "com.naadi.partner",
-      "googleServicesFile": "./GoogleService-Info.plist"
-    },
-    "android": {
-      "package": "com.naadi.partner",
-      "googleServicesFile": "./google-services.json"
-    },
-    "plugins": [
-      "@react-native-firebase/app",
-      // other plugins...
-    ]
-  }
-}
-```
-
-## 4. Enable Authentication Methods
-
-1. In the Firebase Console, go to Authentication
-2. Click on "Get started" if not already set up
-3. Enable the following sign-in methods:
-   - Email/Password
-   - Phone
-   - Google
-   - Facebook (requires Facebook Developer account)
-
-### Platform-Specific Authentication Requirements
-
-#### Web-Specific Requirements
-- Phone Authentication: Configure reCAPTCHA verification
-- Google Sign-In: Add JavaScript origins in Google Cloud Console
-  - Add `https://naadi.ma` for both apps
-- Other OAuth providers: Configure redirect URLs
-  - Set redirect URL to `https://naadi.ma/__/auth/handler` for the user app
-  - Set redirect URL to `https://naadi.ma/partner/__/auth/handler` for the partner app
-
-#### iOS-Specific Requirements
-- For Google Sign-In: Add the reversed client ID to your URL schemes
-- For Facebook: Configure your Info.plist with Facebook App ID
-- For Apple Sign-In: Enable Sign in with Apple capability
-
-#### Android-Specific Requirements
-- For Google Sign-In: Ensure SHA-1 certificate fingerprints are added to Firebase
-- For Facebook: Add Facebook App ID to strings.xml
-- For Phone Auth: Ensure Google Play Services is installed on the device
-
-## 5. Configure Firestore
-
-1. In the Firebase Console, go to Firestore Database
-2. Click "Create database" if not already set up
-3. Choose "Start in production mode" (recommended)
-4. Choose a database location closest to your users
-5. Set up security rules (or use the ones below temporarily for development)
-
-### Sample Firestore Rules
-```
+1.  **Authentication Methods:** In the Firebase Console > Authentication > Sign-in method, enable the providers you need (Email/Password, Phone, Google, etc.).
+2.  **Firestore:** Go to Firestore Database > Create database. Start in **production mode** (secure by default) and choose your location.
+3.  **Security Rules:** Edit Firestore rules. For initial development with emulators, you might use permissive rules like `allow read, write: if true;`. **For production, write secure rules** that grant access based on user authentication (`request.auth`) and roles.
+    ```javascript
+    // Example: Allow logged-in users to read/write their own user doc
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Allow read/write access during development
-    // IMPORTANT: Change these rules before production!
-    match /{document=**} {
-      allow read, write: if true;
-    }
-    
-    // Uncomment these rules when ready for production
-    // match /users/{userId} {
-    //   allow read: if request.auth.uid == userId;
-    //   allow write: if request.auth.uid == userId;
-    // }
-    // Add more collection-specific rules as needed
+        match /users/{userId} {
+          allow read, write: if request.auth != null && request.auth.uid == userId;
+        }
+        // Add rules for other collections (studios, classes, etc.)
+        // Example: Allow any logged-in user to read studios
+        match /studios/{studioId} {
+          allow read: if request.auth != null;
+          // Allow only partners (assuming a 'role' field in user doc) to write
+          allow write: if request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'partner';
+        }
   }
 }
 ```
 
-## 6. Testing Your Configuration
+## 6. Final Steps
 
-### 6.1 Testing User Web App
-1. Set up `naadi-user/.env.local` with the user web app configuration
-2. Run the build script:
-   ```bash
-   npm run build:api
-   ```
-3. Test user authentication:
-   ```bash
-   npm run dev:user
-   ```
-
-### 6.2 Testing Partner Web App
-1. Set up `naadi-partner/.env.local` with the partner web app configuration
-2. Test partner authentication:
-   ```bash
-   npm run dev:partner
-   ```
-
-### 6.3 Testing iOS and Android
-1. Ensure platform-specific files are in their correct locations:
-   - `naadi-user/GoogleService-Info.plist` and `naadi-user/google-services.json`
-   - `naadi-partner/GoogleService-Info.plist` and `naadi-partner/google-services.json`
-2. Build development clients:
-   ```bash
-   cd naadi-user
-   eas build --profile development --platform ios
-   eas build --profile development --platform android
-   
-   cd ../naadi-partner
-   eas build --profile development --platform ios
-   eas build --profile development --platform android
-   ```
-3. Install the development clients on your devices
-4. Run with development client:
-   ```bash
-   cd naadi-user
-   eas start --device
-   
-   cd ../naadi-partner
-   eas start --device
-   ```
-
-## 7. Troubleshooting
-
-### Firebase Admin SDK Initialization Error
-- Check that your service account has the necessary permissions
-- Verify that the JSON or individual fields are correctly formatted in .env.local
-- For private key, ensure line breaks are properly preserved with \n
-
-### Firebase Client Error
-- Check that all EXPO_PUBLIC_FIREBASE_* variables are set correctly
-- Verify that ALL apps are registered in Firebase Console for all platforms
-- Ensure you're using the correct configuration for each app (user vs. partner)
-
-### Authentication Issues
-- Ensure the authentication methods are enabled in Firebase Console
-- Check platform-specific requirements:
-  - Web: Authorized domains, reCAPTCHA settings
-  - iOS: Correct Bundle ID, URL schemes
-  - Android: SHA-1 certificate fingerprints
-
-### Platform-Specific Issues
-- iOS: Verify GoogleService-Info.plist has the correct Bundle ID for each app
-- Android: Verify google-services.json has the correct package name for each app
-- Web: Check if your domain is properly authorized
-
-## 8. Summary - Environment Variable Structure
-
-It's crucial to understand the environment variable file structure in this project:
-
-### Three Separate `.env.local` Files
-
-1. **Root-level `.env.local`**
-   - **Location**: Project root directory
-   - **Contains**: Firebase Admin SDK credentials
-   - **Used by**: `packages/api` for server-side operations
-   - **Key variables**: `FIREBASE_SERVICE_ACCOUNT` or individual credential fields
-
-2. **User App `.env.local`**
-   - **Location**: `naadi-user/` directory
-   - **Contains**: Firebase User Web App configuration
-   - **Used by**: User app only
-   - **Key variables**: `EXPO_PUBLIC_FIREBASE_*` variables with unique APP_ID
-
-3. **Partner App `.env.local`**
-   - **Location**: `naadi-partner/` directory
-   - **Contains**: Firebase Partner Web App configuration
-   - **Used by**: Partner app only
-   - **Key variables**: `EXPO_PUBLIC_FIREBASE_*` variables with unique APP_ID
-
-This separation ensures that each app has its own Firebase configuration while sharing the same Admin SDK credentials for server-side operations.
+*   **Initialize SDK:** Ensure you are correctly initializing the Firebase JS SDK in your Expo app (`src/api/firebase.ts` or similar) using the environment variables.
+*   **Test:** Thoroughly test authentication and Firestore interactions using both app variants and potentially the Firebase Emulator Suite locally.
+*   **Deploy Functions:** Deploy your functions using `firebase deploy --only functions` from the `cloud-functions` directory or project root.
