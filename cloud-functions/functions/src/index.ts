@@ -1,8 +1,8 @@
 import * as admin from "firebase-admin";
 import { HttpsError } from 'firebase-functions/v1/https';
 import { randomBytes } from 'crypto'; // For generating random code
-import { PartnerSignupRequest } from "../../../types/api"; // Check if this type exists in api.ts
-import { PartnerAccount } from "../../../types"; // Assuming PartnerAccount is exported from types/index.ts
+import { PartnerSignupRequest } from "../../../types"; // Using relative path
+import { PartnerAccount } from "../../../types"; // Using relative path
 import { onCall } from "firebase-functions/v2/https";
 import { logger } from "firebase-functions";
 

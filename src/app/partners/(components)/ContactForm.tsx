@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import {
   View,
   StyleSheet,
@@ -17,7 +17,7 @@ import CustomText from '@/components/CustomText';
 // Import PhoneInput and its exported countriesData
 import PhoneInput, { countriesData } from './PhoneInput'; // Adjust path if needed
 // Import the new API helper function
-import { submitPartnerContactRequest } from '../../../api/partner'; // Adjust path if needed
+import { submitPartnerContactRequest } from '@naadi/api'; // Adjust path if needed
 
 export interface PhoneInfo {
   code: string;

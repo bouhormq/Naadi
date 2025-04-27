@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import {
   View,
   StyleSheet,
@@ -8,8 +8,7 @@ import {
   // @ts-ignore
   CheckBox,
   Platform,
-  useWindowDimensions,
-  Linking,
+  useWindowDimensions
 } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import { PartnerSignupRequest, PhoneInfo } from '@naadi/types'; // Assuming these types exist
@@ -17,7 +16,7 @@ import { PartnerSignupRequest, PhoneInfo } from '@naadi/types'; // Assuming thes
 import PhoneInput, { countriesData } from './PhoneInput'; // Adjust path if needed
 import CustomText from '@/components/CustomText';
 // Import the new API helper function
-import { submitPartnerRegistrationRequest } from '../../../api/partner'; // Adjust path if needed
+import { submitPartnerRegistrationRequest } from '@naadi/api'; // Adjust path if needed
 
 export default function PartnerSignupFormContent() {
   const defaultCountryData = countriesData.find(country => country.code === 'MA') || countriesData[0];

@@ -18,6 +18,7 @@
     "@expo/metro-runtime": "~4.0.1",
     "@naadi/api": "../packages/types/src/api",
     "@naadi/types": "../packages/types/src/types",
+    "@react-native-async-storage/async-storage": "^1.24.0",
     "@react-native-picker/picker": "2.9.0",
     "@tanstack/react-table": "^8.21.3",
     "expo": "~52.0.0",

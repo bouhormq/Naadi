@@ -15,7 +15,7 @@ import {
 import { useRouter, useLocalSearchParams } from 'expo-router';
 // Remove direct auth imports if no longer needed directly here
 // import { loginWithEmail, registerPartnerWithCode } from '../../api/auth';
-import { verifyPartnerRegistrationCode } from '../../api/auth'; // Keep if first time tab uses it
+import { verifyPartnerRegistrationCode } from '@naadi/api'; // Keep if first time tab uses it
 import CustomText from '@/components/CustomText';
 // Import the useSession hook
 import { useSession } from '../../ctx'; 
@@ -64,10 +64,12 @@ export default function PartnerLoginScreen() {
                 console.log("PartnerLoginScreen: Session detected admin, redirecting to /admin");
                 router.replace('/admin');
             } else if (session.role === 'partner') {
-                console.log("PartnerLoginScreen: Session detected (partner), redirecting to /partners");
+                console.log("PartnerLoginScreen: Session detected partner, redirecting to /partners");
                 router.replace('/partners');
+            } else if (session.role === 'user') {
+                console.log("PartnerLoginScreen: Session detected user, redirecting to /");
+                router.replace('/'); // Redirect user role to main app root
             }
-            // No redirect for 'user' role from partner login
         }
     }, [session, isSessionLoading, router]);
 

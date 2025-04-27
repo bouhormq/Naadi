@@ -4,33 +4,56 @@ import {
   TouchableOpacity, 
   useWindowDimensions,
 } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, usePathname } from 'expo-router';
 import CustomText from '@/components/CustomText';
+import { useSession } from '../../../ctx';
 
 export default function Header() {
   const router = useRouter();
+  const pathname = usePathname();
   const { width } = useWindowDimensions();
+  const { session, signOut } = useSession();
+
+  const isLoginPage = pathname === '/login';
 
   const navigateToLogin = () => {
     router.push('/login');
   };
 
   const navigateToSignup = () => {
-    router.push('/signup'); // Assuming you have a general user signup page at /signup
+    router.push('/signup');
+  };
+
+  const handleLogoPress = () => {
+    // If not logged in, navigate to the public landing page (main root)
+    // If logged in, do nothing.
+    if (!session) {
+       router.push('/');
+    }
   };
 
   return (
     <View style={styles.header}>
-      <TouchableOpacity onPress={() => router.push('/')} style={styles.logoContainer}>
+      <TouchableOpacity onPress={handleLogoPress} style={styles.logoContainer}>
         <CustomText style={styles.logo}>naadi</CustomText>
       </TouchableOpacity>
       <View style={styles.headerButtons}>
-        <TouchableOpacity style={styles.headerButton} onPress={navigateToSignup}>
-          <CustomText style={styles.menuItemText}>Sign up</CustomText>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.button} onPress={navigateToLogin}> 
-          <CustomText style={styles.buttonText}>Log in</CustomText>
-        </TouchableOpacity>
+        {session ? (
+          <TouchableOpacity style={styles.button} onPress={signOut}> 
+            <CustomText style={styles.buttonText}>Log out</CustomText>
+          </TouchableOpacity>
+        ) : (
+          !isLoginPage && (
+            <>
+              <TouchableOpacity style={styles.headerButton} onPress={navigateToSignup}>
+                <CustomText style={styles.menuItemText}>Sign up</CustomText>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.button} onPress={navigateToLogin}> 
+                <CustomText style={styles.buttonText}>Log in</CustomText>
+              </TouchableOpacity>
+            </>
+          )
+        )}
       </View>
     </View>
   );
@@ -82,6 +105,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'flex-end',
     flex: 2,
+    minHeight: 40,
   },
   headerButton: {
     marginLeft: 10,

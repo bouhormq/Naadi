@@ -3,4 +3,5 @@ export * from './auth';
 export * from './studios';
 export * from './classes';
 export * from './bookings';
-export * from './analytics'; 
+export * from './analytics';
+export * from './partner'; 

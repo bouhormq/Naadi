@@ -1,5 +1,5 @@
 import { httpsCallable, HttpsCallableResult } from 'firebase/functions';
-import { PartnerSignupRequest } from '../../types/api'; // Assuming types are correctly located
+import { PartnerSignupRequest } from '@naadi/types'; // Assuming types are correctly located
 import { PartnerContactFormData } from '../app/partners/(components)/ContactForm'; // Import type from component
 import { functions } from '../config/firebase'; // Import configured functions instance
 

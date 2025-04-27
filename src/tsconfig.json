@@ -23,6 +23,12 @@
       ],
       "@/components/*": [
         "./components/*"
+      ],
+      "@naadi/api/*": [
+        "../src/api/*"
+      ],
+      "@naadi/api": [
+        "../src/api"
       ]
     }
   },

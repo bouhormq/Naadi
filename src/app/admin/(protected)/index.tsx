@@ -1,13 +1,15 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { View, Text, Button, StyleSheet, ScrollView, ActivityIndicator, Alert, TouchableOpacity, TextInput } from 'react-native';
-import { PartnerAccount } from '../../../types';
-import { PartnerSignupRequest } from '../../../types/api';
+// Using relative paths carefully
+import { PartnerAccount } from '../../../../types'; 
+import { PartnerSignupRequest } from '../../../../types/api';
 import { Timestamp } from 'firebase/firestore';
+// Using relative paths carefully
 import { 
     getAdminDashboardData, 
     approvePartnerRequest, 
     togglePartnerAccountStatus 
-} from '../../api/admin';
+} from '../../../api/admin';
 
 // Define combined types for easier state management
 // More explicit Timestamp structure handling
@@ -29,6 +31,7 @@ type Account = PartnerAccount & {
 };
 type ActiveView = 'pending' | 'approved'; // Type for view state
 
+// Renaming component to reflect its purpose (optional)
 export default function AdminDashboardScreen() {
     const [pendingRequests, setPendingRequests] = useState<PendingRequest[]>([]);
     const [partnerAccounts, setPartnerAccounts] = useState<Account[]>([]);

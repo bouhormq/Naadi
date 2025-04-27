@@ -1,22 +1,134 @@
-// app/_layout.js
+// app/_layout.tsx
 import '../config/firebase';
-import { Stack, usePathname, useRouter, SplashScreen } from 'expo-router';
+import { Stack, useRouter, useSegments, SplashScreen } from 'expo-router';
 import { useEffect, useCallback } from 'react';
-import { Platform, View } from 'react-native';
+import { Platform, View, Text } from 'react-native';
 import { useFonts } from 'expo-font';
-import { SessionProvider } from '../ctx';
+import { SessionProvider, useSession } from '../ctx';
 
 // Prevent the splash screen from auto-hiding immediately
 SplashScreen.preventAutoHideAsync();
 
+function RootLayoutNav() {
+  const { session, isLoading } = useSession();
+  const segments = useSegments();
+  const router = useRouter();
+
+  useEffect(() => {
+    const path = segments.join('/');
+    // More robust check for auth routes
+    const isAuthRoute = path === 'login' || path === '(main)/login' || path === 'partners/login'; // Add others like signup
+    
+    const isInMainProtected = path.startsWith('(main)/(protected)');
+    const isInPartnersProtected = path.startsWith('partners/(protected)');
+    const isInAdminProtected = path.startsWith('admin/(protected)');
+    const isAdminRoot = path === 'admin'; // Check specifically for admin root
+    const isInAnyProtected = isInMainProtected || isInPartnersProtected || isInAdminProtected;
+
+    // A route is considered protected if it's in a (protected) folder OR it's the admin root itself
+    const shouldProtectRoute = isInAnyProtected || isAdminRoot;
+
+    const currentTopLevelGroup = segments[0];
+
+    console.log(`RootLayoutNav Effect: isLoading=${isLoading}, sessionExists=${!!session}, path=/${path}, isAuthRoute=${isAuthRoute}, shouldProtectRoute=${shouldProtectRoute}`);
+
+    if (isLoading) {
+        console.log("RootLayoutNav Effect: Still loading session...");
+        return; // Wait until session is loaded
+    }
+
+    if (!session) {
+      // --- LOGGED OUT --- 
+      // Redirect ONLY if trying to access a route marked for protection.
+      if (shouldProtectRoute) {
+          console.log(`RootLayoutNav Effect: Logged out, accessing protected route (/${path}). Redirecting.`);
+          // Specific redirect for admin root attempt
+          if (isAdminRoot) { 
+              console.log("...redirecting /admin to /partners");
+              router.replace('/partners');
+          } 
+          // Redirect for attempts to access actual (protected) folders
+          else if (isInAnyProtected) { 
+              if (currentTopLevelGroup === 'partners' || currentTopLevelGroup === 'admin') {
+                 console.log("...redirecting protected partners/admin to /partners/login");
+                 router.replace('/partners/login'); 
+              } else { // Assumes (main)/(protected)
+                 console.log("...redirecting protected main to /login");
+                 router.replace('/login');
+              }
+          }
+      } else {
+         // If not accessing a protected route, allow access.
+         console.log(`RootLayoutNav Effect: Logged out, accessing public or auth route (/${path}). Allowed.`);
+      }
+    } else {
+      // --- LOGGED IN --- 
+      const userRole = session.role;
+      let userHomeBase = '/'; 
+
+      if (userRole === 'partner') {
+          userHomeBase = '/partners/(protected)'; 
+      } else if (userRole === 'admin') {
+          userHomeBase = '/admin/(protected)'; 
+      } else {
+           userHomeBase = '/(main)/(protected)'; 
+      }
+      const userHomeBasePath = userHomeBase.replace(/^\//, ''); 
+
+      // Redirect away from auth routes
+      if (isAuthRoute) {
+          console.log(`RootLayoutNav Effect: Logged in (${userRole}), accessing auth route (/${path}). Redirecting to ${userHomeBase}.`);
+          router.replace(userHomeBase);
+          return; 
+      }
+
+      // Redirect if accessing public routes or wrong protected area
+      let shouldRedirect = false;
+      if (userRole === 'user') {
+           if (currentTopLevelGroup === 'partners' || currentTopLevelGroup === 'admin' || !isInMainProtected) {
+              // User should not be in partners/admin or any public -(main) page
+               shouldRedirect = true; 
+           }
+      } else if (userRole === 'partner') {
+          if (!isInPartnersProtected) { // Partner should not be outside partners/(protected)
+               shouldRedirect = true;
+          }
+      } else if (userRole === 'admin') {
+           if (!isInAdminProtected) { // Admin should not be outside admin/(protected)
+               shouldRedirect = true;
+           }
+      }
+
+      // Execute redirect if needed
+      if (shouldRedirect) {
+           console.log(`RootLayoutNav Effect: Logged in (${userRole}), accessing disallowed route (/${path}). Redirecting to ${userHomeBase}.`);
+           router.replace(userHomeBase);
+      } else {
+          console.log(`RootLayoutNav Effect: Logged in (${userRole}), accessing allowed route (/${path}).`);
+      }
+    }
+  }, [isLoading, session, segments, router]);
+
+  // Display loading indicator or null while checking session and redirecting
+  if (isLoading) {
+     return <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}><Text>Loading Session...</Text></View>;
+  }
+
+  // Render the main stack navigator
+  return (
+      <Stack screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="(main)" />
+        <Stack.Screen name="partners" />
+        <Stack.Screen name="admin" />
+        {/* Add (auth) group if you create one for login/signup */}
+        {/* <Stack.Screen name="(auth)" /> */}
+      </Stack>
+  );
+}
 
 export default function RootLayout() {
-  const router = useRouter();
-  const pathname = usePathname();
-
-  // --- Font Loading ---
+  // --- Font Loading (Moved from original RootLayoutNav) ---
   const [fontsLoaded, fontError] = useFonts({
-    // Map simple names to the actual file paths.
     'SFProText-Regular': require('../assets/fonts/SF-Pro-Text-Regular.otf'),
     'SFProText-Medium': require('../assets/fonts/SF-Pro-Text-Medium.otf'),
     'SFProText-Semibold': require('../assets/fonts/SF-Pro-Text-Semibold.otf'),
@@ -32,84 +144,21 @@ export default function RootLayout() {
     'AppleColorEmoji': require('../assets/fonts/AppleColorEmoji.ttf'),
   });
 
-  // Log font loading status for debugging
   useEffect(() => {
-    if (fontsLoaded) {
-      console.log("All fonts loaded successfully!");
-    } else if (fontError) {
-      console.error("Font loading error:", fontError);
+    if (fontsLoaded || fontError) {
+      SplashScreen.hideAsync();
     }
   }, [fontsLoaded, fontError]);
 
-  // --- Splash Screen Hiding and Initial Route Logic ---
-  useEffect(() => {
-    if (fontsLoaded || fontError) {
-      // Fonts are loaded, now signal the root view is ready to potentially hide splash screen
-    }
-  }, [fontsLoaded, fontError]);
-
-  // Define the callback for the root view's layout event
-  const onLayoutRootView = useCallback(async () => {
-    // Only hide the splash screen if fonts are loaded OR if there was a font loading error.
-    if (fontsLoaded || fontError) {
-      console.log("Root view layout complete. Hiding splash screen.");
-      await SplashScreen.hideAsync(); // Hide the splash screen
-    }
-  }, [fontsLoaded, fontError]); // Depend on font status
-
-  // Your existing initial route determination logic
-  useEffect(() => {
-    console.log("Determining initial route...");
-    let targetRoute: string | null = null;
-
-    if (Platform.OS !== 'web'){ // Note: Your code had Platform.OS === 'web', changed to !== 'web' for native logic
-      const appVariant = process.env.EXPO_PUBLIC_APP_VARIANT;
-      console.log(`Native: App Variant detected: ${appVariant}`);
-
-      if (appVariant === 'partners') {
-        targetRoute = '/partners';
-      } else {
-        targetRoute = '/(main)';
-      }
-    }
-
-     if (targetRoute && pathname === '/') {
-        console.log(`Redirecting from '/' to ${targetRoute}`);
-        router.replace(targetRoute);
-    } else {
-        console.log(`No redirection needed or not at root '/' (current: ${pathname})`);
-    }
-
-  }, [pathname, router]);
-
-
-  // --- Conditional Rendering based on Font Loading State ---
+  // Wait for fonts to load before rendering the app
   if (!fontsLoaded && !fontError) {
-    console.log("Fonts not loaded, returning null to keep splash screen visible.");
     return null;
   }
-
-  // --- Handle Font Loading Errors ---
-  if (fontError) {
-    console.error("Displaying font loading error UI.");
-  }
-
-  // --- Render the main app content (Stack Navigator) WHEN FONTS ARE READY ---
-  console.log("Fonts loaded, rendering SessionProvider and Stack navigator.");
+  
+  // --- Render the App ---
   return (
-    // Wrap the main content with SessionProvider
     <SessionProvider>
-      {/* Wrap your main navigation structure with a View that has the onLayout callback. */}
-      <View style={{ flex: 1 }} onLayout={onLayoutRootView}>
-        <Stack screenOptions={{ headerShown: false }}>
-          <Stack.Screen name="(main)" />
-          <Stack.Screen name="partners" />
-          {/* Add other top-level modal screens etc. here if needed */}
-          {/* Ensure the 'admin' stack group is defined here or handled by Expo Router conventions */}
-          {/* If 'admin' is a top-level group like '(main)' and 'partners', it might need an entry here */}
-          {/* <Stack.Screen name="admin" /> */}
-        </Stack>
-      </View>
+      <RootLayoutNav />
     </SessionProvider>
   );
 }

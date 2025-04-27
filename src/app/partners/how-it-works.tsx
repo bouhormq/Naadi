@@ -1,5 +1,4 @@
 import { StyleSheet, ScrollView } from 'react-native';
-import { PartnerSignupRequest } from '@naadi/types';
 import HeroSection from './(components)/HeroSection';
 import PartnerSignupForm from './(components)/PartnerSignupForm';
 import SmartToolsSection from './(components)/SmartTools';
@@ -7,31 +6,6 @@ import FAQSection from './(components)/FAQSection';
 import CTASection from './(components)/CTASection';
 import Footer from './(components)/Footer';
 export default function SignupScreen() {
-
-  const handleSubmit = async (data: PartnerSignupRequest) => {
-    try {
-      console.log('Submitting partner signup data:', data);
-
-      const response = await fetch('https://api-3k2a2q5awq-no.a.run.app/register-request', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data),
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const result = await response.json();
-      console.log('Signup successful:', result);
-
-    } catch (error) {
-      console.error('Signup error:', error);
-      throw error; // Re-throw the error to handle it in the BusinessSignupForm component
-    }
-  };
 
   return (
     <ScrollView contentContainerStyle={styles.container}>

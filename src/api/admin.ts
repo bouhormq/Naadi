@@ -1,6 +1,5 @@
 import { httpsCallable, HttpsCallableResult } from 'firebase/functions';
-import { PartnerAccount } from '../../types'; // Assuming types/index.ts exports this
-import { PartnerSignupRequest } from '../../types/api'; // Assuming types/api.ts exports this
+import { PartnerAccount, PartnerSignupRequest } from '@naadi/types'; // Assuming types/index.ts exports this
 
 // Import the configured functions instance from firebase config
 import { functions } from '../config/firebase';

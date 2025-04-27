@@ -1,65 +1,39 @@
-import { useEffect } from 'react'; // Keep useEffect if needed for other things
-import { Stack, useRouter, Redirect } from 'expo-router';
+// Remove useEffect import if no longer needed for other purposes
+// import { useEffect } from 'react'; 
+import { Stack, Redirect, useRootNavigationState } from 'expo-router';
 // Remove Firebase imports
 // import { getAuth, onAuthStateChanged, User } from 'firebase/auth';
 import { Text } from 'react-native'; // Import Text for loading indicator
 
-// Import the useSession hook
-import { useSession } from '../../ctx'; // Adjust path if needed
-// Import the shared Header component
-import Header from '../partners/(components)/Header'; // Adjust path if necessary
+// Remove useSession and Redirect imports if no longer needed here
+// import { useSession } from '../../ctx'; 
+// Import the admin-specific Header component
+import Header from './(components)/Header'; // Updated path
 
-const ADMIN_EMAIL = "bouhormq@gmail.com";
+// const ADMIN_EMAIL = "bouhormq@gmail.com"; // No longer needed here
 
 export default function AdminLayout() {
-  // Destructure session which now contains { email, role } or null
-  const { session, isLoading, signOut } = useSession(); // Use the session hook
-  const router = useRouter();
+  // No longer need session checks here, handled by root layout
+  // const { session, isLoading } = useSession(); 
+  // const navigationState = useRootNavigationState();
+  
+  // Could potentially add a basic loading check if needed
+  // if (!navigationState?.key) return null; 
 
-  // Check authentication and admin status using the session context
-  useEffect(() => {
-    if (isLoading) return; // Wait until session loading is complete
-
-    const isAdmin = session?.email === ADMIN_EMAIL;
-
-    if (!session || !isAdmin) {
-      // If not loading, and no session OR the user is not the admin
-      console.log(`AdminLayout: Redirecting. isLoading: ${isLoading}, session: ${JSON.stringify(session)}, isAdmin: ${isAdmin}`);
-      // Redirect non-admins away
-      // Decide the appropriate redirect target (e.g., partner login or main page)
-      router.replace('/partners/login'); // Example: Redirect to partner login
-    }
-  }, [isLoading, session, router]);
-
-  // Show loading state while checking auth from context
-  if (isLoading) {
-    console.log('AdminLayout: isLoading state is true.');
-    return <Text>Loading...</Text>; // Basic loading indicator
-  }
-
-  // If, after loading, the user is definitely not the admin, redirect.
-  // This ensures immediate redirect without waiting for useEffect.
-  if (!session || session.email !== ADMIN_EMAIL) {
-    console.log('AdminLayout: No session or not admin after loading, rendering Redirect.');
-    return <Redirect href="/partners/login" />; // Example redirect
-  }
-
-  // User is authenticated and is the admin
-  console.log('AdminLayout: Admin verified, rendering stack.');
+  // Render layout
+  console.log("(AdminLayout): Rendering stack");
   return (
     <Stack>
-      {/* Example: Add a sign out button to the header */}
+      {/* Define screen for the protected index route */}
       <Stack.Screen 
-        name="index" 
+        name="(protected)/index" // Reference the protected index file
         options={{
           title: 'Admin Dashboard',
-          // Remove headerRight
-          // headerRight: () => <Text onPress={signOut} style={{ marginRight: 10, color: 'blue' }}>Sign Out</Text>
-          // Use the shared Header component
           header: () => <Header />,
         }} 
       />
-      {/* Add other admin screens here if needed */}
+      {/* Add other admin screens here (likely within (protected) too) */}
+      {/* Example: <Stack.Screen name="(protected)/users" options={{...}} /> */}
     </Stack>
   );
 } 

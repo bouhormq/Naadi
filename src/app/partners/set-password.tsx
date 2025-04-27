@@ -9,10 +9,10 @@ import {
     Alert,
     Platform,
     SafeAreaView,
-    KeyboardAvoidingView
+    ScrollView
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { completePartnerRegistration } from '../../api/auth'; // Import the completion function
+import { completePartnerRegistration } from '@naadi/api'; // Import the completion function
 import CustomText from '@/components/CustomText';
 
 export default function SetPartnerPasswordScreen() {
@@ -84,106 +84,109 @@ export default function SetPartnerPasswordScreen() {
 
     return (
         <SafeAreaView style={styles.safeArea}>
-            <KeyboardAvoidingView 
-                behavior={Platform.OS === "ios" ? "padding" : "height"}
-                style={styles.container}
-            >
-                <View style={styles.content}>
-                    <CustomText style={styles.title}>naadi</CustomText>
-                    <CustomText style={styles.subtitle}>Set Your Partner Password</CustomText>
-                    <CustomText style={styles.infoText}>
-                        Create a secure password for your account ({email})
-                    </CustomText>
-                    
-                    <View style={styles.form}>
-                        <View style={styles.formGroup}>
-                            <CustomText style={styles.label}>New Password</CustomText>
-                            <TextInput
-                                style={[styles.input, isSuccess && styles.inputDisabled]}
-                                value={password}
-                                onChangeText={setPassword}
-                                secureTextEntry
-                                placeholder="New Password"
-                                placeholderTextColor="#9ca3af"
-                                editable={!isSuccess}
-                            />
-                        </View>
-                        <View style={styles.formGroup}>
-                            <CustomText style={styles.label}>Confirm New Password</CustomText>
-                            <TextInput
-                                style={[styles.input, isSuccess && styles.inputDisabled]}
-                                value={confirmPassword}
-                                onChangeText={setConfirmPassword}
-                                secureTextEntry
-                                placeholder="Confirm New Password"
-                                placeholderTextColor="#9ca3af"
-                                editable={!isSuccess}
-                            />
-                        </View>
-
-                        {error && <CustomText style={styles.errorText}>{error}</CustomText>}
-                        {successMessage && <CustomText style={styles.successText}>{successMessage}</CustomText>}
-
-                        <TouchableOpacity
-                            style={[styles.button, (loading || isSuccess) && styles.buttonDisabled]}
-                            onPress={handleSetPassword}
-                            disabled={loading || isSuccess}
-                        >
-                            {loading ? (
-                                <ActivityIndicator color="#fff" size="small" /> 
-                            ) : (
-                                <CustomText style={styles.buttonText}>Set Password & Create Account</CustomText>
-                            )}
-                        </TouchableOpacity>
+            <ScrollView contentContainerStyle={styles.scrollContainer}>
+                <View style={styles.formWrapper}>
+                    <View style={styles.formContainer}>
+                        <CustomText style={styles.formTitle}>Set Your Partner Password</CustomText>
+                        <CustomText style={styles.formSubtitle}>
+                            Create a secure password for your account associated with: 
+                            <CustomText style={{ fontWeight: '600' }}> {email}</CustomText>
+                        </CustomText>
                         
-                        {!isSuccess && (
-                            <TouchableOpacity onPress={() => router.replace('/partners/login')} style={styles.switchLink}>
-                                <CustomText style={styles.backLinkText}>Back to Login</CustomText>
+                        <View style={styles.form}>
+                            <View style={styles.formGroup}>
+                                <CustomText style={styles.label}>New Password</CustomText>
+                                <TextInput
+                                    style={[styles.input, isSuccess && styles.inputDisabled]}
+                                    value={password}
+                                    onChangeText={setPassword}
+                                    secureTextEntry
+                                    placeholder="Enter your new password"
+                                    placeholderTextColor="#9ca3af"
+                                    editable={!isSuccess}
+                                />
+                            </View>
+                            <View style={styles.formGroup}>
+                                <CustomText style={styles.label}>Confirm New Password</CustomText>
+                                <TextInput
+                                    style={[styles.input, isSuccess && styles.inputDisabled]}
+                                    value={confirmPassword}
+                                    onChangeText={setConfirmPassword}
+                                    secureTextEntry
+                                    placeholder="Confirm your new password"
+                                    placeholderTextColor="#9ca3af"
+                                    editable={!isSuccess}
+                                />
+                            </View>
+
+                            {error && <CustomText style={styles.errorText}>{error}</CustomText>}
+                            {successMessage && <CustomText style={styles.successText}>{successMessage}</CustomText>}
+
+                            <TouchableOpacity
+                                style={[styles.submitButton, (loading || isSuccess) && styles.submitButtonDisabled]}
+                                onPress={handleSetPassword}
+                                disabled={loading || isSuccess}
+                            >
+                                {loading ? (
+                                    <ActivityIndicator color="#fff" size="small" /> 
+                                ) : (
+                                    <CustomText style={styles.submitButtonText}>Set Password & Create Account</CustomText>
+                                )}
                             </TouchableOpacity>
-                        )}
+                            
+                             {/* Optional: Add link back to login if they arrived here by mistake? */}
+                             {!isSuccess && (
+                                 <TouchableOpacity onPress={() => router.replace('/partners/login')} style={styles.backLink}>
+                                     <CustomText style={styles.backLinkText}>Back to Login</CustomText>
+                                 </TouchableOpacity>
+                             )}
+                        </View>
                     </View>
                 </View>
-            </KeyboardAvoidingView>
+            </ScrollView>
         </SafeAreaView>
     );
 }
 
-// Reusing styles from PartnerLoginScreen
+// Reusing styles from PartnerLoginScreen with minor adjustments
 const styles = StyleSheet.create({
     safeArea: {
         flex: 1,
-        backgroundColor: '#f8f9fa',
+        backgroundColor: '#fff',
     },
-    container: {
-        flex: 1,
+    scrollContainer: {
+        flexGrow: 1,
         justifyContent: 'center',
-        alignItems: 'center',
-        paddingHorizontal: 30,
+        paddingVertical: 30,
     },
-    content: {
-        width: '100%',
-        maxWidth: 360,
-        alignItems: 'center',
+    formWrapper: {
+        width: '90%',
+        maxWidth: 400,
+        alignSelf: 'center',
     },
-    title: {
-        fontSize: 70,
-        fontWeight: '500',
-        color: '#212529',
-        marginBottom: 15,
+    formContainer: {
+        backgroundColor: '#fff',
+        borderRadius: 12,
+        padding: 30,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.1,
+        shadowRadius: 10,
+        elevation: 8,
+    },
+    formTitle: {
+        fontSize: 20,
+        fontWeight: '600',
+        color: '#1f2937',
+        marginBottom: 8,
         textAlign: 'center',
     },
-    subtitle: {
+    formSubtitle: {
         fontSize: 14,
-        color: '#495057',
-        marginBottom: 15,
-        textAlign: 'center',
-    },
-    infoText: {
-        fontSize: 14,
-        color: '#6c757d',
+        color: '#6b7280',
+        lineHeight: 20,
         textAlign: 'center',
         marginBottom: 25,
-        lineHeight: 20,
     },
     form: {
         // Styles for the form content area
@@ -198,59 +201,60 @@ const styles = StyleSheet.create({
         marginBottom: 8,
     },
     input: {
-        width: '100%',
-        height: 50,
-        backgroundColor: '#fff',
         borderWidth: 1,
-        borderColor: '#ced4da',
+        borderColor: '#d1d5db', 
         borderRadius: 8,
-        paddingHorizontal: 15,
-        fontSize: 16,
-        color: '#212529',
-        marginBottom: 15,
+        paddingHorizontal: 12,
+        paddingVertical: Platform.OS === 'ios' ? 10 : 8,
+        fontSize: 14,
+        color: '#1f2937',
+        backgroundColor: '#fff',
+        minHeight: 40,
     },
     inputDisabled: {
         backgroundColor: '#e9ecef',
         color: '#6c757d',
     },
-    button: {
-        width: '100%',
+    submitButton: {
         backgroundColor: '#007bff',
-        paddingVertical: 15,
         borderRadius: 8,
-        marginTop: 10,
-        marginBottom: 25,
+        paddingVertical: 14,
+        alignItems: 'center',
+        marginTop: 10, 
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.2,
+        shadowRadius: 4,
+        elevation: 4,
     },
-    buttonDisabled: {
-        backgroundColor: '#6c757d',
+    submitButtonDisabled: {
+        backgroundColor: '#adb5bd',
         opacity: 0.7,
     },
-    buttonText: {
+    submitButtonText: {
         color: '#fff',
         fontSize: 16,
         fontWeight: '600',
     },
     errorText: {
-        width: '100%',
-        color: '#dc3545',
+        color: '#ef4444',
         fontSize: 14,
-        marginBottom: 15,
+        marginBottom: 10,
         textAlign: 'center',
     },
-    successText: {
-        width: '100%',
+     successText: {
         color: '#28a745',
         fontSize: 14,
-        marginBottom: 15,
+        marginBottom: 10,
         textAlign: 'center',
     },
-    switchLink: {
-        paddingVertical: 10,
+    backLink: {
+        marginTop: 20,
+        alignItems: 'center',
     },
     backLinkText: {
         color: '#007bff',
         fontSize: 14,
-        textAlign: 'center',
-        fontWeight: '500',
+        textDecorationLine: 'underline',
     },
 }); 

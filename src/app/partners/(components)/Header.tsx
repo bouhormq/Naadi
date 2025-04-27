@@ -18,11 +18,23 @@ export default function Header() {
     router.push('/partners/login');
   };
 
+  const handleLogoPress = () => {
+    // Only navigate if the user is NOT logged in.
+    if (!session) {
+      // If the current path starts with /admin, do nothing (already handled by !session).
+      // Otherwise, navigate to the partner root.
+      // Note: The admin check is technically redundant now, but kept for clarity.
+      if (!pathname.startsWith('/admin')) {
+        router.push('/partners'); 
+      }
+    }
+  };
+
   const isLoginPage = pathname === '/partners/login'; // Check if on login page
 
   return (
     <View style={styles.header}>
-      <TouchableOpacity onPress={() => router.push('/partners')} style={styles.logoContainer}>
+      <TouchableOpacity onPress={handleLogoPress} style={styles.logoContainer}>
         <CustomText style={styles.logo}>naadi</CustomText>
       </TouchableOpacity>
       <View style={styles.headerButtons}>
