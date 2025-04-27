@@ -82,7 +82,7 @@ const PhoneInput: React.FC<PhoneInputProps> = ({
       
       // Update country if it has changed or doesn't match the value prop
       if (countryMatch && countryMatch.code !== selectedCountry.code) {
-          setSelectedCountry(countryMatch);
+         setSelectedCountry(countryMatch);
       }
 
       // Update internal phone number based on value.number
@@ -95,9 +95,9 @@ const PhoneInput: React.FC<PhoneInputProps> = ({
         const defaultCountry = countriesData.find(c => c.code === defaultCountryCode) || countriesData[0];
         // Check if reset is actually needed to prevent potential loops
         if (selectedCountry.code !== defaultCountry.code || phoneNumber !== '') {
-           setSelectedCountry(defaultCountry);
-           setPhoneNumber('');
-        }
+        setSelectedCountry(defaultCountry);
+        setPhoneNumber('');
+    }
     }
     // Dependency array: Rerun effect if `value` prop changes. `defaultCountryCode` is also needed.
     // Avoid including internal state `selectedCountry` or `phoneNumber` if possible to prevent loops,

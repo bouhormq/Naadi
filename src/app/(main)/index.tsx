@@ -1,8 +1,14 @@
 import { useEffect, useRef, useState } from 'react';
-import { Animated, ScrollView, StyleSheet, Platform } from 'react-native';
+import { Animated, ScrollView, StyleSheet, Platform, View } from 'react-native';
 import CustomText from '@/components/CustomText';
+import { useFonts } from 'expo-font'; // Import useFonts
 
 const App = () => {
+  // Load the specific emoji font here
+  const [emojiFontLoaded, emojiFontError] = useFonts({
+    'AppleColorEmoji': require('../../assets/fonts/AppleColorEmoji.ttf'), // Adjust path relative to this file
+  });
+
   // Overall container fade-in
   const containerFadeAnim = useRef(new Animated.Value(0)).current; // Start fully transparent
 
@@ -38,6 +44,14 @@ const App = () => {
     return () => clearInterval(wordChangeInterval);
   }, [containerFadeAnim, wordFadeAnim, businessWords.length]); // Add dependencies
 
+  // Render null or loading indicator until the emoji font is ready
+  if (!emojiFontLoaded && !emojiFontError) {
+    return (
+      <View style={styles.container}> 
+        {/* Optionally add a loading indicator */}
+      </View>
+    );
+  }
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
@@ -45,8 +59,9 @@ const App = () => {
       <Animated.View style={[styles.textContainer, { opacity: containerFadeAnim }]}>
         <CustomText style={styles.mainTitle}>
           {/* Wrap emoji in Animated.Text and apply fade */}
+          {/* Apply the specific font family ONLY if loaded */}
           <Animated.Text style={{ opacity: containerFadeAnim }}>
-            <CustomText>🛠️</CustomText>
+             <CustomText style={emojiFontLoaded ? { fontFamily: 'AppleColorEmoji' } : {}}>🛠️</CustomText>
           </Animated.Text>
           {/* Static text part will fade with the container */}
           {' '}
@@ -58,7 +73,7 @@ const App = () => {
           {' '}
           {/* Wrap emoji in Animated.Text and apply fade */}
           <Animated.Text style={{ opacity: containerFadeAnim }}>
-            <CustomText>✨</CustomText>
+             <CustomText style={emojiFontLoaded ? { fontFamily: 'AppleColorEmoji' } : {}}>✨</CustomText>
           </Animated.Text>
         </CustomText>
         

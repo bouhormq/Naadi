@@ -88,13 +88,13 @@ export default function ContactForm() {
           }));
       } else {
            // If info is null, update state (clear number, keep country)
-           setFormData(prev => ({
-              ...prev,
+      setFormData(prev => ({
+         ...prev,
               phone: {
                   ...prev.phone, // Keep country info
                   number: '' // Clear number
               },
-           }));
+      }));
       }
 
       // --- Validation error clearing logic (remains similar) ---

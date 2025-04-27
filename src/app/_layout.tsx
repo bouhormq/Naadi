@@ -141,7 +141,6 @@ export default function RootLayout() {
     'SFProRounded-Medium': require('../assets/fonts/SF-Pro-Rounded-Medium.otf'),
     'SFProRounded-Semibold': require('../assets/fonts/SF-Pro-Rounded-Semibold.otf'),
     'SFProRounded-Bold': require('../assets/fonts/SF-Pro-Rounded-Bold.otf'),
-    'AppleColorEmoji': require('../assets/fonts/AppleColorEmoji.ttf'),
   });
 
   useEffect(() => {

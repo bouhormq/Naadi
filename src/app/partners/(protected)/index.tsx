@@ -143,7 +143,7 @@ export default function PartnerProtectedIndex() {
     const handlePhoneChange = (info: PhoneInfo | null) => {
         if (info) {
             // If info is provided (country changed or number typed), update state
-            setPhoneInfo(info);
+        setPhoneInfo(info);
             setIsPhoneValid(!!info.number); // Validate based on the number presence
         } else {
             // If info is null (number cleared in PhoneInput), reset to default state
@@ -178,9 +178,9 @@ export default function PartnerProtectedIndex() {
         if (!name || !category || !phoneCheckValid) {
             console.log("handleSave exit: Missing required fields", { name, category, phoneInfo, phoneCheckValid }); 
             Alert.alert("Missing Information", "Business Name, Category, and a valid Phone Number are required.");
-            return; 
+            return;
         }
-        
+
         setIsSaving(true);
         setError(null);
 

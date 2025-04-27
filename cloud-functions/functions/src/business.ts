@@ -40,7 +40,7 @@ interface BusinessWriteData {
 }
 
 const db = admin.firestore();
-const businessesCollection = db.collection("businesses");
+const businessesCollection = db.collection("Businesses");
 
 /**
  * Gets the business profile for a specific business ID.
@@ -231,7 +231,7 @@ export const getMyBusinesses = onCall({ region: TARGET_REGION }, async (request)
 
     try {
         const businessSnap = await admin.firestore()
-            .collection("businesses")
+            .collection("Businesses")
             .where("ownerUid", "==", ownerUid)
             .get();
 
