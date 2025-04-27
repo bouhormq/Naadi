@@ -1,0 +1,26 @@
+{
+  "compilerOptions": {
+    "module": "NodeNext",
+    "esModuleInterop": true,
+    "moduleResolution": "nodenext",
+    "baseUrl": ".",
+    "noImplicitReturns": true,
+    "noUnusedLocals": true,
+    "outDir": "lib",
+    "sourceMap": true,
+    "strict": true,
+    "target": "es2017"
+  },
+  "paths": {
+      "@naadi/types": [
+        "../../types"
+      ],
+      "@naadi/types/*": [
+      "../../types/*"
+    ]
+  },
+  "compileOnSave": true,
+  "include": [
+    "src/index.ts"
+  ]
+}
