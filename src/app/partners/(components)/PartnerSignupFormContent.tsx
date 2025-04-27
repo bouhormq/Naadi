@@ -13,10 +13,13 @@ import {
 import { Picker } from '@react-native-picker/picker';
 import { PartnerSignupRequest, PhoneInfo } from '@naadi/types'; // Assuming these types exist
 // Import PhoneInput and its exported countriesData
-import PhoneInput, { countriesData } from './PhoneInput'; // Adjust path if needed
+import PhoneInput, { countriesData, PhoneInfo as PhoneInputInfo } from '@/components/PhoneInput'; // Adjust path if needed
 import CustomText from '@/components/CustomText';
 // Import the new API helper function
 import { submitPartnerRegistrationRequest } from '@naadi/api'; // Adjust path if needed
+
+// Make sure PhoneInfo type is consistent if imported from multiple places or redefine/reuse
+// type PhoneInfo = PhoneInputInfo; // Example if needed
 
 export default function PartnerSignupFormContent() {
   const defaultCountryData = countriesData.find(country => country.code === 'MA') || countriesData[0];
@@ -65,27 +68,30 @@ export default function PartnerSignupFormContent() {
     if (successfullySubmitted) setSuccessfullySubmitted(false);
   };
 
-   const handlePhoneInputChange = (
-       formattedText: string, // Received from PhoneInput
-       country: typeof countriesData[0],
-       rawNumber: string
-   ) => {
-      // console.log('Parent handlePhoneInputChange: Received', { formattedText, countryCode: country.code, rawNumber });
-      const phoneInfo: PhoneInfo = {
-          code: country.code,
-          name: country.name,
-          number: rawNumber, // Store the raw number
-          dialCode: country.dialCode,
-      };
+   const handlePhoneInputChange = (info: PhoneInfo | null) => {
+      // console.log('Parent handlePhoneInputChange: Received', info);
 
-      setFormData(prev => ({
-         ...prev,
-         phone: phoneInfo,
-      }));
+      if (info) {
+          setFormData(prev => ({
+             ...prev,
+             phone: info, // Update with the received object
+          }));
+      } else {
+           // If info is null (e.g., number cleared), update state accordingly
+           // Keep the default country info but clear the number
+           setFormData(prev => ({
+              ...prev,
+              phone: {
+                  ...prev.phone, // Keep country info
+                  number: '' // Clear number
+              },
+           }));
+      }
 
-      // Clear validation errors for the phone field specifically when user types
-      if (error && (validationErrors.phone || error === 'Please enter a valid phone number.' || error === 'Please fill out all required fields (*).')) {
-         setError(null); // Clear general error message if it was related to phone
+      // --- Validation error clearing logic (remains similar) ---
+      const phoneErrorExists = validationErrors.phone || error === 'Please enter a valid phone number.' || error === 'Please fill out all required fields (*).';
+      if (error && phoneErrorExists) {
+         setError(null); 
       }
       if (validationErrors.phone) {
          setValidationErrors(prev => {
@@ -93,7 +99,6 @@ export default function PartnerSignupFormContent() {
             delete newState.phone;
             return newState;
          });
-         // Reset visual validity state when user starts correcting
          setPhoneValid(true);
       }
 
@@ -347,19 +352,16 @@ export default function PartnerSignupFormContent() {
           {/* Phone Field */}
           <View style={styles.phoneContainer}>
             <CustomText style={styles.label}>Phone <CustomText style={styles.required}>*</CustomText></CustomText>
-            {/* Wrapper gets border based on validationErrors */}
             <View style={[styles.phoneInputWrapper, validationErrors.phone ? styles.inputError : null]}>
                 <PhoneInput
-                  // Value is the formatted string from parent state
-                  value={`${formData.phone.dialCode}${formData.phone.number}`}
-                  // Reports changes via this callback
-                  onChangeFormattedText={handlePhoneInputChange}
-                  // Internal TextInput uses this basic handler
-                  onChangeText={() => {}} // Basic handler needed for TextInput binding
+                  // Pass the PhoneInfo object directly
+                  value={formData.phone}
+                  // Use onChangeInfo prop
+                  onChangeInfo={handlePhoneInputChange}
                   placeholder="Your phone number"
-                  // Receives validity based on parent's submit check
                   isValid={phoneValid}
-                  defaultCountry="MA"
+                  defaultCountryCode="MA" // Use code for default
+                  // Remove onChangeText and onChangeFormattedText if they were present
                 />
             </View>
           </View>

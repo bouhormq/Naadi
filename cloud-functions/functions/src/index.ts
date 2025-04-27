@@ -1,4 +1,10 @@
 import * as admin from "firebase-admin";
+
+// Initialize Firebase Admin SDK ONCE, **before** other imports that use it.
+if (!admin.apps.length) {
+  admin.initializeApp();
+}
+
 import { HttpsError } from 'firebase-functions/v1/https';
 import { randomBytes } from 'crypto'; // For generating random code
 import { PartnerSignupRequest } from "../../../types"; // Using relative path
@@ -6,10 +12,8 @@ import { PartnerAccount } from "../../../types"; // Using relative path
 import { onCall } from "firebase-functions/v2/https";
 import { logger } from "firebase-functions";
 
-// Initialize Firebase Admin SDK if it hasn't been already
-if (!admin.apps.length) {
-  admin.initializeApp();
-}
+// Import functions from other files
+import * as businessFunctions from './business';
 
 const db = admin.firestore();
 const ADMIN_EMAIL = "bouhormq@gmail.com"; // Store admin email securely, maybe env var
@@ -52,6 +56,16 @@ interface ContactRequest {
   message: string; // Added message field
   consent: boolean;
 }
+
+// --- Export Business Profile Functions ---
+// Remove export for the old function
+// export const getMyBusinessProfile = businessFunctions.getMyBusinessProfile;
+
+// Keep export for setMyBusinessProfile
+export const setMyBusinessProfile = businessFunctions.setMyBusinessProfile;
+
+// Add export for the new getMyBusinesses function
+export const getMyBusinesses = businessFunctions.getMyBusinesses;
 
 // --- NEW Callable Function v2: Partner Register Request ---
 export const partnerRegisterRequest = onCall({ region: TARGET_REGION }, async (request) => {

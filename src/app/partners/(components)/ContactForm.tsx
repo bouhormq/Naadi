@@ -14,17 +14,10 @@ import {
 } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import CustomText from '@/components/CustomText';
-// Import PhoneInput and its exported countriesData
-import PhoneInput, { countriesData } from './PhoneInput'; // Adjust path if needed
+// Import PhoneInput, countriesData, and PhoneInfo type
+import PhoneInput, { countriesData, PhoneInfo } from '@/components/PhoneInput'; // Adjust path if needed
 // Import the new API helper function
 import { submitPartnerContactRequest } from '@naadi/api'; // Adjust path if needed
-
-export interface PhoneInfo {
-  code: string;
-  name: string;
-  number: string;
-  dialCode: string;
-}
 
 export interface PartnerContactFormData {
   email: string;
@@ -87,26 +80,27 @@ export default function ContactForm() {
     if (successfullySubmitted) setSuccessfullySubmitted(false);
   };
 
-   const handlePhoneInputChange = (
-       formattedText: string, // Received from PhoneInput
-       country: typeof countriesData[0],
-       rawNumber: string
-   ) => {
-      const phoneInfo: PhoneInfo = {
-          code: country.code,
-          name: country.name,
-          number: rawNumber, // Store the raw number
-          dialCode: country.dialCode,
-      };
+   const handlePhoneInputChange = (info: PhoneInfo | null) => {
+      if (info) {
+          setFormData(prev => ({
+             ...prev,
+             phone: info, // Update with the received object
+          }));
+      } else {
+           // If info is null, update state (clear number, keep country)
+           setFormData(prev => ({
+              ...prev,
+              phone: {
+                  ...prev.phone, // Keep country info
+                  number: '' // Clear number
+              },
+           }));
+      }
 
-      setFormData(prev => ({
-         ...prev,
-         phone: phoneInfo,
-      }));
-
-      // Clear validation errors for the phone field specifically when user types
-      if (error && (validationErrors.phone || error === 'Please enter a valid phone number.' || error === 'Please fill out all required fields (*).')) {
-         setError(null); // Clear general error message if it was related to phone
+      // --- Validation error clearing logic (remains similar) ---
+      const phoneErrorExists = validationErrors.phone || error === 'Please enter a valid phone number.' || error === 'Please fill out all required fields (*).';
+      if (error && phoneErrorExists) {
+         setError(null); 
       }
       if (validationErrors.phone) {
          setValidationErrors(prev => {
@@ -114,7 +108,6 @@ export default function ContactForm() {
             delete newState.phone;
             return newState;
          });
-         // Reset visual validity state when user starts correcting
          setPhoneValid(true);
       }
 
@@ -361,19 +354,15 @@ export default function ContactForm() {
           {/* Phone Field */}
           <View style={styles.phoneContainer}>
             <CustomText style={styles.label}>Phone <CustomText style={styles.required}>*</CustomText></CustomText>
-            {/* Wrapper gets border based on validationErrors */}
             <View style={[styles.phoneInputWrapper, validationErrors.phone ? styles.inputError : null]}>
                 <PhoneInput
-                  // Value is the formatted string from parent state
-                  value={`${formData.phone.dialCode}${formData.phone.number}`}
-                  // Reports changes via this callback
-                  onChangeFormattedText={handlePhoneInputChange}
-                  // Internal TextInput uses this basic handler
-                  onChangeText={() => {}} // Basic handler needed for TextInput binding
+                  // Pass the PhoneInfo object directly
+                  value={formData.phone}
+                  // Use onChangeInfo prop
+                  onChangeInfo={handlePhoneInputChange}
                   placeholder="Your phone number"
-                  // Receives validity based on parent's submit check
                   isValid={phoneValid}
-                  defaultCountry="MA"
+                  defaultCountryCode="MA" // Use code for default
                 />
             </View>
           </View>

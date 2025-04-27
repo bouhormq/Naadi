@@ -1,4 +1,4 @@
-import { initializeApp, getApp, getApps } from 'firebase/app';
+import { initializeApp, getApp, getApps, FirebaseApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 import { getFunctions, connectFunctionsEmulator } from 'firebase/functions';
@@ -17,7 +17,7 @@ const firebaseConfig = {
 };
 
 // Initialize Firebase only if it hasn't been initialized yet
-let app;
+let app: FirebaseApp;
 if (!getApps().length) {
   app = initializeApp(firebaseConfig);
   console.log("Firebase initialized.");

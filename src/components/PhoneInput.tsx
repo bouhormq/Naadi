@@ -35,101 +35,91 @@ export const countriesData = [
     { "code": "ZA", "name": "South Africa", "flag": "🇿🇦", "dialCode": "+27" }
 ];
 
-type Country = typeof countriesData[0];
+export type Country = typeof countriesData[0]; // Export Country type
+
+// Export PhoneInfo type for parent components
+export interface PhoneInfo {
+  code: string;
+  name: string;
+  number: string;
+  dialCode: string;
+}
 
 interface PhoneInputProps {
-  value: string; // Expects formatted value like +212... from parent
-  onChangeText: (text: string) => void; // Still needed for TextInput internal handling
-  onChangeFormattedText: (formattedText: string, country: Country, rawNumber: string) => void; // Reports changes to parent
+  value: PhoneInfo | null | undefined; // Expects the PhoneInfo object or null/undefined
+  onChangeInfo: (info: PhoneInfo | null) => void; // Reports changes to parent with PhoneInfo object
   placeholder?: string;
   containerStyle?: any;
   textInputStyle?: any;
   isValid?: boolean; // Receives validation state from parent for styling
-  defaultCountry?: string;
+  defaultCountryCode?: string; // Use code instead of name for default
 }
 
 const PhoneInput: React.FC<PhoneInputProps> = ({
   value,
-  onChangeText, // Needed for TextInput binding
-  onChangeFormattedText,
+  onChangeInfo,
   placeholder = "Phone number",
   containerStyle,
   textInputStyle,
   isValid, // Use this prop from parent to style the border
-  defaultCountry = "MA",
+  defaultCountryCode = "MA", // Default to Morocco code
 }) => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  // Internal state now holds the selected Country object and the raw number string
   const [selectedCountry, setSelectedCountry] = useState<Country>(
-    countriesData.find(country => country.code === defaultCountry) || countriesData[0]
+    countriesData.find(country => country.code === defaultCountryCode) || countriesData[0]
   );
-  // Internal state for the raw phone number part ONLY
-  const [phoneNumber, setPhoneNumber] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState<string>(''); // Just the number part
 
   const dropdownHeight = useRef(new Animated.Value(0)).current;
   const dropdownRef = useRef<View>(null);
 
-  // *** CORRECTED useEffect ***
-  // This effect synchronizes the internal state (selectedCountry, phoneNumber)
-  // ONLY when the `value` prop changes externally (e.g., form reset, initial load).
-  // It avoids interfering with updates triggered by user typing directly into this component.
+  // Revised Effect to synchronize internal state with `value` prop
   useEffect(() => {
-    // console.log('PhoneInput useEffect - value prop changed:', value);
+    if (value) { // Check if value prop is provided
+      const countryMatch = countriesData.find(c => c.dialCode === value.dialCode);
+      
+      // Update country if it has changed or doesn't match the value prop
+      if (countryMatch && countryMatch.code !== selectedCountry.code) {
+          setSelectedCountry(countryMatch);
+      }
 
-    const parseValue = (formattedValue: string): { country: Country; rawNumber: string } => {
-        let bestMatchCountry = countriesData.find(c => c.code === defaultCountry) || countriesData[0];
-        let rawNumberPart = '';
-        let longestMatchDialCode = '';
+      // Update internal phone number based on value.number
+      if (value.number !== phoneNumber) { 
+          setPhoneNumber(value.number || ''); // Set to value.number or empty string if null/undefined/empty
+      }
 
-        if (formattedValue) {
-            // Find best matching country based on dial code prefix
-            for (const country of countriesData) {
-                if (formattedValue.startsWith(country.dialCode) && country.dialCode.length > longestMatchDialCode.length) {
-                    longestMatchDialCode = country.dialCode;
-                    bestMatchCountry = country;
-                }
-            }
-            // Extract raw number part
-            if (longestMatchDialCode) {
-                 rawNumberPart = formattedValue.substring(longestMatchDialCode.length).replace(/\D/g, '');
-            } else {
-                 // If no dial code matched, assume the whole numeric part is the number
-                 // (This might happen if parent sends just numbers initially)
-                 rawNumberPart = formattedValue.replace(/\D/g, '');
-            }
+    } else {
+        // If value prop is null or undefined, reset to default
+        const defaultCountry = countriesData.find(c => c.code === defaultCountryCode) || countriesData[0];
+        // Check if reset is actually needed to prevent potential loops
+        if (selectedCountry.code !== defaultCountry.code || phoneNumber !== '') {
+           setSelectedCountry(defaultCountry);
+           setPhoneNumber('');
         }
-        return { country: bestMatchCountry, rawNumber: rawNumberPart };
-    };
-
-    const { country: parsedCountry, rawNumber: parsedRawNumber } = parseValue(value);
-
-    // Update internal state ONLY if the parsed value from the prop
-    // is different from the current internal state. This is crucial
-    // to prevent the effect from overwriting the state being updated
-    // directly by the user's input via handlePhoneNumberChange.
-    if (parsedCountry.code !== selectedCountry.code || parsedRawNumber !== phoneNumber) {
-        // console.log(`PhoneInput useEffect: Prop value ('${value}') differs from internal state ('${selectedCountry.dialCode}${phoneNumber}'). Updating internal state.`);
-        setSelectedCountry(parsedCountry);
-        setPhoneNumber(parsedRawNumber);
-        // DO NOT call onChangeFormattedText here - causes loops/conflicts.
-        // Reporting is handled by user interaction handlers (handlePhoneNumberChange, selectCountry).
     }
-    // else {
-    //     console.log(`PhoneInput useEffect: Prop value ('${value}') matches internal state ('${selectedCountry.dialCode}${phoneNumber}'). No update needed.`);
-    // }
+    // Dependency array: Rerun effect if `value` prop changes. `defaultCountryCode` is also needed.
+    // Avoid including internal state `selectedCountry` or `phoneNumber` if possible to prevent loops,
+    // unless complex logic absolutely requires comparing previous internal state.
+  }, [value, defaultCountryCode]);
 
-  // This effect should primarily react to the 'value' prop changing externally,
-  // and potentially the defaultCountry changing.
-  // Avoid depending on internal state (`phoneNumber`, `selectedCountry`) that the effect itself modifies.
-  }, [value, defaultCountry]);
-
-
-  // Function to report changes (data only) to the parent
+  // Function to report changes (PhoneInfo object) to the parent
   const reportChange = (number: string, country: Country) => {
       const cleanedNumber = number.replace(/\D/g, '');
-      const formattedText = country.dialCode + cleanedNumber;
-      // console.log('PhoneInput reportChange: Reporting to parent:', formattedText, country.code, cleanedNumber);
-      onChangeFormattedText(formattedText, country, cleanedNumber);
+      if (cleanedNumber) {
+           onChangeInfo({
+               code: country.code,
+               name: country.name,
+               number: cleanedNumber,
+               dialCode: country.dialCode,
+           });
+      } else {
+          // When the number is cleared internally, report null to the parent
+          // BUT include the currently selected country context potentially?
+          // Let's stick to reporting null as per previous logic, parent handles it.
+           onChangeInfo(null); 
+      }
   };
 
   // Filter countries based on search query
@@ -157,7 +147,6 @@ const PhoneInput: React.FC<PhoneInputProps> = ({
 
   // Handle country selection
   const selectCountry = (country: Country) => {
-    // console.log('PhoneInput selectCountry:', country.code);
     setSelectedCountry(country); // Update internal state
     toggleDropdown();
     // Report the change using the *current* internal phoneNumber and the *newly selected* country
@@ -167,12 +156,8 @@ const PhoneInput: React.FC<PhoneInputProps> = ({
   // Handle phone number input
   const handlePhoneNumberChange = (text: string) => {
     const cleanedText = text.replace(/\D/g, '');
-    // console.log('PhoneInput handlePhoneNumberChange - Cleaned text:', cleanedText);
-    // **1. Update internal state FIRST**
-    setPhoneNumber(cleanedText);
-    // Call the original onChangeText prop (which might be used by TextInput internally)
-    onChangeText(cleanedText);
-    // **2. Report the change to the parent** using the new text and current country
+    setPhoneNumber(cleanedText); // Update internal state FIRST
+    // Report the change to the parent using the new text and current country
     reportChange(cleanedText, selectedCountry);
   };
 
@@ -181,11 +166,7 @@ const PhoneInput: React.FC<PhoneInputProps> = ({
   useEffect(() => {
     if (Platform.OS === 'web') {
        const handleClickOutside = (event: MouseEvent) => {
-           // Cast dropdownRef.current to unknown first, then to HTMLElement
-           // This tells TypeScript that in the web environment, this ref *will*
-           // point to a DOM element that has the 'contains' method.
            const currentRef = dropdownRef.current as unknown as HTMLElement;
-
            if (currentRef && !currentRef.contains(event.target as Node) && isDropdownOpen) {
               toggleDropdown();
            }
@@ -193,15 +174,14 @@ const PhoneInput: React.FC<PhoneInputProps> = ({
        document.addEventListener('mousedown', handleClickOutside);
        return () => document.removeEventListener('mousedown', handleClickOutside);
     }
- }, [isDropdownOpen]); // Dependency only on isDropdownOpen
-
-  // console.log(`PhoneInput Rendering - Internal number: '${phoneNumber}', Country: ${selectedCountry.code}, Received isValid prop: ${isValid}`);
+ }, [isDropdownOpen]);
 
   return (
     <View style={[styles.container, containerStyle, { zIndex: isDropdownOpen ? 99 : 1 }]}>
       <View style={[
         styles.inputContainer,
-        isValid === false && styles.inputContainerError, // Style based on parent validation
+        // Apply error styling based on the isValid prop passed from the parent
+        isValid === false && styles.inputContainerError,
       ]}>
         {/* Country Selector Button */}
         <TouchableOpacity style={styles.countryButton} onPress={toggleDropdown} activeOpacity={0.7}>
@@ -213,10 +193,9 @@ const PhoneInput: React.FC<PhoneInputProps> = ({
         {/* Phone Number Input */}
         <TextInput
           style={[styles.phoneInput, textInputStyle]}
-          // ** Crucial: Value must be bound to the internal phoneNumber state **
+          // Value is bound to the internal phoneNumber state (just the number part)
           value={phoneNumber}
-          // ** Crucial: onChangeText triggers the internal handler **
-          onChangeText={handlePhoneNumberChange}
+          onChangeText={handlePhoneNumberChange} // Triggers internal state update and reporting
           placeholder={placeholder}
           placeholderTextColor="#9ca3af"
           keyboardType="phone-pad"
@@ -230,7 +209,6 @@ const PhoneInput: React.FC<PhoneInputProps> = ({
         <Animated.View style={[styles.dropdown, { height: dropdownHeight }]} ref={dropdownRef}>
           {/* Search Input */}
           <View style={styles.searchContainer}>
-             {/* ... search input ... */}
               <Ionicons name="search" size={16} color="#6b7280" style={styles.searchIcon} />
               <TextInput
                  style={styles.searchInput}
@@ -248,7 +226,6 @@ const PhoneInput: React.FC<PhoneInputProps> = ({
           </View>
           {/* Countries List */}
           <ScrollView style={styles.countryList} nestedScrollEnabled={true} keyboardShouldPersistTaps="handled">
-             {/* ... country list mapping ... */}
               {filteredCountries.map((country) => (
                 <TouchableOpacity
                   key={country.code}
@@ -279,10 +256,12 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     backgroundColor: '#fff',
     zIndex: 2,
-     minHeight: 40,
+    minHeight: 48, // Increased min height slightly
+    borderWidth: 1, // Add default border
+    borderColor: '#d1d5db', // Default border color
   },
   inputContainerError: {
-    borderColor: '#ef4444',
+    borderColor: '#ef4444', // Red border for error
   },
   countryButton: {
     flexDirection: 'row',
@@ -295,19 +274,19 @@ const styles = StyleSheet.create({
     height: '100%',
   },
   flagText: {
-    fontSize: 16, // Adjusted for visibility
+    fontSize: 20, // Slightly larger flag
     marginRight: 4,
   },
   dialCodeText: {
-    fontSize: 14,
+    fontSize: 16, // Slightly larger dial code
     color: '#374151',
     marginRight: 4,
   },
   phoneInput: {
     flex: 1,
-    paddingHorizontal: 12,
+    paddingHorizontal: 15, // More horizontal padding
     paddingVertical: Platform.OS === 'ios' ? 12 : 10,
-    fontSize: 14,
+    fontSize: 16, // Larger font size
     color: '#1f2937',
     backgroundColor: 'transparent',
     ...Platform.select({
@@ -363,23 +342,22 @@ const styles = StyleSheet.create({
       paddingLeft: 8,
   },
   countryList: {
-    flex: 1, // Ensure it takes available space within Animated.View
-    // Max height is controlled by Animated.View's height animation
+    flex: 1,
   },
   countryItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 10, // Slightly more padding
+    paddingVertical: 10,
     paddingHorizontal: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#f3f4f6', // Lighter border
+    borderBottomColor: '#f3f4f6',
   },
   selectedCountryItem: {
-    backgroundColor: '#eef2ff', // Slightly different selection color
+    backgroundColor: '#eef2ff',
   },
   countryFlag: {
     fontSize: 20,
-    marginRight: 10, // More space
+    marginRight: 10,
   },
   countryName: {
     flex: 1,
@@ -393,4 +371,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default PhoneInput;
+export default PhoneInput; 

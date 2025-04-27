@@ -1,9 +1,7 @@
-// No need to import admin here if we use Date
-// import { PhoneInfo } from './firestore'; // Correct: PhoneInfo is exported from firestore.ts
+// import { PhoneInfo } from './firestoreTypes'; // Assuming PhoneInfo is here or imported differently 
+// Remove Timestamp import
+// import { Timestamp } from 'firebase/firestore'; 
 
-// Export all types
-// export * from './api'; // Removed
-// export * from './firestore'; // Removed
 
 // Combined Types
 
@@ -200,6 +198,29 @@ export interface PhoneConfirmRequest {
 // --- Interfaces related to Partner/Admin Operations ---
 
 /**
+ * Represents the Business information associated with a Partner Account.
+ * Stored in a separate 'businesses' collection.
+ */
+export interface Business {
+  id?: string; 
+  ownerUid: string; 
+  name: string;
+  address: { 
+    street?: string;
+    city?: string;
+    state?: string;
+    zip?: string;
+    country?: string;
+  };
+  phone: PhoneInfo; 
+  website?: string; 
+  description?: string;
+  category: string; 
+  createdAt?: Date; // Use standard Date
+  updatedAt?: Date; // Use standard Date
+}
+
+/**
  * Represents the Partner Account document in Firestore (PartnerAccounts collection).
  * This is created after an admin approves a PartnerSignupRequest.
  */
@@ -217,9 +238,10 @@ export interface PartnerAccount {
   consent: boolean;
   status: 'enabled' | 'disabled';
   registrationCode?: string; // Temporary code for initial signup, removed after use
-  approvedAt: Date; // Timestamp when admin approved the request
-  createdAt: Date; // Timestamp when the original request was created
-  registeredAt?: Date; // Timestamp when the partner completed registration (set password)
+  approvedAt: Date; // Timestamp when admin approved the request - Keep as Date?
+  createdAt: Date; // Timestamp when the original request was created - Keep as Date?
+  registeredAt?: Date; // Timestamp when the partner completed registration (set password) - Keep as Date?
+  businessId?: string; // ID linking to the Business document in the 'businesses' collection
 }
 
 /**
