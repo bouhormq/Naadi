@@ -2,8 +2,11 @@ import { useEffect, useRef, useState } from 'react';
 import { Animated, ScrollView, StyleSheet, Platform, View } from 'react-native';
 import CustomText from '@/components/CustomText';
 import { useFonts } from 'expo-font'; // Import useFonts
+import { useTranslation } from 'react-i18next'; // Import useTranslation here
 
 const App = () => {
+  const { t } = useTranslation(); // Get the translation function
+
   // Load the specific emoji font here
   const [emojiFontLoaded, emojiFontError] = useFonts({
     'AppleColorEmoji': require('../../assets/fonts/AppleColorEmoji.ttf'), // Adjust path relative to this file
@@ -13,7 +16,7 @@ const App = () => {
   const containerFadeAnim = useRef(new Animated.Value(0)).current; // Start fully transparent
 
   // Rotating business words
-  const businessWords = ['fitness', 'wellness', 'beauty'];
+  const businessWords = ['fitness', 'wellness', 'beauty']; // Use keys
   const [currentWordIndex, setCurrentWordIndex] = useState(0);
   const wordFadeAnim = useRef(new Animated.Value(1)).current; // Initial opacity 1 for word
 
@@ -53,30 +56,34 @@ const App = () => {
     );
   }
 
+  // Translate the current word before rendering
+  const currentWordKey = businessWords[currentWordIndex];
+  const translatedWord = t(currentWordKey);
+
   return (
     <ScrollView contentContainerStyle={styles.container}>
       {/* Wrap content in Animated.View for fade-in */}
       <Animated.View style={[styles.textContainer, { opacity: containerFadeAnim }]}>
+        {/* Construct the title manually, translating static parts */}
         <CustomText style={styles.mainTitle}>
-          {/* Wrap emoji in Animated.Text and apply fade */}
-          {/* Apply the specific font family ONLY if loaded */}
-          <Animated.Text style={{ opacity: containerFadeAnim }}>
+          {/* Emoji with specific font */}
              <CustomText style={emojiFontLoaded ? { fontFamily: 'AppleColorEmoji' } : {}}>🛠️</CustomText>
-          </Animated.Text>
-          {/* Static text part will fade with the container */}
           {' '}
-          Coming soon... One app for all things{' '}
-          {/* Rotating word with its own animation */}
+          {/* Translate the static part - requires a matching key in JSON */}
+          <CustomText>
+             Coming soon... One app for all things
+          </CustomText>
+          {' '}
+          {/* Render the translated dynamic word */}
           <Animated.Text style={[styles.freeText, { opacity: wordFadeAnim }]}>
-            {businessWords[currentWordIndex]}
+            {translatedWord}
           </Animated.Text>
           {' '}
-          {/* Wrap emoji in Animated.Text and apply fade */}
-          <Animated.Text style={{ opacity: containerFadeAnim }}>
+           {/* Emoji with specific font */}
              <CustomText style={emojiFontLoaded ? { fontFamily: 'AppleColorEmoji' } : {}}>✨</CustomText>
-          </Animated.Text>
         </CustomText>
         
+        {/* Pass the subtitle string directly as children */}
         <CustomText style={styles.mainSubtitle}>
           Naadi gives you access to hundreds of top-rated gyms, fitness studios, salons and spas in Morocco.
         </CustomText>

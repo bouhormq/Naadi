@@ -11,6 +11,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { router } from 'expo-router';
 import CustomText from '@/components/CustomText';
+import i18n from '../../../i18n'; // Correct the relative path to i18n.js
 
 // Replace with your actual PNG paths
 const appleStorePng = require('../(assets)/appleStore.png');
@@ -27,12 +28,17 @@ export default function Footer() {
     { code: 'es', name: 'Español' },
   ];
 
-  const [selectedLanguage, setSelectedLanguage] = useState(languages[0]);
+  const [selectedLanguage, setSelectedLanguage] = useState(() => {
+    // Initialize selected language based on current i18n language
+    const currentLangCode = i18n.language;
+    return languages.find(lang => lang.code === currentLangCode) || languages[0];
+  });
 
   const changeLanguage = (language: { code: string; name: string }) => {
     setSelectedLanguage(language);
     setIsLanguageDropdownVisible(false);
-    console.log('language', language);
+    i18n.changeLanguage(language.code); // Change the language globally
+    console.log('Language changed to:', language.code);
   };
 
   const toggleLanguageDropdown = () => {

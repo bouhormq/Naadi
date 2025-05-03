@@ -5,6 +5,8 @@ import { useEffect, useCallback } from 'react';
 import { Platform, View, Text } from 'react-native';
 import { useFonts } from 'expo-font';
 import { SessionProvider, useSession } from '../ctx';
+import { I18nextProvider } from 'react-i18next';
+import i18n from '../i18n';
 
 // Prevent the splash screen from auto-hiding immediately
 SplashScreen.preventAutoHideAsync();
@@ -154,10 +156,12 @@ export default function RootLayout() {
     return null;
   }
   
-  // --- Render the App ---
+  // --- Render the App --- Wrap with I18nextProvider
   return (
     <SessionProvider>
+      <I18nextProvider i18n={i18n}>
       <RootLayoutNav />
+      </I18nextProvider>
     </SessionProvider>
   );
 }

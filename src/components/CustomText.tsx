@@ -1,7 +1,9 @@
-import React, { useEffect } from 'react';
-import { Text, StyleSheet, Platform, View } from 'react-native';
+import React from 'react';
+import { Text, StyleSheet, Platform, TextProps } from 'react-native';
+import { useTranslation } from 'react-i18next';
+import { useFonts } from 'expo-font';
 
-const fontWeightToFontFamily = {
+const fontWeightToFontFamily: { [key: string]: string } = {
   'normal': 'SFProDisplay-Semibold',
   'bold': 'SFProDisplay-Bold',
   '100': 'SFProDisplay-Regular',
@@ -27,84 +29,70 @@ const isEmoji = (text: string): boolean => {
   if (typeof text !== 'string') return false;
   return emojiRegex.test(text);
 };
-const splitTextByEmoji = (text: string) => {
-  if (typeof text !== 'string') return [{ text, isEmoji: false }];
-  const segments = text.split(emojiRegex).filter(Boolean);
-  return segments.map(segment => ({
-    text: segment,
-    isEmoji: isEmoji(segment)
-  }));
-};
 
-interface CustomTextProps {
-  style?: any;
-  children: React.ReactNode;
+interface CustomTextProps extends TextProps {
+  children?: React.ReactNode;
   fontWeight?: string | number;
   customEmojiFont?: string;
   [key: string]: any;
 }
 
+// Helper function to process children recursively (optional, but cleaner)
+const processChildrenForTranslation = (children: React.ReactNode, t: Function): React.ReactNode => {
+  return React.Children.map(children, (child) => {
+    // If the child is a string, translate it
+    if (typeof child === 'string') {
+      return t(child);
+    }
+    // If the child is a React element with its own children, process them recursively
+    // (This handles nested structures but might become complex)
+    // if (React.isValidElement(child) && child.props.children) {
+    //   return React.cloneElement(child, {
+    //     ...child.props,
+    //     children: processChildrenForTranslation(child.props.children, t),
+    //   });
+    // }
+    // Otherwise, return the child as is (e.g., components like Animated.Text, null, numbers)
+    return child;
+  });
+};
+
 const CustomText: React.FC<CustomTextProps> = (props) => {
   const { style, children, fontWeight, customEmojiFont, ...otherProps } = props;
+  const { t, i18n } = useTranslation();
+
+  const [fontsLoaded, fontError] = useFonts({
+    'SFProDisplay-Regular': require('../assets/fonts/SF-Pro-Display-Regular.otf'),
+    'SFProDisplay-Medium': require('../assets/fonts/SF-Pro-Display-Medium.otf'),
+    'SFProDisplay-Semibold': require('../assets/fonts/SF-Pro-Display-Semibold.otf'),
+    'SFProDisplay-Bold': require('../assets/fonts/SF-Pro-Display-Bold.otf'),
+  });
+
   const weightKey = typeof fontWeight === 'number' ? String(fontWeight) : (fontWeight || 'normal');
-  const baseFontFamily = fontWeightToFontFamily[weightKey as keyof typeof fontWeightToFontFamily] || fontWeightToFontFamily['normal'];
-  const emojiFont = customEmojiFont || EMOJI_FONT;
-  const fontWeightStyle = fontWeight ? { fontWeight } : {};
-  const baseTextStyle = { fontFamily: baseFontFamily, ...fontWeightStyle };
-  const combinedStyle = StyleSheet.flatten([baseTextStyle, style]);
+  const fontFamily = fontWeightToFontFamily[weightKey] || fontWeightToFontFamily['normal'];
 
-  useEffect(() => {
-    if (Platform.OS === 'web' && typeof children === 'string' && isEmoji(children)) {
-      console.log('Rendering emoji with font:', EMOJI_FONT);
-    }
-  }, [children]);
+  // Process children: translate strings, leave others
+  const processedChildren = processChildrenForTranslation(children, t);
 
-  if (typeof children !== 'string') {
-    return (
-      <Text style={combinedStyle} {...otherProps}>
-        {children}
-      </Text>
-    );
+  // Debugging: Log current language and children being processed
+  if (typeof children === 'string' && children.trim() === 'for') { // Log specifically for " for "
+      console.log(`CustomText Debug: Language='${i18n.language}', Processing child='${children}', Translation='${t(children)}'`);
   }
 
-  const segments = splitTextByEmoji(children);
-
-  if (Platform.OS === 'web') {
-    const webStyle = StyleSheet.flatten([
-      style,
-      {
-        fontFamily: `${baseFontFamily}, ${emojiFont}`,
-        fontWeight: fontWeight // Apply fontWeight on web
-      }
-    ]);
-    return (
-      <Text style={webStyle} {...otherProps}>
-        {children}
-      </Text>
-    );
-  }
-
-  if (segments.length === 1 && !segments[0].isEmoji) {
-    return (
-      <Text style={combinedStyle} {...otherProps}>
-        {children}
-      </Text>
-    );
-  }
+  const fontStyle = fontsLoaded && !fontError ? { fontFamily } : {};
+  const combinedStyle = StyleSheet.flatten([style, fontStyle]);
 
   return (
-    <Text style={StyleSheet.flatten([style, fontWeightStyle])} {...otherProps}>
-      {segments.map((segment, index) => (
-        <Text
-          key={index}
-          style={{ fontFamily: segment.isEmoji ? emojiFont : baseFontFamily }}
-        >
-          {segment.text}
-        </Text>
-      ))}
+    <Text style={combinedStyle} {...otherProps}>
+      {processedChildren}
     </Text>
   );
 };
 
+const styles = StyleSheet.create({
+  defaultStyle: {
+    color: '#000',
+  },
+});
 
 export default CustomText;
