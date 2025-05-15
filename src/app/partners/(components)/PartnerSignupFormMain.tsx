@@ -91,9 +91,9 @@ export default function PartnerSignupFormMain() {
     },
     mainTitle: {
       // Use a large numeric value for web font size, keep 32 for native
-      fontSize: Platform.OS === 'web' ? 60 : 32,
+      fontSize: Platform.OS === 'web' ? 67 : 32,
       // Use a corresponding numeric value for web line height
-      lineHeight: Platform.OS === 'web' ? 68 : 38,
+      lineHeight: Platform.OS === 'web' ? 67 : 38,
       textAlign: isWideScreen ? 'left' : 'center',
     },
     mainSubtitle: {

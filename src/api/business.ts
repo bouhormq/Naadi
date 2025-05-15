@@ -1,13 +1,14 @@
-import { getFunctions, httpsCallable } from 'firebase/functions';
-// Remove FirebaseApp import if no longer needed here
-// import { FirebaseApp } from 'firebase/app'; 
+// Remove old import
+// import functions from '@react-native-firebase/functions';
+import { functions } from '../config/firebase';
+import { httpsCallable } from 'firebase/functions';
 import { auth, app } from '../config/firebase'; // Ensure firebase app is initialized and exported
 import { Business, PhoneInfo } from '@naadi/types'; // Use alias
 import { getAuth, User } from 'firebase/auth';
 
-// Specify the region when getting the functions instance
-// Remove type assertion, type should be inferred from import now
-const functions = getFunctions(app, 'europe-southwest1'); 
+// Use the functions instance from config/firebase
+// Example usage:
+// const myFunction = httpsCallable(functions, 'myFunctionName');
 
 // Type for the data sent TO the setMyBusinessProfile Cloud Function
 // Include optional businessId for updates
@@ -79,7 +80,7 @@ export const setMyBusinessProfile = async (businessData: SetBusinessProfilePaylo
     };
 
     try {
-        const setProfileFunction = httpsCallable<SetBusinessProfileCFPayload, { success: boolean, message: string, businessId: string }>(functions, 'setMyBusinessProfile');
+        const setProfileFunction = httpsCallable(functions, 'setMyBusinessProfile');
         
         console.log(`setMyBusinessProfile: Calling function for user ${user.uid} with payload:`, payload);
         

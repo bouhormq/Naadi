@@ -30,10 +30,7 @@ i18n
     // Configuration for language detection
     detection: {
       // Order and from where user language should be detected
-      order: ['asyncStorageDetector', 'languageDetector'], // Use our detector first
-
-      // Caches to use
-      caches: ['asyncStorageDetector'], // Cache the language selection
+      order: ['languageDetector'], // Use only our custom detector
 
       // optional react-i18next specific options
       react: {

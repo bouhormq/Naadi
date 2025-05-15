@@ -1,5 +1,5 @@
 import { Redirect } from 'expo-router';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { ScrollView, StyleSheet, View, Text } from 'react-native';
 import PartnerSignupFormMain from './(components)/PartnerSignupFormMain';
 import Footer from './(components)/Footer';
 import Benefits from './(components)/Benefits';
@@ -8,18 +8,17 @@ import Steps from './(components)/Steps';
 import Corporate from './(components)/Corporate';
 import Integrations from './(components)/Integrations';
 
-const App = () => {
+export default function PartnersIndex() {
   const user = false; // Or your actual user check
   
   if (user) {
     return <Redirect href="/(main)" />; // Assuming '/main' is another route
   }
   
-  
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <View style={styles.formSection}>
-      <PartnerSignupFormMain/>
+        <PartnerSignupFormMain/>
       </View>
       <Benefits />
       <Corporate />
@@ -29,7 +28,7 @@ const App = () => {
       <Footer />
     </ScrollView>
   );
-};
+}
 
 const styles = StyleSheet.create({
   container: {
@@ -42,5 +41,3 @@ const styles = StyleSheet.create({
     backgroundColor: '#eef2f7',
   }
 });
-
-export default App;

@@ -42,6 +42,7 @@ export default {
       supportsTablet: true,
       bundleIdentifier: variantConfig.identifier, // Dynamically set
       buildNumber: '1.0.0', // Manage build number as needed
+      googleServicesFile: './GoogleService-Info.plist',
     },
     android: {
       package: variantConfig.identifier, // Dynamically set
@@ -50,6 +51,7 @@ export default {
         foregroundImage: variantConfig.adaptiveIconForeground, // Dynamically set
         backgroundColor: '#FFFFFF', // Keep or make variant-specific
       },
+      googleServicesFile: './google-services.json',
     },
     splash: {
       image: variantConfig.splashImage, // Dynamically set
@@ -64,6 +66,7 @@ export default {
     assetBundlePatterns: ['**/*'],
     owner: 'bouhormq', // Your Expo account username
     jsEngine: 'hermes', // Recommended
+    newArchEnabled: true, // Enable the new architecture
 
     web: {
       favicon: './app/(main)/(assets)/favicon.png', // Keep existing favicon
@@ -78,7 +81,6 @@ export default {
     },
     plugins: [
       'expo-router',
-      // Add any other plugins here
     ],
     extra: {
       "eas": {

@@ -1,22 +1,16 @@
-import {
-    signInWithEmailAndPassword,
-    createUserWithEmailAndPassword,
-    signOut,
-    onAuthStateChanged,
-    User,
-    getIdTokenResult
-} from 'firebase/auth';
-import { httpsCallable, HttpsCallableResult } from 'firebase/functions';
-import { doc, getDoc, collection, query, where, getDocs, limit } from 'firebase/firestore';
+// Remove old imports
+// import auth from '@react-native-firebase/auth';
+// import functions from '@react-native-firebase/functions';
+// import firestore from '@react-native-firebase/firestore';
 
-// Import the initialized services from your config file
-import { auth, db, functions } from '../config/firebase'; // <-- ADJUST PATH AS NEEDED
+// Use the initialized services from your config file
+import { auth as firebaseAuth, db, functions as firebaseFunctions } from '../config/firebase';
 
 // --- Role Definitions ---
 export type UserRole = 'admin' | 'partner' | 'user' | null;
 
 export interface AuthUserResult {
-    user: User;
+    user: any; // Firebase Auth User type
     role: UserRole;
 }
 
@@ -29,9 +23,8 @@ export interface AuthUserResult {
 const checkPartnerStatus = async (uid: string): Promise<{ exists: boolean; enabled: boolean }> => {
     try {
         // Query for the partner account document where the 'uid' field matches the Auth uid
-        const accountsRef = collection(db, "PartnerAccounts");
-        const q = query(accountsRef, where("uid", "==", uid), limit(1)); 
-        const querySnapshot = await getDocs(q);
+        const accountsRef = db.collection("PartnerAccounts");
+        const querySnapshot = await accountsRef.where("uid", "==", uid).limit(1).get();
 
         if (!querySnapshot.empty) {
             // Get the first document found (should be only one due to limit(1))
@@ -53,7 +46,7 @@ const checkPartnerStatus = async (uid: string): Promise<{ exists: boolean; enabl
 
 export const loginWithEmail = async (email: string, password: string): Promise<AuthUserResult | null> => {
     try {
-        const userCredential = await signInWithEmailAndPassword(auth, email, password);
+        const userCredential = await firebaseAuth.signInWithEmailAndPassword(email, password);
         const user = userCredential.user;
 
         if (!user || !user.email) {
@@ -62,7 +55,7 @@ export const loginWithEmail = async (email: string, password: string): Promise<A
         }
 
         // Force refresh to get latest claims
-        const tokenResult = await getIdTokenResult(user, true); 
+        const tokenResult = await user.getIdTokenResult(true); 
         const claims = tokenResult.claims;
         let userRole: UserRole = claims.role === 'partner' ? 'partner' : 'user'; // Default to user if no/other claim
 
@@ -83,7 +76,7 @@ export const loginWithEmail = async (email: string, password: string): Promise<A
                  return { user, role: userRole };
             } else {
                  console.warn(`Partner login denied for ${user.email}. Status exists: ${partnerStatus.exists}, enabled: ${partnerStatus.enabled}`);
-                 await signOut(auth); // Log out user if partner checks fail
+                 await firebaseAuth.signOut(); // Log out user if partner checks fail
                  throw new Error("Partner account is disabled or not found.");
             }
         } else {
@@ -93,7 +86,7 @@ export const loginWithEmail = async (email: string, password: string): Promise<A
              const partnerCheck = await checkPartnerStatus(user.uid);
              if (partnerCheck.exists) {
                  console.error(`CRITICAL: User ${user.email} logged in as normal user but exists in PartnerAccounts!`);
-                 await signOut(auth);
+                 await firebaseAuth.signOut();
                  throw new Error("Account configuration error. Please contact support.");
              }
              return { user, role: 'user' };
@@ -107,10 +100,10 @@ export const loginWithEmail = async (email: string, password: string): Promise<A
 };
 
 // Placeholder for Normal User Signup
-export const signupNormalUser = async (email: string, password: string): Promise<User | null> => {
+export const signupNormalUser = async (email: string, password: string): Promise<any> => {
     try {
         // IMPORTANT: Ensure this flow DOES NOT add to PartnerAccounts or set partner claim
-        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        const userCredential = await firebaseAuth.createUserWithEmailAndPassword(email, password);
         console.log("Normal user created:", userCredential.user.uid);
         // Optional: Create a basic user profile document in a 'users' collection if needed
         return userCredential.user;
@@ -122,7 +115,7 @@ export const signupNormalUser = async (email: string, password: string): Promise
 
 export const logout = async () => {
     try {
-        await signOut(auth);
+        await firebaseAuth.signOut();
         console.log("User signed out");
     } catch (error) {
         console.error("Logout error:", error);
@@ -149,7 +142,9 @@ interface VerifyCodeResponse {
 export const verifyPartnerRegistrationCode = async ({ email, code }: VerifyCodePayload): Promise<VerifyCodeResponse> => {
     try {
         // Target the renamed Cloud Function
-        const func = httpsCallable<VerifyCodePayload, VerifyCodeResponse>(functions, 'verifyPartnerRegistrationCode');
+        // Use the callable functions API from the JS SDK
+        const { httpsCallable } = await import('firebase/functions');
+        const func = httpsCallable(firebaseFunctions, 'verifyPartnerRegistrationCode');
         console.log(`Calling verifyPartnerRegistrationCode with email: ${email}`);
         const result = await func({ email, code });
         console.log("verifyPartnerRegistrationCode response:", result.data);
@@ -185,7 +180,8 @@ interface CompleteRegistrationResponse {
  */
 export const completePartnerRegistration = async ({ email, code, password }: CompleteRegistrationPayload): Promise<CompleteRegistrationResponse> => {
     try {
-        const func = httpsCallable<CompleteRegistrationPayload, CompleteRegistrationResponse>(functions, 'completePartnerRegistration');
+        const { httpsCallable } = await import('firebase/functions');
+        const func = httpsCallable(firebaseFunctions, 'completePartnerRegistration');
         console.log(`Calling completePartnerRegistration for email: ${email}`);
         const result = await func({ email, code, password });
         console.log("completePartnerRegistration response:", result.data);
@@ -198,13 +194,12 @@ export const completePartnerRegistration = async ({ email, code, password }: Com
     } catch (error: any) {
         console.error(`Error completing partner registration for email ${email}:`, error);
         // Rethrow with a user-friendly message if possible
-        throw new Error(error.message || "Failed to complete registration and set password.");
+        throw new Error(error.message || "Failed to complete partner registration.");
     }
 };
 
-// Placeholder for Auth Listener setup (ideally in context)
-export const setupAuthListener = (callback: (user: User | null) => void) => {
-    return onAuthStateChanged(auth, callback);
+export const setupAuthListener = (callback: (user: any) => void) => {
+    return firebaseAuth.onAuthStateChanged(callback);
 };
 
 // Remove or update isPartnerEnabled if check is done directly in loginWithEmail

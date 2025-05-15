@@ -1,8 +1,9 @@
-import { initializeApp, getApp, getApps, FirebaseApp } from 'firebase/app';
-import { getAuth } from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore';
+import { initializeApp, getApps, getApp } from 'firebase/app';
+import { getAuth, connectAuthEmulator } from 'firebase/auth';
+import { getFirestore, connectFirestoreEmulator } from 'firebase/firestore';
 import { getFunctions, connectFunctionsEmulator } from 'firebase/functions';
-import { getStorage } from 'firebase/storage'; // Add if you use Storage
+import { getStorage, connectStorageEmulator } from 'firebase/storage';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Your web app's Firebase configuration
 // IMPORTANT: Use environment variables for sensitive keys!
@@ -13,36 +14,44 @@ const firebaseConfig = {
   storageBucket: process.env.EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET,
   messagingSenderId: process.env.EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
   appId: process.env.EXPO_PUBLIC_FIREBASE_APP_ID,
-  measurementId: process.env.EXPO_PUBLIC_FIREBASE_MEASUREMENT_ID // Optional
+  measurementId: process.env.EXPO_PUBLIC_FIREBASE_MEASUREMENT_ID, // Optional
+  databaseURL: `https://${process.env.EXPO_PUBLIC_FIREBASE_PROJECT_ID}.firebaseio.com` // Required for web
 };
 
-// Initialize Firebase only if it hasn't been initialized yet
-let app: FirebaseApp;
-if (!getApps().length) {
-  app = initializeApp(firebaseConfig);
-  console.log("Firebase initialized.");
-} else {
-  app = getApp(); // Use the existing app
-  console.log("Firebase already initialized.");
+// Initialize Firebase
+let app;
+try {
+  if (getApps().length === 0) {
+    app = initializeApp(firebaseConfig);
+    console.log("Firebase initialized successfully.");
+  } else {
+    app = getApp();
+    console.log("Firebase app already exists.");
+  }
+} catch (error) {
+  console.error("Error initializing Firebase:", error);
+  throw error;
 }
 
+// Initialize services
 const auth = getAuth(app);
 const db = getFirestore(app);
-const functions = getFunctions(app, 'europe-southwest1');
-const storage = getStorage(app); // Add if you use Storage
+const functions = getFunctions(app);
+const storage = getStorage(app);
 
 // Optional: Connect to Functions emulator if running locally
 // const isDevelopment = process.env.NODE_ENV === 'development'; // Example check
 // if (isDevelopment) { 
-//   console.log("Connecting to Firebase Functions emulator");
+//   console.log("Connecting to Firebase emulators");
 //   try {
-//     connectFunctionsEmulator(functions, "localhost", 5001); 
-//     // You might need to connect other emulators too (Auth, Firestore)
-//     // connectAuthEmulator(auth, "http://localhost:9099");
-//     // connectFirestoreEmulator(db, "localhost", 8080);
+//     connectFunctionsEmulator(functions, 'localhost', 5001);
+//     connectAuthEmulator(auth, 'http://localhost:9099');
+//     connectFirestoreEmulator(db, 'localhost', 8080);
+//     connectStorageEmulator(storage, 'localhost', 9199);
 //   } catch (error) {
 //     console.error("Error connecting to Firebase emulators:", error);
 //   }
 // }
 
-export { app, auth, db, functions, storage }; // Export initialized services 
+// Export initialized services
+export { app, auth, db, functions, storage }; 

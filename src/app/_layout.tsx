@@ -1,15 +1,13 @@
 // app/_layout.tsx
 import '../config/firebase';
-import { Stack, useRouter, useSegments, SplashScreen } from 'expo-router';
+import { Stack, useRouter, useSegments } from 'expo-router';
 import { useEffect, useCallback } from 'react';
-import { Platform, View, Text } from 'react-native';
+import { Platform, View, Text, ActivityIndicator } from 'react-native';
 import { useFonts } from 'expo-font';
 import { SessionProvider, useSession } from '../ctx';
 import { I18nextProvider } from 'react-i18next';
 import i18n from '../i18n';
-
-// Prevent the splash screen from auto-hiding immediately
-SplashScreen.preventAutoHideAsync();
+import * as SplashScreen from 'expo-splash-screen';
 
 function RootLayoutNav() {
   const { session, isLoading } = useSession();
@@ -113,7 +111,11 @@ function RootLayoutNav() {
 
   // Display loading indicator or null while checking session and redirecting
   if (isLoading) {
-     return <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}><Text>Loading Session...</Text></View>;
+     return (
+       <View style={{flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#fff'}}>
+         <ActivityIndicator size="large" color="#0000ff" />
+       </View>
+     );
   }
 
   // Render the main stack navigator
@@ -122,14 +124,11 @@ function RootLayoutNav() {
         <Stack.Screen name="(main)" />
         <Stack.Screen name="partners" />
         <Stack.Screen name="admin" />
-        {/* Add (auth) group if you create one for login/signup */}
-        {/* <Stack.Screen name="(auth)" /> */}
       </Stack>
   );
 }
 
 export default function RootLayout() {
-  // --- Font Loading (Moved from original RootLayoutNav) ---
   const [fontsLoaded, fontError] = useFonts({
     'SFProText-Regular': require('../assets/fonts/SF-Pro-Text-Regular.otf'),
     'SFProText-Medium': require('../assets/fonts/SF-Pro-Text-Medium.otf'),
@@ -146,21 +145,53 @@ export default function RootLayout() {
   });
 
   useEffect(() => {
-    if (fontsLoaded || fontError) {
-      SplashScreen.hideAsync();
+    async function prepare() {
+      try {
+        // Prevent splash screen from auto-hiding
+        await SplashScreen.preventAutoHideAsync();
+        
+        // Wait for fonts to load
+        if (fontsLoaded || fontError) {
+          // Hide splash screen once fonts are loaded
+          await SplashScreen.hideAsync();
+        }
+      } catch (e) {
+        console.warn('Error preparing app:', e);
+        // If there's an error, try to hide the splash screen anyway
+        try {
+          await SplashScreen.hideAsync();
+        } catch (hideError) {
+          console.warn('Error hiding splash screen:', hideError);
+        }
+      }
     }
+
+    prepare();
   }, [fontsLoaded, fontError]);
 
-  // Wait for fonts to load before rendering the app
+  // Show loading indicator while fonts are loading
   if (!fontsLoaded && !fontError) {
-    return null;
+    return (
+      <View style={{flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#fff'}}>
+        <ActivityIndicator size="large" color="#0000ff" />
+      </View>
+    );
+  }
+
+  // Show error state if fonts failed to load
+  if (fontError) {
+    return (
+      <View style={{flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#fff'}}>
+        <Text>Error loading fonts. Please restart the app.</Text>
+      </View>
+    );
   }
   
   // --- Render the App --- Wrap with I18nextProvider
   return (
     <SessionProvider>
       <I18nextProvider i18n={i18n}>
-      <RootLayoutNav />
+        <RootLayoutNav />
       </I18nextProvider>
     </SessionProvider>
   );
