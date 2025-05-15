@@ -4,7 +4,11 @@
 // import firestore from '@react-native-firebase/firestore';
 
 // Use the initialized services from your config file
-import { auth as firebaseAuth, db, functions as firebaseFunctions } from '../config/firebase';
+import { auth as firebaseAuth } from '../config/firebase';
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut as firebaseSignOut } from 'firebase/auth';
+import { getFunctions, httpsCallable } from 'firebase/functions';
+import { getFirestore, doc, getDoc, collection, query, where, getDocs, limit } from 'firebase/firestore';
+import { db, functions as firebaseFunctions } from '../config/firebase';
 
 // --- Role Definitions ---
 export type UserRole = 'admin' | 'partner' | 'user' | null;
@@ -16,43 +20,54 @@ export interface AuthUserResult {
 
 // --- Role Check Functions ---
 
-/**
- * Checks Firestore for partner account status.
- * Assumes account ID matches Firebase Auth UID after registration.
- */
-const checkPartnerStatus = async (uid: string): Promise<{ exists: boolean; enabled: boolean }> => {
+// Helper function to check partner status
+async function checkPartnerStatus(uid: string, email: string): Promise<{ exists: boolean; enabled: boolean }> {
     try {
-        // Query for the partner account document where the 'uid' field matches the Auth uid
-        const accountsRef = db.collection("PartnerAccounts");
-        const querySnapshot = await accountsRef.where("uid", "==", uid).limit(1).get();
-
-        if (!querySnapshot.empty) {
-            // Get the first document found (should be only one due to limit(1))
-            const accountDoc = querySnapshot.docs[0];
-            const data = accountDoc.data();
-            console.log(`Partner status check for uid ${uid}: Found doc ${accountDoc.id}, status: ${data.status}`);
-            return { exists: true, enabled: data.status === 'enabled' };
-        } else {
-             console.log(`Partner status check for uid ${uid}: No account found with matching uid field.`);
+        console.log(`Checking partner status for email: ${email}`);
+        // Query PartnerAccounts collection where email matches
+        const partnerQuery = query(
+            collection(db, 'PartnerAccounts'),
+            where('email', '==', email.toLowerCase()),
+            limit(1)
+        );
+        
+        const querySnapshot = await getDocs(partnerQuery);
+        console.log(`Found ${querySnapshot.size} partner documents`);
+        
+        if (querySnapshot.empty) {
+            console.log(`No partner document found for email: ${email}`);
             return { exists: false, enabled: false };
         }
+        
+        const partnerDoc = querySnapshot.docs[0];
+        const data = partnerDoc.data();
+        console.log(`Partner document data:`, data);
+        console.log(`Partner status: ${data?.status}`);
+        
+        return { 
+            exists: true, 
+            enabled: data?.status === 'enabled' 
+        };
     } catch (error) {
-        console.error(`Error checking partner status for uid ${uid}:`, error);
-        return { exists: false, enabled: false }; // Default to disabled on error
+        console.error("Error checking partner status:", error);
+        return { exists: false, enabled: false };
     }
-};
+}
 
 // --- Authentication Functions ---
 
 export const loginWithEmail = async (email: string, password: string): Promise<AuthUserResult | null> => {
     try {
-        const userCredential = await firebaseAuth.signInWithEmailAndPassword(email, password);
+        console.log(`Attempting login for email: ${email}`);
+        const userCredential = await signInWithEmailAndPassword(firebaseAuth, email, password);
         const user = userCredential.user;
 
         if (!user || !user.email) {
              console.error("Login succeeded but user object or email is missing.");
              return null; // Should not happen
         }
+
+        console.log(`User logged in successfully. UID: ${user.uid}`);
 
         // Force refresh to get latest claims
         const tokenResult = await user.getIdTokenResult(true); 
@@ -70,26 +85,29 @@ export const loginWithEmail = async (email: string, password: string): Promise<A
         
         if (userRole === 'partner') {
             // If identified as partner via claim, double-check Firestore status
-            const partnerStatus = await checkPartnerStatus(user.uid);
+            console.log(`Checking partner status for ${user.email} (UID: ${user.uid})`);
+            const partnerStatus = await checkPartnerStatus(user.uid, user.email);
+            console.log(`Partner status check result:`, partnerStatus);
+            
             if (partnerStatus.exists && partnerStatus.enabled) {
                 console.log(`Enabled partner ${user.email} logged in.`);
-                 return { user, role: userRole };
+                return { user, role: userRole };
             } else {
-                 console.warn(`Partner login denied for ${user.email}. Status exists: ${partnerStatus.exists}, enabled: ${partnerStatus.enabled}`);
-                 await firebaseAuth.signOut(); // Log out user if partner checks fail
-                 throw new Error("Partner account is disabled or not found.");
+                console.warn(`Partner login denied for ${user.email}. Status exists: ${partnerStatus.exists}, enabled: ${partnerStatus.enabled}`);
+                await firebaseSignOut(firebaseAuth); // Log out user if partner checks fail
+                throw new Error("Partner account is disabled or not found.");
             }
         } else {
-             // Assume normal user if no partner claim
-             console.log(`Normal user ${user.email} logged in.`);
+            // Assume normal user if no partner claim
+            console.log(`Normal user ${user.email} logged in.`);
             // Check if they accidentally exist in PartnerAccounts (shouldn't happen)
-             const partnerCheck = await checkPartnerStatus(user.uid);
-             if (partnerCheck.exists) {
-                 console.error(`CRITICAL: User ${user.email} logged in as normal user but exists in PartnerAccounts!`);
-                 await firebaseAuth.signOut();
-                 throw new Error("Account configuration error. Please contact support.");
-             }
-             return { user, role: 'user' };
+            const partnerCheck = await checkPartnerStatus(user.uid, user.email);
+            if (partnerCheck.exists) {
+                console.error(`CRITICAL: User ${user.email} logged in as normal user but exists in PartnerAccounts!`);
+                await firebaseSignOut(firebaseAuth);
+                throw new Error("Account configuration error. Please contact support.");
+            }
+            return { user, role: 'user' };
         }
 
     } catch (error: any) {
@@ -103,7 +121,7 @@ export const loginWithEmail = async (email: string, password: string): Promise<A
 export const signupNormalUser = async (email: string, password: string): Promise<any> => {
     try {
         // IMPORTANT: Ensure this flow DOES NOT add to PartnerAccounts or set partner claim
-        const userCredential = await firebaseAuth.createUserWithEmailAndPassword(email, password);
+        const userCredential = await createUserWithEmailAndPassword(firebaseAuth, email, password);
         console.log("Normal user created:", userCredential.user.uid);
         // Optional: Create a basic user profile document in a 'users' collection if needed
         return userCredential.user;
@@ -115,7 +133,7 @@ export const signupNormalUser = async (email: string, password: string): Promise
 
 export const logout = async () => {
     try {
-        await firebaseAuth.signOut();
+        await firebaseSignOut(firebaseAuth);
         console.log("User signed out");
     } catch (error) {
         console.error("Logout error:", error);
@@ -141,23 +159,12 @@ interface VerifyCodeResponse {
  */
 export const verifyPartnerRegistrationCode = async ({ email, code }: VerifyCodePayload): Promise<VerifyCodeResponse> => {
     try {
-        // Target the renamed Cloud Function
-        // Use the callable functions API from the JS SDK
-        const { httpsCallable } = await import('firebase/functions');
         const func = httpsCallable(firebaseFunctions, 'verifyPartnerRegistrationCode');
-        console.log(`Calling verifyPartnerRegistrationCode with email: ${email}`);
         const result = await func({ email, code });
-        console.log("verifyPartnerRegistrationCode response:", result.data);
-        // Add basic validation for the response structure
-        if (result.data && typeof result.data.success === 'boolean') {
-            return result.data;
-        } else {
-            throw new Error("Invalid response structure received from verify function.");
-        }
+        return result.data as VerifyCodeResponse;
     } catch (error: any) {
-        console.error(`Error verifying partner code for email ${email}:`, error);
-        // Rethrow with a user-friendly message if possible
-        throw new Error(error.message || "Failed to verify registration code.");
+        console.error("Error verifying partner registration code:", error);
+        throw error;
     }
 };
 
@@ -180,21 +187,12 @@ interface CompleteRegistrationResponse {
  */
 export const completePartnerRegistration = async ({ email, code, password }: CompleteRegistrationPayload): Promise<CompleteRegistrationResponse> => {
     try {
-        const { httpsCallable } = await import('firebase/functions');
         const func = httpsCallable(firebaseFunctions, 'completePartnerRegistration');
-        console.log(`Calling completePartnerRegistration for email: ${email}`);
         const result = await func({ email, code, password });
-        console.log("completePartnerRegistration response:", result.data);
-        // Add basic validation for the response structure
-        if (result.data && typeof result.data.success === 'boolean') {
-            return result.data;
-        } else {
-            throw new Error("Invalid response structure received from completion function.");
-        }
+        return result.data as CompleteRegistrationResponse;
     } catch (error: any) {
-        console.error(`Error completing partner registration for email ${email}:`, error);
-        // Rethrow with a user-friendly message if possible
-        throw new Error(error.message || "Failed to complete partner registration.");
+        console.error("Error completing partner registration:", error);
+        throw error;
     }
 };
 

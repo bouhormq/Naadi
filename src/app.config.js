@@ -1,5 +1,9 @@
 // app.config.js
-import 'dotenv/config'; // Optional: for local testing with a .env file
+try {
+  require('dotenv').config();
+} catch (error) {
+  console.warn('dotenv not found, using default environment variables');
+}
 
 // Determine the variant. Default to 'main' if not set.
 // EXPO_PUBLIC_APP_VARIANT will be set by EAS build profiles.

@@ -16,11 +16,12 @@ import { logger } from "firebase-functions";
 import * as businessFunctions from './business';
 
 const db = admin.firestore();
-const ADMIN_EMAIL = "bouhormq@gmail.com"; // Store admin email securely, maybe env var
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL || "bouhormq@gmail.com"; // Use environment variable with fallback
 const PARTNER_REGISTRATION_REQUEST_COLLECTION = "PartnerRegistrationRequest";
 const PARTNER_CONTACT_REQUEST_COLLECTION = "PartnerContactRequest"; // Added constant
 const PARTNER_ACCOUNTS_COLLECTION = "PartnerAccounts";
-const TARGET_REGION = "europe-southwest1"; // Define region once
+const TARGET_REGION = "europe-southwest1"; // Set to europe-southwest1
+
 
 // Define the interface for the PhoneInfo structure as expected from the frontend
 interface PhoneInfo {
@@ -68,7 +69,10 @@ export const setMyBusinessProfile = businessFunctions.setMyBusinessProfile;
 export const getMyBusinesses = businessFunctions.getMyBusinesses;
 
 // --- NEW Callable Function v2: Partner Register Request ---
-export const partnerRegisterRequest = onCall({ region: TARGET_REGION }, async (request) => {
+export const partnerRegisterRequest = onCall({ 
+  region: TARGET_REGION,
+  cors: true // Allow all origins
+}, async (request) => {
   const {
         email, firstName, lastName, businessName, website,
         businessType, location, phone, consent
@@ -127,7 +131,10 @@ export const partnerRegisterRequest = onCall({ region: TARGET_REGION }, async (r
 });
 
 // --- NEW Callable Function v2: Partner Contact Request ---
-export const partnerContactRequest = onCall({ region: TARGET_REGION }, async (request) => {
+export const partnerContactRequest = onCall({ 
+  region: TARGET_REGION,
+  cors: true // Allow all origins
+}, async (request) => {
   const {
         email, firstName, lastName, businessName, website,
         businessType, location, phone, message, consent
@@ -192,7 +199,10 @@ function generateRegistrationCode(length = 8): string {
 }
 
 // --- Existing Callable Functions (Approve, Toggle Status, Get Data, Register Code) ---
-export const approvePartnerRequest = onCall({ region: TARGET_REGION }, async (request) => {
+export const approvePartnerRequest = onCall({ 
+  region: TARGET_REGION,
+  cors: true // Allow all origins
+}, async (request) => {
     // 1. Check Authentication and Admin Role (using request.auth)
     if (!request.auth || request.auth.token.email !== ADMIN_EMAIL) {
        logger.warn("Permission denied for approvePartnerRequest", { 
@@ -269,7 +279,10 @@ export const approvePartnerRequest = onCall({ region: TARGET_REGION }, async (re
   });
 
 // --- Callable Function v2: Toggle Partner Account Status ---
-export const togglePartnerAccountStatus = onCall({ region: TARGET_REGION }, async (request) => {
+export const togglePartnerAccountStatus = onCall({ 
+  region: TARGET_REGION,
+  cors: true // Allow all origins
+}, async (request) => {
     // 1. Check Authentication and Admin Role (using request.auth)
      if (!request.auth || request.auth.token.email !== ADMIN_EMAIL) {
        logger.warn("Permission denied for togglePartnerAccountStatus", { 
@@ -313,7 +326,10 @@ export const togglePartnerAccountStatus = onCall({ region: TARGET_REGION }, asyn
   });
 
 // --- Callable Function v2: Get Admin Dashboard Data ---
-export const getAdminDashboardData = onCall({ region: TARGET_REGION }, async (request) => {
+export const getAdminDashboardData = onCall({ 
+  region: TARGET_REGION,
+  cors: true // Allow all origins
+}, async (request) => {
     // 1. Check Authentication and Admin Role
     if (!request.auth || request.auth.token.email !== ADMIN_EMAIL) {
        logger.warn("Permission denied for getAdminDashboardData", { 
@@ -342,7 +358,10 @@ export const getAdminDashboardData = onCall({ region: TARGET_REGION }, async (re
 
 // --- Callable Function v2: Verify Partner Registration Code ---
 // Renamed from registerPartnerWithCode
-export const verifyPartnerRegistrationCode = onCall({ region: TARGET_REGION }, async (request) => {
+export const verifyPartnerRegistrationCode = onCall({ 
+  region: TARGET_REGION,
+  cors: true // Allow all origins
+}, async (request) => {
     // This function checks if the email and code are valid for an UNREGISTERED partner.
     const data = request.data;
     if (!data || typeof data.email !== "string" || typeof data.code !== "string") {
@@ -407,7 +426,10 @@ interface CompleteRegistrationPayload {
     password?: string; // Optional for now, mandatory for email/pass flow
 }
 
-export const completePartnerRegistration = onCall({ region: TARGET_REGION }, async (request) => {
+export const completePartnerRegistration = onCall({ 
+  region: TARGET_REGION,
+  cors: true // Allow all origins
+}, async (request) => {
      const data = request.data as CompleteRegistrationPayload;
      if (!data || 
          typeof data.email !== "string" || 
