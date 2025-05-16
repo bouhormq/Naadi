@@ -1,88 +1,328 @@
-# Managing App Variants (Main vs. Partner)
+# Managing App Variants in Naadi
 
-This project uses a single codebase (`src/`) to build two distinct application variants: the main user app and the partner app. This is achieved through dynamic configuration driven by an environment variable and managed by Expo Application Services (EAS).
+This document outlines how Naadi manages its two app variants (user-facing and partner-facing) using Expo's build system and environment configuration.
 
-## Key Components
+## 1. Variant Overview
 
-1.  **`EXPO_PUBLIC_APP_VARIANT` Environment Variable:**
-    *   The core mechanism for determining which variant to build or run.
-    *   Expected values: `'main'` or `'partner'`.
-    *   Set during development locally (e.g., `export EXPO_PUBLIC_APP_VARIANT=main`) or via `.env` files.
-    *   Set during builds via **EAS Build Profiles** in `eas.json`.
+### 1.1 Available Variants
 
-2.  **`src/app.config.js`:**
-    *   Dynamically configures the Expo app build based on `process.env.EXPO_PUBLIC_APP_VARIANT`.
-    *   Reads the variable at build time.
-    *   Selects the appropriate configuration object (`mainConfig` or `partnerConfig`).
-    *   Sets variant-specific properties like:
-        *   `name`: App display name (e.g., "Naadi", "Naadi Partner").
-        *   `slug`: Unique identifier for URLs/deep linking (e.g., "naadi", "naadi-partner").
-        *   `ios.bundleIdentifier`: iOS app ID (e.g., "ma.naadi.app", "ma.naadi.partner").
-        *   `android.package`: Android application ID (e.g., "ma.naadi.app", "ma.naadi.partner").
-        *   `icon`: Path to the app icon.
-        *   `splash.image`: Path to the splash screen image.
-        *   `adaptiveIcon.foregroundImage`: Path to the Android adaptive icon foreground.
-    *   Also defines common configuration shared by both variants.
+1. **Main Variant (User App)**
+   - Target: End users
+   - Features: Studio browsing, class booking, user profile
+   - Bundle ID: `ma.naadi.app`
 
-3.  **`src/app/` Directory Structure (Expo Router):**
-    *   Uses **Expo Router route groups** to organize variant-specific screens, layouts, and assets.
-    *   `(main)`: Contains routes primarily for the main user app.
-        *   `(main)/(tabs)`: Example tab layout for the main app.
-        *   `(main)/(assets)`: Contains `icon-main.png`, `splash-main.png`, etc., referenced by `mainConfig` in `app.config.js`.
-    *   `(partners)`: Contains routes primarily for the partner app.
-        *   `(partners)/(tabs)`: Example tab layout for the partner app.
-        *   `(partners)/(assets)`: Contains `icon-partner.png`, `splash-partner.png`, etc., referenced by `partnerConfig` in `app.config.js`.
-    *   Shared routes, components, and the root layout (`_layout.tsx`) can exist outside these groups.
+2. **Partner Variant (Partner App)**
+   - Target: Studio owners/managers
+   - Features: Studio management, class scheduling, analytics
+   - Bundle ID: `ma.naadi.partner`
 
-4.  **`eas.json` (EAS Build Profiles):**
-    *   Defines different build profiles for development, preview, and production.
-    *   Crucially, sets the `env.EXPO_PUBLIC_APP_VARIANT` within each profile to tell EAS which variant to build.
-    *   Example Profiles:
-        *   `development-main`: Builds a development client for the main app.
-        *   `production-partner`: Builds a production app for the partner variant.
+## 2. Configuration Management
 
-## Development Workflow
-
-1.  **Set Environment Variable:** Before running the app locally, set the `EXPO_PUBLIC_APP_VARIANT`:
-    ```bash
-    export EXPO_PUBLIC_APP_VARIANT=main # Or 'partner'
-    ```
-2.  **Start Development Server:**
-    ```bash
-    npx expo start
-    ```
-    The running app will use the configuration corresponding to the `EXPO_PUBLIC_APP_VARIANT` you set. `app.config.js` selects the correct name, icons, etc., dynamically *at runtime* for the dev client, although some features like native bundle IDs are only truly set during a *build*.
-
-## Build Workflow (EAS)
-
-1.  **Choose Profile:** Select the desired build profile from `eas.json` that corresponds to the variant and environment you need.
-2.  **Run Build:**
-    ```bash
-    # Build production Android app for the main variant
-    eas build --platform android --profile production-main
-
-    # Build preview iOS app for the partner variant
-    eas build --platform ios --profile preview-partner
-    ```
-3.  EAS reads the profile, sets `EXPO_PUBLIC_APP_VARIANT` in the build environment, and `app.config.js` generates the correct native project configuration before the build proceeds.
-
-## Conditional Logic in Code (If Needed)
-
-While most variant differences are handled by configuration (`app.config.js`) and routing (`src/app/`), you might occasionally need conditional logic within shared components or hooks.
+### 2.1 Environment Variables
 
 ```typescript
-import Constants from 'expo-constants';
-
-const appVariant = Constants.expoConfig?.extra?.appVariant || process.env.EXPO_PUBLIC_APP_VARIANT || 'main';
-
-function MySharedComponent() {
-  if (appVariant === 'partner') {
-    // Render something specific for partners
-  } else {
-    // Render default for main users
+// src/app.config.js
+export default {
+  name: 'Naadi',
+  slug: 'naadi',
+  version: '1.0.0',
+  orientation: 'portrait',
+  icon: './assets/icon.png',
+  userInterfaceStyle: 'light',
+  splash: {
+    image: './assets/splash.png',
+    resizeMode: 'contain',
+    backgroundColor: '#ffffff'
+  },
+  assetBundlePatterns: ['**/*'],
+  ios: {
+    supportsTablet: true,
+    bundleIdentifier: process.env.EXPO_PUBLIC_APP_VARIANT === 'partner' 
+      ? 'ma.naadi.partner'
+      : 'ma.naadi.app'
+  },
+  android: {
+    adaptiveIcon: {
+      foregroundImage: './assets/adaptive-icon.png',
+      backgroundColor: '#ffffff'
+    },
+    package: process.env.EXPO_PUBLIC_APP_VARIANT === 'partner'
+      ? 'ma.naadi.partner'
+      : 'ma.naadi.app'
+  },
+  web: {
+    favicon: './assets/favicon.png'
+  },
+  extra: {
+    appVariant: process.env.EXPO_PUBLIC_APP_VARIANT || 'main'
   }
-  // ...
+};
+```
+
+### 2.2 EAS Build Configuration
+
+```json
+// eas.json
+{
+  "cli": {
+    "version": ">= 5.9.1"
+  },
+  "build": {
+    "development-main": {
+      "developmentClient": true,
+      "distribution": "internal",
+      "env": {
+        "EXPO_PUBLIC_APP_VARIANT": "main"
+      }
+    },
+    "development-partner": {
+      "developmentClient": true,
+      "distribution": "internal",
+      "env": {
+        "EXPO_PUBLIC_APP_VARIANT": "partner"
+      }
+    },
+    "preview-main": {
+      "distribution": "internal",
+      "env": {
+        "EXPO_PUBLIC_APP_VARIANT": "main"
+      }
+    },
+    "preview-partner": {
+      "distribution": "internal",
+      "env": {
+        "EXPO_PUBLIC_APP_VARIANT": "partner"
+      }
+    },
+    "production-main": {
+      "env": {
+        "EXPO_PUBLIC_APP_VARIANT": "main"
+      }
+    },
+    "production-partner": {
+      "env": {
+        "EXPO_PUBLIC_APP_VARIANT": "partner"
+      }
+    }
+  },
+  "submit": {
+    "production-main": {
+      "ios": {
+        "appleId": "your-apple-id",
+        "ascAppId": "your-app-store-connect-id",
+        "appleTeamId": "your-team-id"
+      }
+    },
+    "production-partner": {
+      "ios": {
+        "appleId": "your-apple-id",
+        "ascAppId": "your-partner-app-store-connect-id",
+        "appleTeamId": "your-team-id"
+      }
+    }
+  }
 }
 ```
 
-**Note:** Relying heavily on runtime checks can make code complex. Prefer configuration and routing for managing variants where possible. Ensure the `appVariant` is consistently available (e.g., by passing it via `extra` in `app.config.js` if needed beyond build time, although direct use of `EXPO_PUBLIC_APP_VARIANT` is often sufficient). 
+## 3. Code Organization
+
+### 3.1 Directory Structure
+
+```
+src/
+├── app/
+│   ├── (main)/           # Main app routes
+│   │   ├── (protected)/  # Protected user routes
+│   │   │   ├── home.tsx
+│   │   │   ├── profile.tsx
+│   │   │   └── bookings.tsx
+│   │   ├── login.tsx
+│   │   └── register.tsx
+│   ├── partners/         # Partner app routes
+│   │   ├── (protected)/  # Protected partner routes
+│   │   │   ├── dashboard.tsx
+│   │   │   ├── studios.tsx
+│   │   │   └── classes.tsx
+│   │   ├── login.tsx
+│   │   └── register.tsx
+│   └── _layout.tsx       # Root layout with variant detection
+```
+
+### 3.2 Variant Detection
+
+```typescript
+// src/app/_layout.tsx
+import { useAppVariant } from '@/hooks/useAppVariant';
+
+export default function RootLayout() {
+  const { isPartner } = useAppVariant();
+
+  return (
+    <Stack>
+      {isPartner ? (
+        <Stack.Screen name="partners" options={{ headerShown: false }} />
+      ) : (
+        <Stack.Screen name="(main)" options={{ headerShown: false }} />
+      )}
+    </Stack>
+  );
+}
+```
+
+### 3.3 Custom Hook
+
+```typescript
+// src/hooks/useAppVariant.ts
+import Constants from 'expo-constants';
+
+export function useAppVariant() {
+  const appVariant = Constants.expoConfig?.extra?.appVariant || 'main';
+  
+  return {
+    isPartner: appVariant === 'partner',
+    isMain: appVariant === 'main',
+    variant: appVariant
+  };
+}
+```
+
+## 4. Building and Deployment
+
+### 4.1 Development
+
+```bash
+# Run main variant
+EXPO_PUBLIC_APP_VARIANT=main npm start
+
+# Run partner variant
+EXPO_PUBLIC_APP_VARIANT=partner npm start
+```
+
+### 4.2 Building
+
+```bash
+# Build main variant
+eas build --profile production-main
+
+# Build partner variant
+eas build --profile production-partner
+```
+
+### 4.3 Deployment
+
+```bash
+# Deploy main variant
+eas submit --profile production-main
+
+# Deploy partner variant
+eas submit --profile production-partner
+```
+
+## 5. Testing
+
+### 5.1 Unit Tests
+
+```typescript
+// src/__tests__/hooks/useAppVariant.test.ts
+import { useAppVariant } from '@/hooks/useAppVariant';
+
+describe('useAppVariant', () => {
+  it('returns correct variant for main app', () => {
+    // Mock Constants.expoConfig
+    jest.spyOn(Constants, 'expoConfig', 'get').mockReturnValue({
+      extra: { appVariant: 'main' }
+    });
+
+    const { isPartner, isMain, variant } = useAppVariant();
+    
+    expect(isPartner).toBe(false);
+    expect(isMain).toBe(true);
+    expect(variant).toBe('main');
+  });
+});
+```
+
+### 5.2 E2E Tests
+
+```yaml
+# e2e/main-app.maestro.yaml
+appId: ma.naadi.app
+---
+- launchApp
+- assertVisible: "Welcome to Naadi"
+- tapOn: "Browse Studios"
+
+# e2e/partner-app.maestro.yaml
+appId: ma.naadi.partner
+---
+- launchApp
+- assertVisible: "Partner Dashboard"
+- tapOn: "Manage Studios"
+```
+
+## 6. Best Practices
+
+### 6.1 Code Organization
+
+1. **Shared Code**
+   - Keep common utilities in `src/utils/`
+   - Share components in `src/components/`
+   - Use shared types in `types/`
+
+2. **Variant-Specific Code**
+   - Use route groups for variant-specific screens
+   - Keep variant-specific components in their respective directories
+   - Use the `useAppVariant` hook for conditional rendering
+
+### 6.2 Performance
+
+1. **Bundle Size**
+   - Use dynamic imports for variant-specific code
+   - Implement code splitting
+   - Optimize assets per variant
+
+2. **Caching**
+   - Implement variant-specific caching strategies
+   - Use appropriate storage keys per variant
+   - Clear caches when switching variants
+
+### 6.3 Security
+
+1. **Authentication**
+   - Implement variant-specific auth flows
+   - Use appropriate role-based access control
+   - Secure variant-specific endpoints
+
+2. **Data Access**
+   - Implement variant-specific data access patterns
+   - Use appropriate security rules
+   - Validate user roles per variant
+
+## 7. Troubleshooting
+
+### 7.1 Common Issues
+
+1. **Build Failures**
+   - Check environment variables
+   - Verify bundle identifiers
+   - Check EAS configuration
+
+2. **Runtime Issues**
+   - Verify variant detection
+   - Check navigation structure
+   - Validate environment setup
+
+### 7.2 Debugging
+
+1. **Development**
+   ```bash
+   # Enable debug logging
+   EXPO_DEBUG=true EXPO_PUBLIC_APP_VARIANT=main npm start
+   ```
+
+2. **Production**
+   ```bash
+   # Check build logs
+   eas build:list
+   eas build:view
+   ```

@@ -21,9 +21,9 @@ const firebaseConfig = {
 let app;
 try {
   if (getApps().length === 0) {
-    app = initializeApp(firebaseConfig);
+  app = initializeApp(firebaseConfig);
     console.log("Firebase initialized successfully.");
-  } else {
+} else {
     app = getApp();
     console.log("Firebase app already exists.");
   }

@@ -91,23 +91,23 @@ export const loginWithEmail = async (email: string, password: string): Promise<A
             
             if (partnerStatus.exists && partnerStatus.enabled) {
                 console.log(`Enabled partner ${user.email} logged in.`);
-                return { user, role: userRole };
+                 return { user, role: userRole };
             } else {
-                console.warn(`Partner login denied for ${user.email}. Status exists: ${partnerStatus.exists}, enabled: ${partnerStatus.enabled}`);
+                 console.warn(`Partner login denied for ${user.email}. Status exists: ${partnerStatus.exists}, enabled: ${partnerStatus.enabled}`);
                 await firebaseSignOut(firebaseAuth); // Log out user if partner checks fail
-                throw new Error("Partner account is disabled or not found.");
+                 throw new Error("Partner account is disabled or not found.");
             }
         } else {
-            // Assume normal user if no partner claim
-            console.log(`Normal user ${user.email} logged in.`);
+             // Assume normal user if no partner claim
+             console.log(`Normal user ${user.email} logged in.`);
             // Check if they accidentally exist in PartnerAccounts (shouldn't happen)
             const partnerCheck = await checkPartnerStatus(user.uid, user.email);
-            if (partnerCheck.exists) {
-                console.error(`CRITICAL: User ${user.email} logged in as normal user but exists in PartnerAccounts!`);
+             if (partnerCheck.exists) {
+                 console.error(`CRITICAL: User ${user.email} logged in as normal user but exists in PartnerAccounts!`);
                 await firebaseSignOut(firebaseAuth);
-                throw new Error("Account configuration error. Please contact support.");
-            }
-            return { user, role: 'user' };
+                 throw new Error("Account configuration error. Please contact support.");
+             }
+             return { user, role: 'user' };
         }
 
     } catch (error: any) {

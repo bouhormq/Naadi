@@ -4,14 +4,19 @@ Naadi is a platform connecting users to fitness studios and enabling partners to
 
 ## Features
 
-- **User App (Main Variant)**:
-  - Browse studios
-  - Book classes
-  - Manage bookings
-- **Partner App (Partner Variant)**:
-  - Manage studios and classes
-  - Handle bookings
-  - View partner statistics
+### User App (Main Variant)
+- Browse studios with map integration
+- Book classes and manage bookings
+- User profile management
+- Responsive design for mobile and web
+- Internationalization support
+
+### Partner App (Partner Variant)
+- Studio and class management
+- Booking management and analytics
+- Staff management
+- Business profile customization
+- Responsive dashboard
 
 ## Project Structure
 
@@ -27,28 +32,32 @@ naadi/
 │   └── ...
 ├── docs/                 # Project documentation
 │   ├── software-design-document.md
+│   ├── architecture-interaction.md
+│   ├── testing-strategy.md
+│   ├── managing-variants.md
 │   └── ...
 ├── src/                  # Expo app source code
-│   ├── app/              # Expo router screens & layouts ((main), (partners), etc.)
-│   ├── api/              # Client-side API helper functions (calling Cloud Functions)
-│   ├── assets/           # Shared assets (fonts, generic images)
+│   ├── app/              # Expo router screens & layouts
+│   │   ├── (main)/       # Main app screens
+│   │   │   ├── (protected)/ # Protected user routes
+│   │   │   └── ...
+│   │   ├── partners/     # Partner app screens
+│   │   │   ├── (protected)/ # Protected partner routes
+│   │   │   └── ...
+│   │   └── _layout.tsx   # Root layout
+│   ├── api/              # Client-side API helpers
 │   ├── components/       # Shared UI components
-│   ├── contexts/         # Shared React contexts (e.g., AuthContext)
-│   ├── hooks/            # Shared custom React hooks
-│   ├── tests/            # App tests
-│   ├── utils/            # Shared utility functions
+│   ├── assets/           # Shared assets
+│   ├── contexts/         # React contexts
+│   ├── hooks/            # Custom React hooks
+│   ├── utils/            # Utility functions
 │   ├── app.config.js     # Dynamic variant configuration
-│   ├── eas.json          # EAS build configuration (variants)
-│   ├── tsconfig.json     # TypeScript config for the Expo app
-│   └── ...               # Other app source files
-├── types/                # Shared TypeScript types (used by src/ and cloud-functions/)
-│   ├── index.ts
 │   └── ...
+├── types/                # Shared TypeScript types
 ├── .gitignore
 ├── LICENSE
-├── package.json          # Dependencies and scripts for the Expo app
-├── package-lock.json
-└── README.md             # This file
+├── package.json
+└── README.md
 ```
 
 ## Technologies
@@ -57,6 +66,8 @@ naadi/
 - **Backend**: Firebase Cloud Functions, Firebase Firestore, Firebase Authentication
 - **Build & Deployment**: Expo Application Services (EAS)
 - **Types**: TypeScript
+- **Internationalization**: i18next
+- **Testing**: Jest, React Native Testing Library
 
 ## Getting Started
 
@@ -72,88 +83,77 @@ naadi/
 
 ### Installation
 
-1.  **Clone the repository:**
+1. Clone the repository:
     ```bash
-    git clone <your-repo-url>
+git clone https://github.com/yourusername/naadi.git
     cd naadi
     ```
 
-2.  **Install Expo App Dependencies:**
+2. Install dependencies:
     ```bash
-    # Navigate to the Expo app's source directory if your root package.json isn't set up for it
-    # cd src # Uncomment if needed
     npm install
     # or
-    # yarn install
+yarn install
     ```
 
-3.  **Install Cloud Functions Dependencies:**
+3. Set up environment variables:
     ```bash
-    cd cloud-functions/functions
-    npm install
-    # or
-    # yarn install
-    cd ../.. # Return to root
-    ```
+cp .env.example .env
+# Edit .env with your configuration
+```
 
-4.  **Firebase Setup:**
-    *   Log in to Firebase: `firebase login`
-    *   Select the correct Firebase project: `firebase use <your-firebase-project-id>`
-    *   Ensure you have the necessary service account keys or configuration set up if your functions require Admin SDK access locally (refer to Firebase docs).
-
-5.  **Expo Setup:**
-    *   Log in to Expo: `expo login`
-    *   Ensure `eas.json` is configured with the correct Expo project ID.
-
-## Development
-
-1.  **Run the Expo App (Choose a Variant):**
-    *   Set the variant environment variable (e.g., in your shell or `.env` file):
+4. Start the development server:
         ```bash
-        # For the main user app
-        export EXPO_PUBLIC_APP_VARIANT=main
-        # OR for the partner app
-        # export EXPO_PUBLIC_APP_VARIANT=partner
-        ```
-    *   Start the development server (from the root or `src/` directory, depending on your `package.json`):
-        ```bash
-        npx expo start
-        ```
-    *   Follow the prompts to open the app in a simulator, on a device (Expo Go), or in a web browser.
+# For main variant
+EXPO_PUBLIC_APP_VARIANT=main npm start
+# or
+EXPO_PUBLIC_APP_VARIANT=main yarn start
 
-2.  **Run Cloud Functions Locally (Optional):**
-    *   Use the Firebase Emulator Suite:
-        ```bash
-        # Make sure emulators are configured in firebase.json
-        firebase emulators:start --only functions,firestore,auth # Add other services as needed
-        ```
-    *   Update your client-side API helpers (`src/api/`) to point to the local emulator URLs during development.
+# For partner variant
+EXPO_PUBLIC_APP_VARIANT=partner npm start
+# or
+EXPO_PUBLIC_APP_VARIANT=partner yarn start
+```
 
-## Deployment
+### Building
 
-1.  **Deploy Cloud Functions:**
+To build the app for production:
+
     ```bash
-    # From the project root
-    firebase deploy --only functions
+# Build main variant
+eas build --profile production-main
+
+# Build partner variant
+eas build --profile production-partner
     ```
 
-2.  **Build App Variants with EAS:**
-    *   Choose the appropriate build profile from `eas.json` (e.g., `production-main`, `production-partner`).
-    ```bash
-    # Example: Build production Android app for the main variant
-    eas build --platform android --profile production-main
+## Testing
 
-    # Example: Build production iOS app for the partner variant
-    eas build --platform ios --profile production-partner
-    ```
-    *   Follow the EAS CLI prompts.
+Run the test suite:
 
-3.  **Submit to Stores (Optional):**
-    *   Use EAS Submit after a successful build:
     ```bash
-    eas submit --platform ios --profile production-main --latest # Example
-    ```
+npm test
+# or
+yarn test
+```
+
+## Documentation
+
+Detailed documentation is available in the `docs/` directory:
+
+- [Software Design Document](docs/software-design-document.md)
+- [Architecture Interaction](docs/architecture-interaction.md)
+- [Testing Strategy](docs/testing-strategy.md)
+- [Managing Variants](docs/managing-variants.md)
+
+## Contributing
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
 ## License
 
-[MIT](LICENSE)
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.

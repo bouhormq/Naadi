@@ -7,7 +7,7 @@ declare namespace NodeJS {
     EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: string;
     EXPO_PUBLIC_FIREBASE_APP_ID: string;
     EXPO_PUBLIC_FIREBASE_MEASUREMENT_ID?: string; // Optional
-    EXPO_PUBLIC_APP_VARIANT: 'main' | 'partners' | 'development'; // Add other variants if needed
+    EXPO_PUBLIC_APP_VARIANT: 'main' | 'partner' | 'development'; // Add other variants if needed
     // Add other environment variables here
   }
 } 

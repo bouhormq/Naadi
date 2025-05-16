@@ -1,152 +1,355 @@
-# Architecture Interaction Flow
+# Architecture and System Interactions
 
-This document describes how the different parts of the Naadi project (Expo frontend, shared types, Cloud Functions backend) interact with each other.
+This document outlines the architecture and interaction patterns of the Naadi platform, including both the Expo frontend and Firebase backend components.
 
-## Overview
+## 1. System Overview
 
-The system follows a client-server pattern:
-
-1.  **Client (Expo App):** The `src/` directory contains the React Native application logic, UI components, and navigation using Expo Router.
-2.  **Backend (Firebase):** Firebase provides Authentication, Firestore database, and serverless execution via Cloud Functions (`cloud-functions/`).
-3.  **Shared Types:** A root `types/` directory defines common data structures (TypeScript interfaces/types) used by both the client and the backend to ensure consistency.
-4.  **Communication:** The Expo app does not directly call the Firebase Admin SDK (except potentially for basic Firestore reads/writes if security rules allow). Instead, it primarily communicates with the backend logic hosted in Cloud Functions via HTTPS requests, orchestrated by helper functions.
-
-## Interaction Diagram
+### 1.1 High-Level Architecture
 
 ```
-+--------------------------+        +-------------------------+        +-----------------------------+
-| Expo App (`src/app/`)    |        | API Helpers (`src/api/`)  |        | Shared Types (`types/`)     |
-| - Screens & Components   | -----> | - Calls Cloud Functions | <----- | - Interfaces (User, Studio) |
-| - Uses Hooks & Contexts|        | - Handles Auth State    |        | - API Payloads              |
-+--------------------------+        | - Imports Types         |        +--------------^--------------+
-         |                          +-------------^-----------+                         |
-         | Imports Helpers                    | Imports Types                           |
-         |                                    |                                         |
-         | Calls Helpers                      v Makes HTTPS Requests                    |
-         |                                    |                                         |
-         |                                    |                                         v Imports Types
-         |                                    |                               +-----------------------------+
-         +------------------------------------->                              | Cloud Functions             |
-                                                                            | (`cloud-functions/functions/`)
-                                                                            | - HTTP Endpoints            |
-                                                                            | - Firestore Triggers        |
-                                                                            | - Imports Types             |
-                                                                            | - Uses Shared Utils         |
-                                                                            | - Interacts w/ Firebase SDK |
-                                                                            +-----------------------------+
+┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
+│   Expo Client   │     │  Firebase Auth  │     │  Cloud Storage  │
+│  (User/Partner) │◄───►│                 │◄───►│                 │
+└─────────────────┘     └─────────────────┘     └─────────────────┘
+         ▲                       ▲                       ▲
+         │                       │                       │
+         ▼                       ▼                       ▼
+┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
+│  Expo Router    │     │  Cloud Functions│     │   Firestore     │
+│                 │◄───►│                 │◄───►│                 │
+└─────────────────┘     └─────────────────┘     └─────────────────┘
 ```
 
-## Detailed Flow (Example: Creating a Studio)
+### 1.2 Component Responsibilities
 
-1.  **User Interaction (Expo App):** A partner user fills out a form in a screen component within `src/app/partners/`. On submission, the component calls a function (e.g., `handleCreateStudio`).
-2.  **Call API Helper (Expo App):** `handleCreateStudio` imports and calls a specific helper function, e.g., `createStudio` from `src/api/studios.ts`.
-    ```typescript
-    // src/app/partners/studios/create.tsx
-    import { createStudio } from '@/api/studios'; // Assuming @/api alias
-    import { StudioData } from '../../../types'; // Import type
+1. **Expo Client**
+   - User interface rendering
+   - State management
+   - Navigation handling
+   - API communication
 
-    const handleCreateStudio = async (data: StudioData) => {
-      try {
-        const newStudio = await createStudio(data);
-        // Handle success (e.g., navigate)
-      } catch (error) {
-        // Handle error
-      }
-    };
-    ```
-3.  **Execute API Helper (`src/api/`):** The `createStudio` function in `src/api/studios.ts`:
-    *   Imports the necessary types (e.g., `StudioData`, `Studio`) from `types/`.
-    *   Gets the current user's authentication token (e.g., from an `AuthContext` or Firebase Auth SDK state).
-    *   Constructs an HTTPS request (e.g., using `fetch` or `axios`) to the corresponding Cloud Function endpoint (e.g., `https://<region>-<project>.cloudfunctions.net/api/studios`).
-    *   Includes the `StudioData` in the request body and the auth token in the `Authorization` header.
-    *   Sends the request and awaits the response.
-    *   Parses the response (potentially validating it against a type imported from `types/`).
-    *   Returns the result (e.g., the created `Studio` object) or throws an error.
-    ```typescript
-    // src/api/studios.ts
-    import { StudioData, Studio } from '../../types';
-    import { getAuthToken } from './auth'; // Example auth helper
+2. **Firebase Services**
+   - Authentication
+   - Data storage
+   - File storage
+   - Serverless functions
 
-    const API_URL = 'https://...'; // Cloud Functions base URL
+3. **Cloud Functions**
+   - Business logic
+   - Data validation
+   - Event handling
+   - Security enforcement
 
-    export async function createStudio(data: StudioData): Promise<Studio> {
-      const token = await getAuthToken();
-      const response = await fetch(`${API_URL}/api/studios`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify(data),
-      });
+## 2. Data Flow
 
-      if (!response.ok) {
-        // Handle error response
-        throw new Error('Failed to create studio');
-      }
-      return await response.json() as Studio;
+### 2.1 Authentication Flow
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant App
+    participant Auth
+    participant Functions
+    participant Firestore
+
+    User->>App: Login Request
+    App->>Auth: Sign In
+    Auth->>App: Auth Token
+    App->>Functions: Verify Token
+    Functions->>Firestore: Get User Data
+    Firestore->>Functions: User Profile
+    Functions->>App: User Context
+    App->>User: Authenticated State
+```
+
+### 2.2 Studio Management Flow
+
+```mermaid
+sequenceDiagram
+    participant Partner
+    participant App
+    participant Functions
+    participant Firestore
+    participant Storage
+
+    Partner->>App: Create Studio
+    App->>Functions: Studio Data
+    Functions->>Firestore: Validate & Store
+    Firestore->>Functions: Confirmation
+    Functions->>Storage: Upload Images
+    Storage->>Functions: Image URLs
+    Functions->>App: Studio Created
+    App->>Partner: Success Message
+```
+
+## 3. Component Interactions
+
+### 3.1 Frontend Components
+
+#### 3.1.1 Navigation Structure
+
+```
+app/
+├── (main)/
+│   ├── (protected)/
+│   │   ├── home.tsx
+│   │   ├── profile.tsx
+│   │   └── bookings.tsx
+│   ├── login.tsx
+│   └── register.tsx
+├── partners/
+│   ├── (protected)/
+│   │   ├── dashboard.tsx
+│   │   ├── studios.tsx
+│   │   └── classes.tsx
+│   ├── login.tsx
+│   └── register.tsx
+└── _layout.tsx
+```
+
+#### 3.1.2 State Management
+
+```typescript
+// src/contexts/AuthContext.tsx
+interface AuthState {
+  user: User | null;
+  role: 'user' | 'partner' | 'admin';
+  loading: boolean;
+}
+
+// src/contexts/StudioContext.tsx
+interface StudioState {
+  studios: Studio[];
+  selectedStudio: Studio | null;
+  loading: boolean;
+}
+```
+
+### 3.2 Backend Components
+
+#### 3.2.1 Cloud Functions Structure
+
+```
+cloud-functions/
+├── functions/
+│   ├── src/
+│   │   ├── auth/
+│   │   │   ├── onUserCreated.ts
+│   │   │   └── onUserDeleted.ts
+│   │   ├── studios/
+│   │   │   ├── createStudio.ts
+│   │   │   └── updateStudio.ts
+│   │   └── bookings/
+│   │       ├── createBooking.ts
+│   │       └── updateBooking.ts
+│   └── utils/
+│       ├── auth.ts
+│       └── validation.ts
+```
+
+#### 3.2.2 Firestore Collections
+
+```typescript
+interface User {
+  uid: string;
+  email: string;
+  role: 'user' | 'partner' | 'admin';
+  displayName?: string;
+  profilePic?: string;
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+}
+
+interface Studio {
+  id: string;
+  businessId: string;
+  name: string;
+  location: {
+    lat: number;
+    lng: number;
+  };
+  address: string;
+  description: string;
+  photos: string[];
+  status: 'active' | 'inactive';
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+}
+
+interface Class {
+  id: string;
+  studioId: string;
+  name: string;
+  description: string;
+  schedule: {
+    startTime: Timestamp;
+    endTime: Timestamp;
+    recurring: boolean;
+    daysOfWeek?: number[];
+  };
+  capacity: number;
+  price: number;
+  status: 'active' | 'cancelled' | 'completed';
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+}
+
+interface Booking {
+  id: string;
+  userId: string;
+  classId: string;
+  studioId: string;
+  status: 'confirmed' | 'cancelled' | 'completed';
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+}
+```
+
+## 4. Security Model
+
+### 4.1 Authentication
+
+- Firebase Authentication for user management
+- Custom claims for role-based access
+- JWT tokens for session management
+
+### 4.2 Authorization
+
+```javascript
+// Firestore Security Rules
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isAuthenticated() {
+      return request.auth != null;
     }
-    ```
-4.  **Receive Request (Cloud Functions):** The Cloud Function mapped to the `POST /api/studios` endpoint (defined in `cloud-functions/functions/src/index.ts` or similar) receives the request.
-5.  **Execute Cloud Function (`cloud-functions/functions/`):** The function handler:
-    *   Imports types from `types/`.
-    *   Imports shared utility functions from `cloud-functions/functions/utils/` (e.g., for validation).
-    *   Verifies the user's authentication token using the Firebase Admin SDK.
-    *   Validates the incoming request body (`StudioData`).
-    *   Uses the Firebase Admin SDK to interact with Firestore (e.g., create a new document in the `studios` collection).
-    *   Returns the newly created studio data (conforming to the `Studio` type) in the HTTPS response.
-    ```typescript
-    // cloud-functions/functions/src/studios.ts (Example)
-    import * as functions from 'firebase-functions';
-    import * as admin from 'firebase-admin';
-    import { StudioData, Studio } from '../../../types'; // Relative path to root types
-    import { validateStudioData } from './utils/validation'; // Shared backend util
+    
+    function isAdmin() {
+      return isAuthenticated() && 
+        request.auth.token.role == 'admin';
+    }
+    
+    function isPartner() {
+      return isAuthenticated() && 
+        request.auth.token.role == 'partner';
+    }
+    
+    function isOwner(userId) {
+      return isAuthenticated() && 
+        request.auth.uid == userId;
+    }
+  }
+}
+```
 
-    export const createStudioHandler = async (req: functions.https.Request, res: functions.Response): Promise<void> => {
-      try {
-        // 1. Verify Auth Token
-        const idToken = req.headers.authorization?.split('Bearer ')[1];
-        if (!idToken) {
-          res.status(401).send('Unauthorized');
-          return;
-        }
-        const decodedToken = await admin.auth().verifyIdToken(idToken);
-        const uid = decodedToken.uid;
-        // Optional: Check user role (isPartner?)
+## 5. Error Handling
 
-        // 2. Validate Input
-        const studioData = req.body as StudioData;
-        if (!validateStudioData(studioData)) {
-          res.status(400).send('Invalid input');
-          return;
-        }
+### 5.1 Frontend Error Handling
 
-        // 3. Interact with Firestore
-        const db = admin.firestore();
-        const studioRef = db.collection('studios').doc(); // Auto-generate ID
-        const newStudio: Studio = {
-          id: studioRef.id,
-          businessId: uid,
-          createdAt: new Date().toISOString(),
-          ...studioData,
-        };
-        await studioRef.set(newStudio);
+```typescript
+// src/utils/errorHandling.ts
+export class AppError extends Error {
+  constructor(
+    message: string,
+    public code: string,
+    public status: number
+  ) {
+    super(message);
+  }
+}
 
-        // 4. Send Response
-        res.status(201).json(newStudio);
+export const handleError = (error: unknown) => {
+  if (error instanceof AppError) {
+    // Handle known errors
+    return error;
+  }
+  // Handle unknown errors
+  return new AppError(
+    'An unexpected error occurred',
+    'UNKNOWN_ERROR',
+    500
+  );
+};
+```
 
-      } catch (error) {
-        functions.logger.error('Error creating studio:', error);
-        res.status(500).send('Internal Server Error');
+### 5.2 Backend Error Handling
+
+```typescript
+// cloud-functions/functions/utils/errorHandling.ts
+export class FunctionError extends Error {
+  constructor(
+    message: string,
+    public code: string,
+    public status: number
+  ) {
+    super(message);
+  }
+}
+
+export const handleFunctionError = (error: unknown) => {
+  if (error instanceof FunctionError) {
+    return {
+      error: {
+        message: error.message,
+        code: error.code,
+        status: error.status
       }
     };
-    ```
-6.  **Handle Response (Expo App):** The `createStudio` API helper receives the response, and returns the data to the original calling component (`src/app/partners/studios/create.tsx`), which updates the UI accordingly.
+  }
+  return {
+    error: {
+      message: 'Internal server error',
+      code: 'INTERNAL_ERROR',
+      status: 500
+    }
+  };
+};
+```
 
-## Role of `types/`
+## 6. Performance Considerations
 
-The root `types/` directory is crucial for maintaining consistency. Both the frontend (`src/`) and the backend (`cloud-functions/`) import type definitions from this central location. This prevents mismatches in data structures passed between the client and server.
+### 6.1 Frontend Optimization
 
-## Role of `cloud-functions/functions/utils/`
+- Lazy loading of routes
+- Image optimization
+- Caching strategies
+- State management optimization
 
-This directory contains shared code *specifically for the backend*. This could include validation logic, complex business rules, or helpers for interacting with the Firebase Admin SDK, ensuring consistency across different Cloud Functions. 
+### 6.2 Backend Optimization
+
+- Function cold start optimization
+- Firestore query optimization
+- Caching strategies
+- Rate limiting
+
+## 7. Monitoring and Logging
+
+### 7.1 Frontend Monitoring
+
+- Error tracking
+- Performance monitoring
+- User analytics
+- Crash reporting
+
+### 7.2 Backend Monitoring
+
+- Function execution metrics
+- Database performance
+- Error tracking
+- Usage analytics
+
+## 8. Deployment Strategy
+
+### 8.1 Frontend Deployment
+
+- EAS Build for app variants
+- Staging and production environments
+- Feature flags
+- A/B testing capability
+
+### 8.2 Backend Deployment
+
+- Cloud Functions deployment
+- Database migrations
+- Security rules updates
+- Environment configuration 

@@ -1,7 +1,7 @@
 // app/_layout.tsx
 import '../config/firebase';
 import { Stack, useRouter, useSegments } from 'expo-router';
-import { useEffect, useCallback } from 'react';
+import { useEffect} from 'react';
 import { Platform, View, Text, ActivityIndicator } from 'react-native';
 import { useFonts } from 'expo-font';
 import { SessionProvider, useSession } from '../ctx';
@@ -13,56 +13,82 @@ function RootLayoutNav() {
   const { session, isLoading } = useSession();
   const segments = useSegments();
   const router = useRouter();
+  
+  // Get app variant from environment variable
+  const appVariant = process.env.EXPO_PUBLIC_APP_VARIANT || 'main';
+  const isPartner = appVariant === 'partner';
+  const isMobile = Platform.OS === 'ios' || Platform.OS === 'android';
+
+  console.log(`[RootLayoutNav] App variant: ${appVariant}, isPartner: ${isPartner}, isMobile: ${isMobile}`);
+
+  // Determine initial route based on auth state and variant
+  const getInitialRoute = () => {
+    // Only set initial route on mobile
+    if (!isMobile) return undefined;
+
+    if (!session) {
+      const route = isPartner ? 'partners' : '(main)';
+      console.log(`[getInitialRoute] Not logged in, returning: ${route}`);
+      return route;
+    }
+    
+    const userRole = session.role;
+    let route;
+    if (userRole === 'partner') {
+      route = 'partners';
+    } else if (userRole === 'admin') {
+      route = 'admin';
+    } else {
+      route = '(main)';
+    }
+    console.log(`[getInitialRoute] Logged in as ${userRole}, returning: ${route}`);
+    return route;
+  };
 
   useEffect(() => {
+    // Only apply mobile-specific routing on mobile platforms
+    if (!isMobile) return;
+
     const path = segments.join('/');
-    // More robust check for auth routes
-    const isAuthRoute = path === 'login' || path === '(main)/login' || path === 'partners/login'; // Add others like signup
+    console.log(`[RootLayoutNav] Current path: ${path}, isPartner: ${isPartner}`);
     
+    const isAuthRoute = path === 'login' || path === '(main)/login' || path === 'partners/login';
     const isInMainProtected = path.startsWith('(main)/(protected)');
     const isInPartnersProtected = path.startsWith('partners/(protected)');
     const isInAdminProtected = path.startsWith('admin/(protected)');
-    const isAdminRoot = path === 'admin'; // Check specifically for admin root
+    const isAdminRoot = path === 'admin';
     const isInAnyProtected = isInMainProtected || isInPartnersProtected || isInAdminProtected;
-
-    // A route is considered protected if it's in a (protected) folder OR it's the admin root itself
     const shouldProtectRoute = isInAnyProtected || isAdminRoot;
-
     const currentTopLevelGroup = segments[0];
 
-    console.log(`RootLayoutNav Effect: isLoading=${isLoading}, sessionExists=${!!session}, path=/${path}, isAuthRoute=${isAuthRoute}, shouldProtectRoute=${shouldProtectRoute}`);
-
     if (isLoading) {
-        console.log("RootLayoutNav Effect: Still loading session...");
-        return; // Wait until session is loaded
+      console.log('[RootLayoutNav] Still loading session...');
+      return;
     }
 
+    // Handle route protection and redirects
     if (!session) {
-      // --- LOGGED OUT --- 
-      // Redirect ONLY if trying to access a route marked for protection.
-      if (shouldProtectRoute) {
-          console.log(`RootLayoutNav Effect: Logged out, accessing protected route (/${path}). Redirecting.`);
-          // Specific redirect for admin root attempt
-          if (isAdminRoot) { 
-              console.log("...redirecting /admin to /partners");
-              router.replace('/partners');
-          } 
-          // Redirect for attempts to access actual (protected) folders
-          else if (isInAnyProtected) { 
-              if (currentTopLevelGroup === 'partners' || currentTopLevelGroup === 'admin') {
-                 console.log("...redirecting protected partners/admin to /partners/login");
+      // Not logged in - redirect to appropriate login page
+      if (isPartner) {
+        // For partner variant, ensure we're in the partners section
+        if (!path.startsWith('partners')) {
+          console.log("[RootLayoutNav] Partner variant - redirecting to partners/login (not in partners section)");
+          router.replace('/partners/login');
+        } else if (path !== 'partners/login') {
+          console.log("[RootLayoutNav] Partner variant - redirecting to partners/login (wrong path)");
                  router.replace('/partners/login'); 
-              } else { // Assumes (main)/(protected)
-                 console.log("...redirecting protected main to /login");
-                 router.replace('/login');
-              }
           }
       } else {
-         // If not accessing a protected route, allow access.
-         console.log(`RootLayoutNav Effect: Logged out, accessing public or auth route (/${path}). Allowed.`);
+        // For main variant, ensure we're in the main section
+        if (!path.startsWith('(main)')) {
+          console.log("[RootLayoutNav] Main variant - redirecting to (main)/login (not in main section)");
+          router.replace('/(main)/login');
+        } else if (path !== '(main)/login') {
+          console.log("[RootLayoutNav] Main variant - redirecting to (main)/login (wrong path)");
+          router.replace('/(main)/login');
+        }
       }
     } else {
-      // --- LOGGED IN --- 
       const userRole = session.role;
       let userHomeBase = '/'; 
 
@@ -73,54 +99,48 @@ function RootLayoutNav() {
       } else {
            userHomeBase = '/(main)/(protected)'; 
       }
-      const userHomeBasePath = userHomeBase.replace(/^\//, ''); 
 
-      // Redirect away from auth routes
       if (isAuthRoute) {
-          console.log(`RootLayoutNav Effect: Logged in (${userRole}), accessing auth route (/${path}). Redirecting to ${userHomeBase}.`);
+        console.log(`[RootLayoutNav] Logged in as ${userRole}, redirecting from auth route to ${userHomeBase}`);
           router.replace(userHomeBase);
           return; 
       }
 
-      // Redirect if accessing public routes or wrong protected area
       let shouldRedirect = false;
       if (userRole === 'user') {
            if (currentTopLevelGroup === 'partners' || currentTopLevelGroup === 'admin' || !isInMainProtected) {
-              // User should not be in partners/admin or any public -(main) page
                shouldRedirect = true; 
            }
       } else if (userRole === 'partner') {
-          if (!isInPartnersProtected) { // Partner should not be outside partners/(protected)
+        if (!isInPartnersProtected) {
                shouldRedirect = true;
           }
       } else if (userRole === 'admin') {
-           if (!isInAdminProtected) { // Admin should not be outside admin/(protected)
+        if (!isInAdminProtected) {
                shouldRedirect = true;
            }
       }
 
-      // Execute redirect if needed
       if (shouldRedirect) {
-           console.log(`RootLayoutNav Effect: Logged in (${userRole}), accessing disallowed route (/${path}). Redirecting to ${userHomeBase}.`);
+        console.log(`[RootLayoutNav] Logged in as ${userRole}, redirecting to ${userHomeBase}`);
            router.replace(userHomeBase);
-      } else {
-          console.log(`RootLayoutNav Effect: Logged in (${userRole}), accessing allowed route (/${path}).`);
       }
     }
-  }, [isLoading, session, segments, router]);
+  }, [isLoading, session, segments, router, appVariant, isMobile]);
 
-  // Display loading indicator or null while checking session and redirecting
   if (isLoading) {
-     return (
-       <View style={{flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#fff'}}>
-         <ActivityIndicator size="large" color="#0000ff" />
-       </View>
-     );
+    return (
+      <View style={{flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#fff'}}>
+        <ActivityIndicator size="large" color="#0000ff" />
+      </View>
+    );
   }
 
-  // Render the main stack navigator
   return (
-      <Stack screenOptions={{ headerShown: false }}>
+    <Stack 
+      screenOptions={{ headerShown: false }}
+      initialRouteName={getInitialRoute()}
+    >
         <Stack.Screen name="(main)" />
         <Stack.Screen name="partners" />
         <Stack.Screen name="admin" />
@@ -147,17 +167,13 @@ export default function RootLayout() {
   useEffect(() => {
     async function prepare() {
       try {
-        // Prevent splash screen from auto-hiding
         await SplashScreen.preventAutoHideAsync();
         
-        // Wait for fonts to load
-        if (fontsLoaded || fontError) {
-          // Hide splash screen once fonts are loaded
+    if (fontsLoaded || fontError) {
           await SplashScreen.hideAsync();
-        }
+    }
       } catch (e) {
         console.warn('Error preparing app:', e);
-        // If there's an error, try to hide the splash screen anyway
         try {
           await SplashScreen.hideAsync();
         } catch (hideError) {
@@ -169,7 +185,6 @@ export default function RootLayout() {
     prepare();
   }, [fontsLoaded, fontError]);
 
-  // Show loading indicator while fonts are loading
   if (!fontsLoaded && !fontError) {
     return (
       <View style={{flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#fff'}}>
@@ -177,8 +192,7 @@ export default function RootLayout() {
       </View>
     );
   }
-
-  // Show error state if fonts failed to load
+  
   if (fontError) {
     return (
       <View style={{flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#fff'}}>
@@ -187,11 +201,10 @@ export default function RootLayout() {
     );
   }
   
-  // --- Render the App --- Wrap with I18nextProvider
   return (
     <SessionProvider>
       <I18nextProvider i18n={i18n}>
-        <RootLayoutNav />
+      <RootLayoutNav />
       </I18nextProvider>
     </SessionProvider>
   );

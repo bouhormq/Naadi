@@ -18,7 +18,7 @@ export default function PartnersIndex() {
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <View style={styles.formSection}>
-        <PartnerSignupFormMain/>
+      <PartnerSignupFormMain/>
       </View>
       <Benefits />
       <Corporate />
