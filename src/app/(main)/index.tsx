@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
-import { Animated, ScrollView, StyleSheet, Platform, View } from 'react-native';
+import { Animated, ScrollView, StyleSheet, Platform, View, Text } from 'react-native';
 import CustomText from '@/components/CustomText';
 import { useFonts } from 'expo-font'; // Import useFonts
 import { useTranslation } from 'react-i18next'; // Import useTranslation here
+import { Redirect } from 'expo-router';
 
 const App = () => {
   const { t } = useTranslation(); // Get the translation function
@@ -20,7 +21,12 @@ const App = () => {
   const [currentWordIndex, setCurrentWordIndex] = useState(0);
   const wordFadeAnim = useRef(new Animated.Value(1)).current; // Initial opacity 1 for word
 
+  const appVariant = process.env.EXPO_PUBLIC_APP_VARIANT || 'main';
+  const isPartner = appVariant === 'partner';
+  
   useEffect(() => {
+    console.log(`[MainIndex] Loaded with app variant: ${appVariant}`);
+
     // Animate the container fade-in on mount
     Animated.timing(containerFadeAnim, {
       toValue: 1,
@@ -44,8 +50,16 @@ const App = () => {
       });
     }, 2750);
 
-    return () => clearInterval(wordChangeInterval);
+    return () => {
+      clearInterval(wordChangeInterval);
+    };
   }, [containerFadeAnim, wordFadeAnim, businessWords.length]); // Add dependencies
+
+  // Add a safety check - if somehow we end up here in partner mode, redirect
+  if (isPartner) {
+    console.log('[MainIndex] ERROR: Partner variant reached main index - redirecting to partners');
+    return <Redirect href="/partners" />;
+  }
 
   // Render null or loading indicator until the emoji font is ready
   if (!emojiFontLoaded && !emojiFontError) {

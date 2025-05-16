@@ -3,7 +3,7 @@
 import { Stack, Redirect, useRootNavigationState } from 'expo-router';
 // Remove Firebase imports
 // import { getAuth, onAuthStateChanged, User } from 'firebase/auth';
-import { Text } from 'react-native'; // Import Text for loading indicator
+import { Text, Platform } from 'react-native'; // Import Text for loading indicator
 
 // Remove useSession and Redirect imports if no longer needed here
 // import { useSession } from '../../ctx'; 
@@ -20,16 +20,37 @@ export default function AdminLayout() {
   // Could potentially add a basic loading check if needed
   // if (!navigationState?.key) return null; 
 
+  // Detect if on mobile platform
+  const isMobile = Platform.OS === 'ios' || Platform.OS === 'android';
+  
   // Render layout
-  console.log("(AdminLayout): Rendering stack");
+  console.log(`(AdminLayout): Rendering stack, isMobile: ${isMobile}`);
+  
+  // Configure screen options based on platform
+  const screenOptions = {
+    // Only show header on web/desktop, hide on mobile
+    headerShown: !isMobile,
+    // Only use custom header on web/desktop
+    ...(isMobile ? {} : { header: () => <Header /> }),
+    // Disable animations on mobile only
+    ...(isMobile ? {
+      animation: 'none' as const,
+      animationDuration: 0,
+      presentation: 'card' as const,
+    } : {})
+  };
+  
   return (
-    <Stack>
+    <Stack screenOptions={screenOptions}>
       {/* Define screen for the protected index route */}
       <Stack.Screen 
         name="(protected)/index" // Reference the protected index file
         options={{
           title: 'Admin Dashboard',
-          header: () => <Header />,
+          ...(isMobile ? { 
+            animation: 'none' as const,
+            headerShown: false 
+          } : {})
         }} 
       />
       {/* Add other admin screens here (likely within (protected) too) */}
