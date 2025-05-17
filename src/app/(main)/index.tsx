@@ -23,7 +23,7 @@ const App = () => {
 
   const appVariant = process.env.EXPO_PUBLIC_APP_VARIANT || 'main';
   const isPartner = appVariant === 'partner';
-  
+
   useEffect(() => {
     console.log(`[MainIndex] Loaded with app variant: ${appVariant}`);
 

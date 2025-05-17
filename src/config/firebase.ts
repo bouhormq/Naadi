@@ -1,5 +1,6 @@
 import { initializeApp, getApps, getApp } from 'firebase/app';
-import { getAuth, connectAuthEmulator } from 'firebase/auth';
+import { connectAuthEmulator } from 'firebase/auth';
+import { getReactNativePersistence, initializeAuth } from 'firebase/auth/react-native';
 import { getFirestore, connectFirestoreEmulator } from 'firebase/firestore';
 import { getFunctions, connectFunctionsEmulator } from 'firebase/functions';
 import { getStorage, connectStorageEmulator } from 'firebase/storage';
@@ -33,7 +34,9 @@ try {
 }
 
 // Initialize services
-const auth = getAuth(app);
+const auth = initializeAuth(app, {
+  persistence: getReactNativePersistence(AsyncStorage)
+});
 const db = getFirestore(app);
 const functions = getFunctions(app, 'europe-southwest1');
 const storage = getStorage(app);

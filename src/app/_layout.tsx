@@ -1,13 +1,14 @@
 // app/_layout.tsx
 import '../config/firebase';
 import { Stack, useRouter, useSegments } from 'expo-router';
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState } from 'react';
 import { Platform, View, Text, ActivityIndicator } from 'react-native';
 import { useFonts } from 'expo-font';
 import { SessionProvider, useSession } from '../ctx';
 import { I18nextProvider } from 'react-i18next';
 import i18n from '../i18n';
 import * as SplashScreen from 'expo-splash-screen';
+import type { StackAnimationTypes } from '@react-navigation/stack';
 
 // Keep the splash screen visible while we initialize
 SplashScreen.preventAutoHideAsync();
@@ -97,23 +98,13 @@ function PartnerLayoutNav() {
 
   // Configure screen options based on platform
   const screenOptions = {
-    headerShown: false, // Always hide header at the Stack level
-    animation: 'none' as const,
-    presentation: 'card' as const,
-    animationDuration: 0,
-    // For nested navigators in each route, ensure headers are hidden on mobile
+    headerShown: false, 
+    animation: 'none' as StackAnimationTypes,
     contentStyle: isMobile ? { 
-      paddingTop: 0 // Remove any top padding that might be added for headers
+      paddingTop: 0 
     } : undefined
   };
   
-  // Screen-specific options
-  const screenCommonOptions = {
-    animation: 'none' as const,
-    animationDuration: 0,
-    headerShown: false // Ensure headers are hidden
-  };
-
   // Render partner-specific layout with modified animation options
   return (
     <Stack 
@@ -123,23 +114,24 @@ function PartnerLayoutNav() {
       <Stack.Screen 
         name="partners" 
         options={{
-          ...screenCommonOptions,
+          headerShown: false,
+          animation: 'none' as StackAnimationTypes,
           contentStyle: isMobile ? { paddingTop: 0 } : undefined
         }}
       />
       <Stack.Screen 
         name="admin" 
         options={{
-          ...screenCommonOptions,
-          presentation: 'card' as const,
+          headerShown: false,
+          animation: 'none' as StackAnimationTypes,
           contentStyle: isMobile ? { paddingTop: 0 } : undefined
         }} 
       />
       <Stack.Screen 
         name="_redirects/index" 
         options={{
-          ...screenCommonOptions,
-          presentation: 'card' as const,
+          headerShown: false,
+          animation: 'none' as StackAnimationTypes,
           contentStyle: isMobile ? { paddingTop: 0 } : undefined
         }} 
       />
@@ -235,23 +227,13 @@ function MainLayoutNav() {
 
   // Configure screen options based on platform
   const screenOptions = {
-    headerShown: false, // Always hide header at the Stack level
-    animation: 'none' as const,
-    presentation: 'card' as const,
-    animationDuration: 0,
-    // For nested navigators in each route, ensure headers are hidden on mobile
+    headerShown: false,
+    animation: 'none' as StackAnimationTypes,
     contentStyle: isMobile ? { 
-      paddingTop: 0 // Remove any top padding that might be added for headers
+      paddingTop: 0
     } : undefined
   };
   
-  // Screen-specific options
-  const screenCommonOptions = {
-    animation: 'none' as const,
-    animationDuration: 0,
-    headerShown: false // Ensure headers are hidden
-  };
-
   // Render main-specific layout with modified animation options
   return (
     <Stack 
@@ -261,31 +243,32 @@ function MainLayoutNav() {
       <Stack.Screen 
         name="(main)" 
         options={{
-          ...screenCommonOptions,
+          headerShown: false,
+          animation: 'none' as StackAnimationTypes,
           contentStyle: isMobile ? { paddingTop: 0 } : undefined
         }}
       />
       <Stack.Screen 
         name="partners" 
         options={{
-          ...screenCommonOptions,
-          presentation: 'card' as const,
+          headerShown: false,
+          animation: 'none' as StackAnimationTypes,
           contentStyle: isMobile ? { paddingTop: 0 } : undefined
         }} 
       />
       <Stack.Screen 
         name="admin" 
         options={{
-          ...screenCommonOptions,
-          presentation: 'card' as const,
+          headerShown: false,
+          animation: 'none' as StackAnimationTypes,
           contentStyle: isMobile ? { paddingTop: 0 } : undefined
         }} 
       />
       <Stack.Screen 
         name="_redirects/index" 
         options={{
-          ...screenCommonOptions,
-          presentation: 'card' as const,
+          headerShown: false,
+          animation: 'none' as StackAnimationTypes,
           contentStyle: isMobile ? { paddingTop: 0 } : undefined
         }} 
       />

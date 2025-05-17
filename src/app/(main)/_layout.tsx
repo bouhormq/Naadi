@@ -13,7 +13,7 @@ const MainLayout = () => {
 
   // Detect if on mobile platform
   const isMobile = Platform.OS === 'ios' || Platform.OS === 'android';
-  
+
   // Render layout
   console.log(`(MainLayout): Rendering stack, isMobile: ${isMobile}`);
   

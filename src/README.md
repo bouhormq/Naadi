@@ -118,4 +118,40 @@ FIREBASE_MESSAGING_SENDER_ID=
 FIREBASE_APP_ID=
 ```
 
-For development, create a `.env.local` file with these variables. 
+For development, create a `.env.local` file with these variables.
+
+## Expo SDK 53 Upgrade Notes
+
+The project has been successfully upgraded from Expo SDK 52 to SDK 53. All compatibility checks are now passing.
+
+### Upgrade Changes
+
+1. Updated Expo packages:
+   - expo: ~53.0.0
+   - expo-constants: ~17.1.6
+   - expo-linking: ~7.1.5
+   - expo-router: ~5.0.7
+   - expo-secure-store, expo-splash-screen, expo-status-bar
+
+2. Updated React and React Native:
+   - react: 19.0.0
+   - react-dom: 19.0.0
+   - react-native: 0.79.2
+   - react-native-safe-area-context: 5.4.0
+   - react-native-web: ^0.20.0
+
+3. Updated Metro packages:
+   - metro: ^0.82.0
+   - metro-config: ^0.82.0
+   - metro-resolver: ^0.82.0
+
+4. Added proper configuration:
+   - Created metro.config.js for better module resolution
+   - Updated React Navigation-related code for compatibility with v7
+
+### Migration Notes
+
+The upgrade involved significant changes:
+- Updated from expo-router v4 to v5 (which uses React Navigation v7)
+- Modified Stack navigation options to be compatible with the newer API
+- Adjusted animation configurations for proper typing 

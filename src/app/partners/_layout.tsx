@@ -16,7 +16,7 @@ const PartnerLayout = () => {
 
   // Detect if on mobile platform
   const isMobile = Platform.OS === 'ios' || Platform.OS === 'android';
-  
+
   // Render layout
   console.log(`(PartnerLayout): Rendering stack, isMobile: ${isMobile}`);
   
