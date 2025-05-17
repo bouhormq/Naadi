@@ -17,18 +17,18 @@ const mainConfig = {
   name: 'Naadi', // App name for the main app
   slug: 'naadi', // Unique slug for main app (used for URL scheme)
   identifier: 'ma.naadi.app', // << NEW Unique Bundle ID / Package Name for main app
-  icon: './app/(main)/(assets)/icon-main.png', // << CREATE THIS ICON FILE
-  adaptiveIconForeground: './app/(main)/(assets)/adaptive-icon-main.png', // << CREATE THIS ICON FILE
-  splashImage: './app/(main)/(assets)/splash-main.png', // << CREATE THIS SPLASH FILE
+  icon: './assets/images/icon.png', // << USE COMMON ICON
+  adaptiveIconForeground: './assets/images/adaptive-icon.png', // << USE COMMON ADAPTIVE ICON
+  splashImage: './assets/images/splash.png', // << USE COMMON SPLASH
 };
 
 const partnerConfig = {
   name: 'Naadi Partner', // App name for the partner app (Adjust if needed)
   slug: 'naadi-partner', // Keep existing slug
   identifier: 'ma.naadi.partner', // Keep existing Bundle ID / Package Name
-  icon: './app/partners/(assets)/icon.png', // Keep existing or rename to icon-partner.png
-  adaptiveIconForeground: './app/partners/(assets)/adaptive-icon.png', // Keep existing or rename
-  splashImage: './app/partners/(assets)/splash.png', // Keep existing or rename
+  icon: './assets/images/icon.png', // << USE COMMON ICON
+  adaptiveIconForeground: './assets/images/adaptive-icon.png', // << USE COMMON ADAPTIVE ICON
+  splashImage: './assets/images/splash.png', // << USE COMMON SPLASH
 };
 
 // --- Select the configuration based on the variant ---
@@ -85,6 +85,14 @@ export default {
     },
     plugins: [
       'expo-router',
+      [
+        'expo-splash-screen',
+        {
+          image: variantConfig.splashImage,
+          resizeMode: 'contain', // As per your existing expo.splash.resizeMode
+          backgroundColor: '#ffffff', // As per your existing expo.splash.backgroundColor
+        },
+      ],
     ],
     extra: {
       "eas": {
