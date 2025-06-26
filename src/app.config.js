@@ -1,12 +1,11 @@
-// app.config.js
 try {
+  // Load environment variables from .env file
   require('dotenv').config();
 } catch (error) {
   console.warn('dotenv not found, using default environment variables');
 }
 
 // Determine the variant. Default to 'main' if not set.
-// EXPO_PUBLIC_APP_VARIANT will be set by EAS build profiles.
 const appVariant = process.env.EXPO_PUBLIC_APP_VARIANT || 'main';
 
 console.log(`app.config.js: Configuring for variant: ${appVariant}`);
@@ -14,21 +13,21 @@ console.log(`app.config.js: Configuring for variant: ${appVariant}`);
 // --- Variant-Specific Configurations ---
 
 const mainConfig = {
-  name: 'Naadi', // App name for the main app
-  slug: 'naadi', // Unique slug for main app (used for URL scheme)
-  identifier: 'ma.naadi.app', // << NEW Unique Bundle ID / Package Name for main app
-  icon: './assets/images/icon.png', // << USE COMMON ICON
-  adaptiveIconForeground: './assets/images/adaptive-icon.png', // << USE COMMON ADAPTIVE ICON
-  splashImage: './assets/images/splash.png', // << USE COMMON SPLASH
+  name: 'Naadi',
+  slug: 'naadi',
+  identifier: 'ma.naadi.app',
+  icon: './assets/images/icon.png',
+  adaptiveIconForeground: './assets/images/adaptive-icon.png',
+  splashImage: './assets/images/splash.png',
 };
 
 const partnerConfig = {
-  name: 'Naadi Partner', // App name for the partner app (Adjust if needed)
-  slug: 'naadi-partner', // Keep existing slug
-  identifier: 'ma.naadi.partner', // Keep existing Bundle ID / Package Name
-  icon: './assets/images/icon.png', // << USE COMMON ICON
-  adaptiveIconForeground: './assets/images/adaptive-icon.png', // << USE COMMON ADAPTIVE ICON
-  splashImage: './assets/images/splash.png', // << USE COMMON SPLASH
+  name: 'Naadi Partner',
+  slug: 'naadi-partner',
+  identifier: 'ma.naadi.partner',
+  icon: './assets/images/icon.png',
+  adaptiveIconForeground: './assets/images/adaptive-icon.png',
+  splashImage: './assets/images/splash.png',
 };
 
 // --- Select the configuration based on the variant ---
@@ -40,45 +39,54 @@ export default {
     // --- Settings using variantConfig ---
     name: variantConfig.name,
     slug: variantConfig.slug,
-    scheme: variantConfig.slug, // Use slug for deep linking scheme
+    scheme: variantConfig.slug,
     icon: variantConfig.icon,
+
     ios: {
       supportsTablet: true,
-      bundleIdentifier: variantConfig.identifier, // Dynamically set
-      buildNumber: '1.0.0', // Manage build number as needed
+      bundleIdentifier: variantConfig.identifier,
+      buildNumber: '1.0.0',
       googleServicesFile: './GoogleService-Info.plist',
+      config: {
+        // --- ADDED: Google Maps API Key for iOS ---
+        googleMapsApiKey: process.env.EXPO_PUBLIC_Maps_API_KEY_WEB,
+      },
     },
     android: {
-      package: variantConfig.identifier, // Dynamically set
-      versionCode: 1, // Manage version code as needed
+      package: variantConfig.identifier,
+      versionCode: 1,
       adaptiveIcon: {
-        foregroundImage: variantConfig.adaptiveIconForeground, // Dynamically set
-        backgroundColor: '#FFFFFF', // Keep or make variant-specific
+        foregroundImage: variantConfig.adaptiveIconForeground,
+        backgroundColor: '#FFFFFF',
       },
       googleServicesFile: './google-services.json',
+      config: {
+        googleMaps: {
+          // --- ADDED: Google Maps API Key for Android ---
+          apiKey: process.env.EXPO_PUBLIC_Maps_API_KEY_WEB,
+        },
+      },
     },
     splash: {
-      image: variantConfig.splashImage, // Dynamically set
+      image: variantConfig.splashImage,
       resizeMode: 'contain',
-      backgroundColor: '#ffffff', // Keep or make variant-specific
+      backgroundColor: '#ffffff',
     },
 
-    // --- Common settings from your old app.json ---
+    // --- Common settings ---
     version: '1.0.0',
     orientation: 'portrait',
     userInterfaceStyle: 'light',
     assetBundlePatterns: ['**/*'],
-    owner: 'bouhormq', // Your Expo account username
-    jsEngine: 'hermes', // Recommended
-    newArchEnabled: true, // Enable the new architecture
+    owner: 'bouhormq',
+    jsEngine: 'hermes',
+    newArchEnabled: true,
 
     web: {
-      favicon: './app/(main)/(assets)/favicon.png', // Keep existing favicon
+      favicon: './app/(main)/(assets)/favicon.png',
       bundler: 'metro',
-      // Set the production origin for web builds
       config: {
          expoRouter: {
-            // IMPORTANT: Set your actual production domain here
             origin: 'https://naadi.ma',
          }
       }
@@ -89,18 +97,18 @@ export default {
         'expo-splash-screen',
         {
           image: variantConfig.splashImage,
-          resizeMode: 'contain', // As per your existing expo.splash.resizeMode
-          backgroundColor: '#ffffff', // As per your existing expo.splash.backgroundColor
+          resizeMode: 'contain',
+          backgroundColor: '#ffffff',
         },
       ],
+      // NOTE: Because you use the Metro bundler for web, a webpack plugin
+      // for aliasing 'react-native-maps' will not work.
+      // The recommended approach is to create a universal component, shown below.
     ],
     extra: {
-      "eas": {
-        "projectId": "d2e1171b-6b0e-4bc9-bd2e-650a1c79a669"
+      eas: {
+        projectId: 'd2e1171b-6b0e-4bc9-bd2e-650a1c79a669'
       }
-      // Keep your EAS Project ID
-      // You could pass the variant here too if needed elsewhere, but EXPO_PUBLIC_* is preferred
-      // appVariant: appVariant
     },
   },
 };

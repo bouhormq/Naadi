@@ -5,7 +5,7 @@ import { useSession } from '../ctx';
 
 // Root level redirect based on app variant
 export default function Index() {
-  const { session, isLoading: isSessionLoading } = useSession();
+  const { session, isLoading: isSessionLoading, signOut } = useSession();
   const [isLoading, setIsLoading] = useState(true);
   const [initialRoute, setInitialRoute] = useState("");
   const isMobile = Platform.OS === 'ios' || Platform.OS === 'android';
@@ -48,30 +48,31 @@ export default function Index() {
         // Main app variant
         if (session) {
           const userRole = session.role;
-          if (userRole === 'user') {
+          if (userRole === 'partner' || userRole === 'admin') {
+            console.log(`[Root Index] Main variant, logged in as ${userRole}, signing out.`);
+            signOut();
+          } else if (userRole === 'user') {
             console.log('[Root Index] Main variant, logged in as user - redirecting to protected area');
             setInitialRoute('(main)/(protected)');
-          } else if (userRole === 'partner') {
-            console.log('[Root Index] Main variant, logged in as partner - redirecting to partner area');
-            setInitialRoute('partners/(protected)');
-          } else if (userRole === 'admin') {
-            console.log('[Root Index] Main variant, logged in as admin - redirecting to admin area');
-            setInitialRoute('admin/(protected)');
+          } else {
+            // Fallback for any other roles
+            console.log(`[Root Index] Main variant, logged in with unexpected role '${userRole}', signing out.`);
+            signOut();
           }
         } else {
-          console.log('[Root Index] Main variant, not logged in - redirecting to login');
-          setInitialRoute('(main)/login');
+          console.log('[Root Index] Main variant, not logged in - redirecting to onboarding');
+          setInitialRoute('(main)/onboarding');
         }
       }
     } catch (error) {
       console.error('[Root Index] Error determining route:', error);
       // Default to appropriate login page if there's an error
       const appVariant = process.env.EXPO_PUBLIC_APP_VARIANT || 'main';
-      setInitialRoute(appVariant === 'partner' ? 'partners/login' : '(main)/login');
+      setInitialRoute(appVariant === 'partner' ? 'partners/login' : '(main)/onboarding');
     } finally {
       setIsLoading(false);
     }
-  }, [session, isSessionLoading, isMobile]);
+  }, [session, isSessionLoading, isMobile, signOut]);
 
   // Use the router directly on mount to avoid animation
   useEffect(() => {
@@ -88,4 +89,4 @@ export default function Index() {
       <Text>Initializing...</Text>
     </View>
   );
-} 
+}

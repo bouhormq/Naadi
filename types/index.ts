@@ -21,22 +21,18 @@ export interface PhoneInfo {
  * User document in Firestore
  */
 export interface User {
-  id?: string;
   uid: string;
   email: string;
   role: 'user' | 'partner';
-  displayName?: string;
   profilePic?: string;
   photoURL?: string;
-  phoneNumber?: string; // May overlap with PhoneInfo, clarify usage
-  businessName?: string; // Relevant for partners?
-  contactInfo?: {
-    phone: string;
-    address: string;
-  };
-  authMethod?: 'email' | 'phone' | 'google' | 'facebook' | 'apple';
-  createdAt: Date; // Use standard Date
-  lastLoginAt?: Date; // Use standard Date
+  phone: PhoneInfo; 
+  authMethod?: 'email' | 'google' | 'facebook' | 'apple';
+  lastLoginAt?: Date; 
+  firstName: string;
+  lastName: string;
+  agreeToMarketing: boolean;
+  createdAt: Date; 
 }
 
 /**

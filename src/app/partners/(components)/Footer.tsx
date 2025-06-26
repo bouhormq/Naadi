@@ -115,7 +115,7 @@ export default function Footer() {
 
       {/* Mobile App Section */}
       <View style={styles.mobileSection}>
-        <CustomText style={styles.mobileSectionTitle}>Enjoy fitness on the go</CustomText>
+        <CustomText style={styles.mobileSectionTitle}>Enjoy everything on the go</CustomText>
         <View style={styles.appButtons}>
           <TouchableOpacity style={styles.appButton}>
             <View style={styles.svgContainer}>

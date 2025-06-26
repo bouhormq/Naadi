@@ -165,53 +165,27 @@ function MainLayoutNav() {
     const path = segments.join('/');
     console.log(`[MainLayoutNav] Checking route protection (mobile): ${path}, isLoggedIn: ${!!session}`);
     
-    const isAuthRoute = path === '(main)/login';
-    const isAnyProtectedRoute = 
-      path.startsWith('(main)/(protected)') || 
-      path.startsWith('partners/(protected)') || 
-      path.startsWith('admin/(protected)');
-    
-    // Not logged in - redirect to login
+    // Public routes that can be accessed without being logged in
+    const publicRoutes = ['(main)/onboarding', '(main)/login', '(main)/signup'];
+    const isPublicRoute = publicRoutes.some(r => path.startsWith(r));
+
+    // Protected routes that require a user to be logged in
+    const isProtectedRoute = path.startsWith('(main)/(protected)');
+
     if (!session) {
-      if (isAnyProtectedRoute) {
-        console.log('[MainLayoutNav] Unauthorized access to protected route, redirecting to login');
-        router.replace('/(main)/login');
-      } else if (!isAuthRoute && path.startsWith('(main)')) {
-        console.log('[MainLayoutNav] Unauthenticated access to main route, redirecting to login');
-        router.replace('/(main)/login');
+      // If the user is not logged in and trying to access a protected route,
+      // redirect them to the onboarding screen.
+      if (isProtectedRoute) {
+        console.log('[MainLayoutNav] Unauthenticated user on protected route, redirecting to onboarding.');
+        router.replace('/(main)/onboarding');
       }
-      return;
-    }
-    
-    // Logged in - ensure proper access based on role
-    const userRole = session.role;
-    
-    // Already on login page but logged in - redirect to appropriate area
-    if (isAuthRoute) {
-      if (userRole === 'user') {
-        console.log('[MainLayoutNav] Already logged in, redirecting from login to user area');
+      // If it's a public route, do nothing and let the user stay.
+    } else {
+      // If the user is logged in and on a public route (like login or onboarding),
+      // redirect them to the main protected area.
+      if (isPublicRoute) {
+        console.log('[MainLayoutNav] Authenticated user on public route, redirecting to home.');
         router.replace('/(main)/(protected)');
-      } else if (userRole === 'partner') {
-        console.log('[MainLayoutNav] Partner logged in, redirecting from login to partner area');
-        router.replace('/partners/(protected)');
-      } else if (userRole === 'admin') {
-        console.log('[MainLayoutNav] Admin logged in, redirecting from login to admin area');
-        router.replace('/admin/(protected)');
-      }
-      return;
-    }
-    
-    // Role-based access control for protected routes
-    if (isAnyProtectedRoute) {
-      if (userRole === 'user' && !path.startsWith('(main)/(protected)')) {
-        console.log('[MainLayoutNav] User accessing wrong area, redirecting to user area');
-        router.replace('/(main)/(protected)');
-      } else if (userRole === 'partner' && !path.startsWith('partners/(protected)')) {
-        console.log('[MainLayoutNav] Partner accessing wrong area, redirecting to partner area');
-        router.replace('/partners/(protected)');
-      } else if (userRole === 'admin' && !path.startsWith('admin/(protected)')) {
-        console.log('[MainLayoutNav] Admin accessing wrong area, redirecting to admin area');
-        router.replace('/admin/(protected)');
       }
     }
   }, [isReady, isLoading, session, segments, router, isMobile]);

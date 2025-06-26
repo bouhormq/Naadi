@@ -22,7 +22,7 @@ Naadi is a platform connecting users to fitness studios and enabling partners to
 
 ```
 naadi/
-├── cloud-functions/      # Firebase functions project
+├── api/                  # Firebase functions project
 │   ├── functions/        # Functions source code
 │   │   ├── src/          # Example TS source folder
 │   │   ├── utils/        # Shared logic for functions

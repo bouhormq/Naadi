@@ -1,0 +1,40 @@
+diff --git a/node_modules/react-native-maps/lib/components/MapCallout.js b/node_modules/react-native-maps/lib/components/MapCallout.js
+index 4a2c9b1..05f79dd 100644
+--- a/node_modules/react-native-maps/lib/components/MapCallout.js
++++ b/node_modules/react-native-maps/lib/components/MapCallout.js
+@@ -1,5 +1,5 @@
+ import React from 'react';
+-import { View, StyleSheet, ViewPropTypes } from 'react-native';
++import { View, StyleSheet } from 'react-native';
+ import PropTypes from 'prop-types';
+ 
+ const propTypes = {
+@@ -10,7 +10,7 @@ const propTypes = {
+   onPress: PropTypes.func,
+ };
+ 
+-const viewPropTypes = ViewPropTypes || View.propTypes;
++const viewPropTypes = View.propTypes;
+ 
+ class MapCallout extends React.Component {
+   render() {
+diff --git a/node_modules/react-native-maps/lib/components/MapMarker.js b/node_modules/react-native-maps/lib/components/MapMarker.js
+index a26de49..6d7799c 100644
+--- a/node_modules/react-native-maps/lib/components/MapMarker.js
++++ b/node_modules/react-native-maps/lib/components/MapMarker.js
+@@ -1,5 +1,5 @@
+ import React from 'react';
+-import { View, Image, StyleSheet, ViewPropTypes } from 'react-native';
++import { View, Image, StyleSheet } from 'react-native';
+ import PropTypes from 'prop-types';
+ 
+ import decorateMapComponent from './decorateMapComponent';
+@@ -100,7 +100,7 @@ const propTypes = {
+   onPress: PropTypes.func,
+ };
+ 
+-const viewPropTypes = ViewPropTypes || View.propTypes;
++const viewPropTypes = View.propTypes;
+ const markerPropTypes = {
+   ...viewPropTypes,
+   ...propTypes,

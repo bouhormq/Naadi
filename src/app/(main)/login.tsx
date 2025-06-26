@@ -1,201 +1,222 @@
 import React, { useState, useEffect } from 'react';
-import {
-    View,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    StyleSheet,
-    ActivityIndicator,
-    Platform,
-    SafeAreaView,
-    KeyboardAvoidingView
-} from 'react-native';
-import { useRouter, Redirect } from 'expo-router';
+import { View, TextInput, TouchableOpacity, StyleSheet, SafeAreaView, ActivityIndicator, Platform, TouchableWithoutFeedback, Keyboard } from 'react-native';
+import { useRouter, useLocalSearchParams } from 'expo-router';
+import { useSession } from '../../ctx';
+import { Ionicons } from '@expo/vector-icons';
 import CustomText from '@/components/CustomText';
-import { useSession } from '../../ctx'; // Adjust path if needed based on actual location
 
-// This is the Main App Login Screen
-export default function MainLoginScreen() {
+export default function LoginScreen() {
     const router = useRouter();
-    // Get signIn function and session status from context
-    const { signIn, session, isLoading: isSessionLoading, isLoggingIn } = useSession(); 
+    const params = useLocalSearchParams();
+    const email = params.email as string;
 
-    // State for Login Form
-    const [loginEmail, setLoginEmail] = useState('');
-    const [loginPassword, setLoginPassword] = useState('');
+    const { signIn, session, isLoading: isSessionLoading, isLoggingIn } = useSession();
+
+    const [password, setPassword] = useState('');
+    const [isPasswordVisible, setIsPasswordVisible] = useState(false);
     const [loginError, setLoginError] = useState<string | null>(null);
 
-    // Redirect logged-in users away from this page
     useEffect(() => {
-        // Only redirect if session is loaded and valid
-        if (!isSessionLoading && session) {
-            // This login form is only for 'user' roles.
-            if (session.role === 'user') {
-                 console.log("MainLoginScreen: Session detected user, redirecting to /(main)/(protected)");
-                 // Redirect to the main protected area for users
-                 router.replace('/(main)/(protected)'); 
-            } else {
-                // If admin or partner somehow logged in here or is visiting,
-                // send them to the root. The root layout will handle the final redirect.
-                console.log(`MainLoginScreen: Session detected ${session.role}, redirecting to /`);
-                router.replace('/');
+        // If the email is not passed, we can't proceed with login.
+        // Redirect back to the onboarding screen.
+        if (!email) {
+            router.replace('onboarding');
+        }
+    }, [email, router]);
+
+    useEffect(() => {
+        if (session) {
+            switch (session.role) {
+                case 'admin':
+                    router.replace('/admin/(protected)');
+                    break;
+                case 'partner':
+                    router.replace('/partners/(protected)');
+                    break;
+                default:
+                    router.replace('/(main)/(protected)');
+                    break;
             }
         }
-    }, [session, isSessionLoading, router]);
+    }, [session, router]);
 
-    const handleLogin = async () => {
-        setLoginError(null);
-        // Call signIn from context
-        const result = await signIn(loginEmail, loginPassword);
-
-        if (!result.success) {
-            setLoginError(result.error || "Login failed. Please check your credentials.");
-        } 
-        // If login is successful, the useEffect above will handle the redirect
-        // based on the updated session state from the context.
-    };
-
-    // If the session is still loading, show a basic indicator
     if (isSessionLoading) {
         return (
             <SafeAreaView style={styles.safeArea}>
-                <View style={styles.container}>
-                    <ActivityIndicator size="large" />
-                </View>
+                <ActivityIndicator size="large" />
             </SafeAreaView>
         );
     }
 
-    // If already logged in (and useEffect hasn't redirected yet), render nothing or Redirect
-    // This prevents flickering the login form briefly before redirection
     if (session) {
-         return <Redirect href="/" />; // Redirect immediately if session exists
+        // While redirecting, don't render the login form
+        return (
+            <SafeAreaView style={styles.safeArea}>
+                <ActivityIndicator size="large" />
+            </SafeAreaView>
+        );
     }
 
+    // While redirecting, don't render the login form
+    if (!email) {
+        return null;
+    }
 
-    // Render the login form if not loading and not logged in
+    const handleLogin = async () => {
+        if (!password) {
+            setLoginError('Password is required.');
+            return;
+        }
+        setLoginError(null);
+        const result = await signIn(email, password);
+
+        if (!result.success) {
+            setLoginError('Incorrect password. Please try again');
+        }
+        // On success, the useEffect listening to session changes will handle the redirect.
+    };
+
     return (
-        <SafeAreaView style={styles.safeArea}>
-            <KeyboardAvoidingView 
-                behavior={Platform.OS === "ios" ? "padding" : "height"}
-                style={styles.container}
-            >
-                <View style={styles.content}> 
-                    <CustomText style={styles.title}>naadi</CustomText> 
-                    <CustomText style={styles.subtitle}>Sign in to your account</CustomText>
-                    
-                    {loginError && <CustomText style={styles.errorText}>{loginError}</CustomText>}
-
-                    <TextInput
-                        style={styles.input}
-                        value={loginEmail}
-                        onChangeText={(text) => { setLoginEmail(text); setLoginError(null); }}
-                        keyboardType="email-address"
-                        autoCapitalize="none"
-                        placeholder="Email"
-                        placeholderTextColor="#9ca3af"
-                    />
-                    <TextInput
-                        style={styles.input}
-                        value={loginPassword}
-                        onChangeText={(text) => { setLoginPassword(text); setLoginError(null); }}
-                        secureTextEntry
-                        placeholder="Password"
-                        placeholderTextColor="#9ca3af"
-                    />
-                   
-                    <TouchableOpacity
-                        style={[styles.button, isLoggingIn && styles.buttonDisabled]}
-                        onPress={handleLogin}
-                        disabled={isLoggingIn}
-                    >
-                        {isLoggingIn ? <ActivityIndicator color="#fff" size="small" /> : <CustomText style={styles.buttonText}>Log In</CustomText>}
+        <TouchableWithoutFeedback onPress={() => Platform.OS !== 'web' && Keyboard.dismiss()} accessible={false}>
+            <SafeAreaView style={styles.safeArea}>
+                <View style={styles.container}>
+                    <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+                        <Ionicons name="arrow-back" size={28} color="black" />
                     </TouchableOpacity>
 
-                    {/* Optional: Link to Sign Up */}
-                    {/* <TouchableOpacity onPress={() => router.push('/signup')} style={styles.switchLink}>
-                        <CustomText style={styles.switchLinkText}>Don't have an account? Sign Up</CustomText>
-                    </TouchableOpacity> */}
+                    <View style={styles.header}>
+                        <CustomText style={styles.title}>Welcome back</CustomText>
+                        <CustomText style={styles.subtitle}>
+                            Enter your password to log in as {email}
+                        </CustomText>
+                    </View>
+
+                    <View style={styles.form}>
+                        <CustomText style={styles.label}>Password</CustomText>
+                        <View style={styles.inputContainer}>
+                            <TextInput
+                                style={styles.input}
+                                value={password}
+                                onChangeText={setPassword}
+                                secureTextEntry={!isPasswordVisible}
+                                autoCapitalize="none"
+                                autoCorrect={false}
+                                textContentType="password"
+                                placeholder="Enter your password"
+                            />
+                            <TouchableOpacity onPress={() => setIsPasswordVisible(!isPasswordVisible)} style={styles.eyeIcon}>
+                                <Ionicons name={isPasswordVisible ? "eye-off-outline" : "eye-outline"} size={24} color="#8e8e93" />
+                            </TouchableOpacity>
+                        </View>
+
+                        {loginError && <CustomText style={styles.errorText}>{loginError}</CustomText>}
+
+                        <TouchableOpacity
+                            style={[styles.button, isLoggingIn && styles.buttonDisabled]}
+                            onPress={handleLogin}
+                            disabled={isLoggingIn}
+                        >
+                            {isLoggingIn ? (
+                                <ActivityIndicator color="#fff" />
+                            ) : (
+                                <CustomText style={styles.buttonText}>Continue</CustomText>
+                            )}
+                        </TouchableOpacity>
+
+                        <TouchableOpacity onPress={() => router.push('/forgot-password')}>
+                            <CustomText style={styles.forgotPasswordText}>Forgot your password?</CustomText>
+                        </TouchableOpacity>
+                    </View>
                 </View>
-            </KeyboardAvoidingView>
-        </SafeAreaView>
+            </SafeAreaView>
+        </TouchableWithoutFeedback>
     );
 }
 
-// Styles adapted from PartnerLoginScreen
 const styles = StyleSheet.create({
     safeArea: {
         flex: 1,
-        backgroundColor: '#f8f9fa', 
+        backgroundColor: '#ffffff',
     },
-    container: { 
+    container: {
         flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        paddingHorizontal: 30,
+        paddingHorizontal: 24,
+        paddingTop: Platform.OS === 'android' ? 40 : 20,
     },
-    content: { 
-        width: '100%',
-        maxWidth: 360, 
-        alignItems: 'center',
+    backButton: {
+        alignSelf: 'flex-start',
+        padding: 4, // Increase touchable area
+    },
+    header: {
+        marginTop: 24,
+        marginBottom: 32,
     },
     title: {
-        fontSize: 70, 
-        fontWeight: '500',
-        color: '#212529',
-        marginBottom: 15,
-        textAlign: 'center',
+        fontSize: 34,
+        fontWeight: 'bold',
+        color: '#000000',
+        marginBottom: 8,
     },
     subtitle: {
-        fontSize: 14,
-        color: '#495057',
-        marginBottom: 30, 
-        textAlign: 'center',
+        fontSize: 16,
+        color: '#3c3c43',
+        lineHeight: 22,
+    },
+    form: {
+        width: '100%',
+    },
+    label: {
+        fontSize: 15,
+        fontWeight: '500',
+        color: '#000000',
+        marginBottom: 8,
+    },
+    inputContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#f2f2f7',
+        borderRadius: 12,
+        borderWidth: 1,
+        borderColor: 'rgba(0,0,0,0.1)',
+        paddingHorizontal: 4,
     },
     input: {
-        width: '100%',
-        height: 50, 
-        backgroundColor: '#fff',
-        borderWidth: 1,
-        borderColor: '#ced4da', 
-        borderRadius: 8,
-        paddingHorizontal: 15,
+        flex: 1,
+        height: 50,
+        paddingHorizontal: 12,
         fontSize: 16,
-        color: '#212529',
-        marginBottom: 15,
+        color: '#000000',
+    },
+    eyeIcon: {
+        padding: 10,
     },
     button: {
+        height: 50,
         width: '100%',
-        backgroundColor: '#007bff', 
-        paddingVertical: 15,
-        borderRadius: 8,
+        backgroundColor: '#000000',
+        borderRadius: 12,
         alignItems: 'center',
-        marginTop: 10, 
-        marginBottom: 25,
+        justifyContent: 'center',
+        marginTop: 16,
+        marginBottom: 24,
     },
     buttonDisabled: {
-        backgroundColor: '#6c757d', 
-        opacity: 0.7,
+        backgroundColor: '#a9a9a9',
     },
     buttonText: {
-        color: '#fff',
+        color: '#ffffff',
         fontSize: 16,
         fontWeight: '600',
     },
-    switchLink: {
-        paddingVertical: 10,
-    },
-    switchLinkText: {
+    forgotPasswordText: {
         color: '#007bff', 
-        fontSize: 14,
-        textAlign: 'center',
+        fontSize: 16,
         fontWeight: '500',
     },
     errorText: {
-        width: '100%',
-        color: '#dc3545', 
-        fontSize: 14,
-        marginBottom: 15,
-        textAlign: 'center',
+        color: '#ff3b30',
+        fontSize: 13,
+        marginTop: 8,
+        marginBottom: 8,
     },
-}); 
+});

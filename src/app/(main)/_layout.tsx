@@ -34,8 +34,16 @@ const MainLayout = () => {
   return (
     <>
       <Stack screenOptions={screenOptions}>
-        {/* Define screens within the main stack here */}
-        {/* Make sure files like index.tsx, login.tsx exist here */}
+        <Stack.Screen 
+          name="onboarding" 
+          options={{ 
+            title: 'Onboarding',
+            ...(isMobile ? { 
+              animation: 'none' as const,
+              headerShown: false 
+            } : {})
+          }} 
+        /> 
         <Stack.Screen 
           name="index" 
           options={{ 
@@ -50,6 +58,16 @@ const MainLayout = () => {
           name="login" 
           options={{ 
             title: 'Login',
+            ...(isMobile ? { 
+              animation: 'none' as const,
+              headerShown: false 
+            } : {})
+          }} 
+        /> 
+        <Stack.Screen 
+          name="signup"
+          options={{ 
+            title: 'Signup',
             ...(isMobile ? { 
               animation: 'none' as const,
               headerShown: false 

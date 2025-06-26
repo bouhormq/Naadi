@@ -1,27 +1,24 @@
 import React, { useContext, createContext, type PropsWithChildren, useState, useEffect } from 'react';
 import { useStorageState } from './useStorageState';
-import { loginWithEmail, logout, type UserRole, type AuthUserResult } from './api/auth'; // Import real auth functions and types
+import { loginWithEmail, logout, signupNormalUser, type UserRole, type AuthUserResult, type SignupData } from './api/auth'; // Import real auth functions and types
 import { getFunctions } from 'firebase/functions'; // Import the getFunctions function
-
-// Define the shape of the user data we want in the context
-interface UserData {
-  email: string | null;
-  role: UserRole;
-  // Add other relevant fields from Firebase User if needed (e.g., uid, displayName)
-}
+import { type User } from '../types';
+import { useRouter } from 'expo-router';
 
 // Define the shape of the context value
 interface AuthContextType {
   // Updated signIn to be async and reflect potential failure
   signIn: (email: string, pass: string) => Promise<{ success: boolean; error?: string }>; 
+  signUp: (data: SignupData) => Promise<{ success: boolean; error?: string }>;
   signOut: () => void;
-  session: UserData | null; // Store parsed user data object
+  session: User | null; // Store parsed user data object
   isLoading: boolean; // Overall loading state (checking storage)
   isLoggingIn: boolean; // Specific loading state for login action
 }
 
 const AuthContext = createContext<AuthContextType>({
   signIn: async () => ({ success: false, error: 'Provider not ready' }),
+  signUp: async () => ({ success: false, error: 'Provider not ready' }),
   signOut: () => null,
   session: null,
   isLoading: true, // Start as loading
@@ -42,15 +39,16 @@ export function useSession() {
 // Provider component
 export function SessionProvider({ children }: PropsWithChildren) {
   const [[isLoadingStorage, storedSession], setStoredSession] = useStorageState('session'); // Key for storage
-  const [userData, setUserData] = useState<UserData | null>(null);
+  const [userData, setUserData] = useState<User | null>(null);
   const [isLoggingIn, setIsLoggingIn] = useState(false); // Login action loading state
+  const router = useRouter();
 
   // Effect to parse stored session when it loads from storage
   useEffect(() => {
     if (!isLoadingStorage) {
       if (storedSession) {
         try {
-          const parsedData: { email: string; role: UserRole } = JSON.parse(storedSession);
+          const parsedData: User = JSON.parse(storedSession);
           setUserData(parsedData);
         } catch (e) {
           console.error("Failed to parse stored session:", e);
@@ -67,10 +65,7 @@ export function SessionProvider({ children }: PropsWithChildren) {
     try {
       const result = await loginWithEmail(email, pass);
       if (result && result.user) {
-        const dataToStore: UserData = {
-          email: result.user.email, // Assuming email is always present on success
-          role: result.role,
-        };
+        const dataToStore: User = result.user;
         setUserData(dataToStore);
         setStoredSession(JSON.stringify(dataToStore)); // Store stringified user data
         console.log("SessionProvider: Signed in, session set:", dataToStore);
@@ -100,6 +95,18 @@ export function SessionProvider({ children }: PropsWithChildren) {
     setUserData(null);
     setStoredSession(null);
     console.log("SessionProvider: Signed out, session cleared.");
+    router.replace('/');
+  };
+
+  const handleSignUp = async (data: SignupData): Promise<{ success: boolean; error?: string }> => {
+    try {
+      await signupNormalUser(data);
+      // After successful signup, automatically sign the user in
+      return await handleSignIn(data.email, data.password);
+    } catch (error: any) {
+      console.error("SessionProvider: SignUp error:", error);
+      return { success: false, error: error.message || 'An unknown signup error occurred.' };
+    }
   };
 
   return (
@@ -107,6 +114,7 @@ export function SessionProvider({ children }: PropsWithChildren) {
       value={{
         signIn: handleSignIn,
         signOut: handleSignOut,
+        signUp: handleSignUp,
         session: userData, // Provide the parsed user data object
         isLoading: isLoadingStorage, // Reflect storage loading state
         isLoggingIn: isLoggingIn,    // Reflect login action loading state
@@ -114,4 +122,4 @@ export function SessionProvider({ children }: PropsWithChildren) {
       {children}
     </AuthContext.Provider>
   );
-} 
+}
