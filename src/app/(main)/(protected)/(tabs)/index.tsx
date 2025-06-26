@@ -5,6 +5,9 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useCachedHomepageData } from '../../../../hooks/useCachedHomepageData';
 import Footer from '../../../partners/(components)/Footer';
+import EstablishmentCard from '../(components)/EstablishmentCard';
+import { EstablishmentData } from '../../../../../types';
+import Categories from '../(components)/Categories';
 
 export default function MainProtectedIndex() {
   const { width } = useWindowDimensions();
@@ -140,59 +143,6 @@ export default function MainProtectedIndex() {
         fontSize: 13,
         fontWeight: '500',
       },
-      categorySection: {
-        marginTop: 30,
-        paddingHorizontal: 20,
-        marginBottom: 40,
-      },
-      categoryGrid: {
-        flexDirection: 'row',
-        flexWrap: canFitAllInRow ? 'nowrap' : 'wrap',
-        justifyContent: 'space-between',
-        marginTop: 10,
-      },
-      categoryCard: {
-        width: canFitAllInRow ? '23%' : (canFitTwoInRow ? '48%' : '100%'),
-        height: 100,
-        marginBottom: 15,
-        borderRadius: 10,
-        backgroundColor: '#f0f0f0',
-        justifyContent: 'flex-start',
-        padding: 10,
-        alignItems: 'flex-end',
-      },
-      categoryImagePlaceholder: {
-        ...StyleSheet.absoluteFillObject,
-        backgroundColor: '#f0f0f0',
-        borderRadius: 10,
-      },
-      categoryText: {
-        fontSize: 11.5 + (canFitAllInRow ? (width * 0.23) / 40 : (canFitTwoInRow ? (width * 0.48) / 40 : (width - 40) / 40)),
-        fontWeight: 'bold',
-        color: 'black',
-        zIndex: 1,
-        textAlign: 'right',
-      },
-      categoryImage: {
-        position: 'absolute',
-        left: 0,
-        bottom: 0,
-        width: Platform.OS === 'web' ? 130 : 105,
-        height: Platform.OS === 'web' ? 120 : 100,
-      },
-      tabBar: {
-        flexDirection: 'row',
-        justifyContent: 'space-around',
-        alignItems: 'center',
-        height: 60,
-        borderTopWidth: 1,
-        borderTopColor: '#e0e0e0',
-        backgroundColor: '#fff',
-        paddingBottom: 10,
-      },
-      tabItem: {
-        alignItems: 'center',
-      },
     });
   }, [width]);
 
@@ -235,26 +185,8 @@ export default function MainProtectedIndex() {
     index,
   });
 
-  const categories = [
-    { name: 'Fitness' },
-    { name: 'Beauty' },
-    { name: 'Motors & Watercraft' },
-    { name: 'Wellness' },
-  ];
-
-  const renderEstablishmentCard = ({ item }: { item: any }) => (
-    <TouchableOpacity style={styles.card}>
-      <View style={styles.cardImagePlaceholder} />
-      <Text style={styles.cardTitle}>{item.name}</Text>
-      <View style={styles.ratingContainer}>
-        <Ionicons name="star" size={16} color="#FFC107" />
-        <Text style={styles.ratingText}>{item.rating} <Text style={styles.reviewsText}>({item.reviews})</Text></Text>
-      </View>
-      <Text style={styles.cardAddress}>{item.address}</Text>
-      <View style={styles.cardTypeContainer}>
-        <Text style={styles.cardTypeText}>{item.type}</Text>
-      </View>
-    </TouchableOpacity>
+  const renderEstablishmentCard = ({ item }: { item: EstablishmentData }) => (
+    <EstablishmentCard item={item} />
   );
 
   if (loading) {
@@ -365,28 +297,7 @@ export default function MainProtectedIndex() {
           />
         </View>
 
-        <View style={styles.categorySection}>
-          <Text style={styles.sectionTitle}>Categories</Text>
-          <View style={styles.categoryGrid}>
-            {categories.map((category) => (
-              <TouchableOpacity key={category.name} style={styles.categoryCard}>
-                <Text style={styles.categoryText}>{category.name}</Text>
-                {category.name === 'Fitness' &&
-                  <Image source={require('../../(assets)/fitness.png')} style={styles.categoryImage} />
-                }
-                {category.name === 'Motors & Watercraft' &&
-                  <Image source={require('../../(assets)/motorsAndWatercrafts.png')} style={styles.categoryImage} />
-                }
-                {category.name === 'Wellness' &&
-                  <Image source={require('../../(assets)/wellness.png')} style={styles.categoryImage} />
-                }
-                {category.name === 'Beauty' &&
-                  <Image source={require('../../(assets)/beauty.png')} style={styles.categoryImage} />
-                }
-              </TouchableOpacity>
-            ))}
-          </View>
-        </View>
+        <Categories />
 
         {Platform.OS === 'web' && <Footer />}
       </ScrollView>

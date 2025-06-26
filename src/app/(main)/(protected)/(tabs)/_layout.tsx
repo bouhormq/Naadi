@@ -1,5 +1,5 @@
 import { Tabs } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, Octicons } from '@expo/vector-icons';
 
 export default function TabLayout() {
   return (
@@ -7,12 +7,13 @@ export default function TabLayout() {
       screenOptions={{
         headerShown: false,
         tabBarShowLabel: false,
+        tabBarActiveTintColor: '#3674B5',
       }}>
       <Tabs.Screen
         name="index"
         options={{
           title: 'Home',
-          tabBarIcon: ({ color }) => <Ionicons name="home" size={28} color={color} />,
+          tabBarIcon: ({ color }) => <Octicons name="home" size={25} color={color} />,
         }}
       />
       <Tabs.Screen
@@ -26,7 +27,7 @@ export default function TabLayout() {
         name="appointments"
         options={{
           title: 'Appointments',
-          tabBarIcon: ({ color }) => <Ionicons name="calendar" size={28} color={color} />,
+          tabBarIcon: ({ color }) => <Ionicons name="calendar-clear-outline" size={28} color={color} />,
         }}
       />
     </Tabs>
