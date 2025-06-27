@@ -7,7 +7,7 @@ import { Ionicons } from '@expo/vector-icons';
 
 // Import your universal components
 import CustomMapView, { Marker } from '../../../../components/Map/Map';
-import CustomMarker from '../../../../components/Map/Markers';
+import CustomMarker from '../../../../components/Map/Marker/Markers';
 import { venues } from '../venues';
 import EstablishmentCard from '../(components)/EstablishmentCard';
 import { EstablishmentData } from '../../../../../types';
@@ -32,6 +32,14 @@ export default function MapScreen() {
   const [bottomSheetHeight, setBottomSheetHeight] = useState(0);
   const [containerHeight, setContainerHeight] = useState(0);
   const [isSearchModalVisible, setSearchModalVisible] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchLocation, setSearchLocation] = useState('Current location');
+  const [searchCriteria, setSearchCriteria] = useState({
+    activity: '',
+    location: 'Current location',
+    date: 'Any date',
+    time: 'Any time',
+  });
 
   const renderCluster = (cluster: any) => {
     const { id, geometry, onPress, properties } = cluster;
@@ -162,12 +170,73 @@ export default function MapScreen() {
   const openSearchModal = () => setSearchModalVisible(true);
   const closeSearchModal = () => setSearchModalVisible(false);
 
+  const handleSearch = (searchData: {
+    activity: string;
+    location: string;
+    date: string;
+    time: string;
+  }) => {
+    setSearchCriteria(searchData);
+    const { activity, location, date, time } = searchData;
+
+    const getFormattedDate = (d: Date) => {
+      const day = String(d.getDate()).padStart(2, '0');
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const year = d.getFullYear();
+      return `${day}-${month}-${year}`;
+    };
+
+    const today = new Date();
+    const tomorrow = new Date();
+    tomorrow.setDate(today.getDate() + 1);
+    const todayStr = getFormattedDate(today);
+    const tomorrowStr = getFormattedDate(tomorrow);
+
+    const searchItems = [];
+    if (activity) {
+      searchItems.push(activity);
+    }
+
+    const otherSearchItems = [];
+    if (date !== 'Any date') {
+      if (date === todayStr) {
+        otherSearchItems.push('Today');
+      } else if (date === tomorrowStr) {
+        otherSearchItems.push('Tomorrow');
+      } else {
+        otherSearchItems.push(date);
+      }
+    }
+    if (time !== 'Any time') otherSearchItems.push(time);
+
+    if (!activity && otherSearchItems.length > 0) {
+      searchItems.push('Any venue');
+    }
+
+    const allItems = [...searchItems, ...otherSearchItems];
+
+    setSearchQuery(allItems.join(' ⋅ '));
+    setSearchLocation(location);
+    closeSearchModal();
+  };
+
   const filteredVenues = venues
     .filter(venue => {
       const priceMatch = filters.maxPrice === 700 || venue.price <= filters.maxPrice;
       const venueTypeMatch =
         filters.venueType === 'Everyone' || venue.gender === filters.venueType;
-      return priceMatch && venueTypeMatch;
+
+      const activityMatch =
+        !searchCriteria.activity ||
+        (venue.name &&
+          venue.name.toLowerCase().includes(searchCriteria.activity.toLowerCase()));
+
+      const locationMatch =
+        searchCriteria.location === 'Current location' ||
+        (venue.address &&
+          venue.address.toLowerCase().includes(searchCriteria.location.toLowerCase()));
+
+      return priceMatch && venueTypeMatch && activityMatch && locationMatch;
     })
     .sort((a, b) => {
       switch (filters.sortBy) {
@@ -203,7 +272,6 @@ export default function MapScreen() {
           <CustomMarker
             key={venue.id}
             coordinate={venue.coordinate}
-            title={venue.name}
             onPress={() => handleMarkerPress(venue.id)}
             type={venue.type}
           />
@@ -217,8 +285,9 @@ export default function MapScreen() {
             style={styles.searchInput}
             placeholderTextColor="black"
             editable={false} // To prevent keyboard from showing up
+            value={searchQuery}
           />
-          <Text style={styles.locationText}>Current location</Text>
+          <Text style={styles.locationText}>{searchLocation}</Text>
         </View>
         <View style={styles.listIconContainer}>
           <Ionicons name="map-outline" size={20} color="black" />
@@ -270,7 +339,11 @@ export default function MapScreen() {
         activeFilter={activeFilter}
         initialFilters={filters}
       />
-      <SearchModal visible={isSearchModalVisible} onClose={closeSearchModal} />
+      <SearchModal
+        visible={isSearchModalVisible}
+        onClose={closeSearchModal}
+        onSearch={handleSearch}
+      />
     </View>
   );
 }

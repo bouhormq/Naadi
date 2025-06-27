@@ -213,10 +213,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     borderRadius: 25,
     borderWidth: 1,
-    borderColor: '#3674B5',
+    borderColor: '#e0e0e0',
   },
   venueTypeButtonSelected: {
     backgroundColor: '#3674B5',
+    borderColor: '#3674B5'
   },
   venueTypeButtonText: {
     color: 'black',

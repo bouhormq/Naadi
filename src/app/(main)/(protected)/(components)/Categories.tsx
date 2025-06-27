@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image, Platform, useWindowDimensions } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 
 const categories = [
   { name: 'Fitness' },
@@ -10,9 +11,10 @@ const categories = [
 
 interface CategoriesProps {
   variant?: 'default' | 'modal';
+  onCategorySelect?: (category: string) => void;
 }
 
-const Categories: React.FC<CategoriesProps> = ({ variant = 'default' }) => {
+const Categories: React.FC<CategoriesProps> = ({ variant = 'default', onCategorySelect }) => {
   const { width } = useWindowDimensions();
 
   const styles = useMemo(() => {
@@ -68,6 +70,19 @@ const Categories: React.FC<CategoriesProps> = ({ variant = 'default' }) => {
         width: Platform.OS === 'web' ? 130 : 105,
         height: Platform.OS === 'web' ? 120 : 100,
       },
+      row: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        width: '100%',
+      },
+      categoryContainer: {
+        width: '23%',
+        alignItems: 'center',
+        marginBottom: 20,
+      },
+      iconContainer: {
+        marginBottom: 5,
+      },
     });
   }, [width, variant]);
 
@@ -76,7 +91,11 @@ const Categories: React.FC<CategoriesProps> = ({ variant = 'default' }) => {
       <Text style={styles.sectionTitle}>Categories</Text>
       <View style={styles.categoryGrid}>
         {categories.map((category) => (
-          <TouchableOpacity key={category.name} style={styles.categoryCard}>
+          <TouchableOpacity
+            key={category.name}
+            style={styles.categoryCard}
+            onPress={() => onCategorySelect?.(category.name)}
+          >
             <Text style={styles.categoryText}>{category.name}</Text>
             {category.name === 'Fitness' &&
               <Image source={require('../../(assets)/fitness.png')} style={styles.categoryImage} />

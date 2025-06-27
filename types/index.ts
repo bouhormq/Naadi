@@ -350,4 +350,18 @@ export interface StudioAnalyticsData {
     status: string; // Consider Booking status enum
     createdAt: string; // Consider ISO string format or Date
   }>;
-} 
+}
+
+export interface EstablishmentData {
+  id: string;
+  name: string;
+  rating: number;
+  reviews: number;
+  address: string;
+  type: string;
+  image?: any;
+  coordinate: {
+    latitude: number;
+    longitude: number;
+  };
+}
