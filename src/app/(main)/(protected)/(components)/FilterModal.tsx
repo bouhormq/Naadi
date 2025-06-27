@@ -26,12 +26,21 @@ interface FilterModalProps {
   onClose: () => void;
   onApply: (filters: { sortBy: string; venueType: string; maxPrice: number }) => void;
   activeFilter: 'all' | 'sortBy' | 'maxPrice' | 'venueType';
+  initialFilters: { sortBy: string; venueType: string; maxPrice: number };
 }
 
-const FilterModal: React.FC<FilterModalProps> = ({ visible, onClose, onApply, activeFilter }) => {
-  const [sortBy, setSortBy] = useState('Recommended');
-  const [venueType, setVenueType] = useState('Everyone');
-  const [maxPrice, setMaxPrice] = useState(700);
+const FilterModal: React.FC<FilterModalProps> = ({ visible, onClose, onApply, activeFilter, initialFilters }) => {
+  const [sortBy, setSortBy] = useState(initialFilters.sortBy);
+  const [venueType, setVenueType] = useState(initialFilters.venueType);
+  const [maxPrice, setMaxPrice] = useState(initialFilters.maxPrice);
+
+  React.useEffect(() => {
+    if (visible) {
+      setSortBy(initialFilters.sortBy);
+      setVenueType(initialFilters.venueType);
+      setMaxPrice(initialFilters.maxPrice);
+    }
+  }, [visible, initialFilters]);
 
   const handleClear = () => {
     switch (activeFilter) {

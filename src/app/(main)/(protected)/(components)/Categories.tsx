@@ -8,7 +8,11 @@ const categories = [
   { name: 'Wellness' },
 ];
 
-const Categories = () => {
+interface CategoriesProps {
+  variant?: 'default' | 'modal';
+}
+
+const Categories: React.FC<CategoriesProps> = ({ variant = 'default' }) => {
   const { width } = useWindowDimensions();
 
   const styles = useMemo(() => {
@@ -16,12 +20,13 @@ const Categories = () => {
     const breakpointColumn = 800;
     const canFitAllInRow = Platform.OS === 'web' && width > breakpointRow;
     const canFitTwoInRow = Platform.OS === 'web' && width > breakpointColumn;
+    const isModal = variant === 'modal';
 
     return StyleSheet.create({
       categorySection: {
-        marginTop: 30,
-        paddingHorizontal: 20,
-        marginBottom: 40,
+        marginTop: isModal ? 15 : 30,
+        paddingHorizontal: isModal ? 0 : 20,
+        marginBottom: isModal ? 0 : 40,
       },
       sectionTitle: {
         fontSize: 24,
@@ -35,7 +40,7 @@ const Categories = () => {
         marginTop: 10,
       },
       categoryCard: {
-        width: canFitAllInRow ? '23%' : (canFitTwoInRow ? '48%' : '100%'),
+        width: canFitAllInRow ? '24%' : (canFitTwoInRow ? '48.5%' : '100%'),
         height: 100,
         marginBottom: 15,
         borderRadius: 10,
@@ -64,7 +69,7 @@ const Categories = () => {
         height: Platform.OS === 'web' ? 120 : 100,
       },
     });
-  }, [width]);
+  }, [width, variant]);
 
   return (
     <View style={styles.categorySection}>

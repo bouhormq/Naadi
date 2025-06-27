@@ -7,10 +7,12 @@ import { Ionicons } from '@expo/vector-icons';
 
 // Import your universal components
 import CustomMapView, { Marker } from '../../../../components/Map/Map';
+import CustomMarker from '../../../../components/Map/Markers';
 import { venues } from '../venues';
 import EstablishmentCard from '../(components)/EstablishmentCard';
 import { EstablishmentData } from '../../../../../types';
 import FilterModal from '../(components)/FilterModal';
+import SearchModal from '../(components)/SearchModal';
 
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
   UIManager.setLayoutAnimationEnabledExperimental(true);
@@ -29,6 +31,27 @@ export default function MapScreen() {
   });
   const [bottomSheetHeight, setBottomSheetHeight] = useState(0);
   const [containerHeight, setContainerHeight] = useState(0);
+  const [isSearchModalVisible, setSearchModalVisible] = useState(false);
+
+  const renderCluster = (cluster: any) => {
+    const { id, geometry, onPress, properties } = cluster;
+    const points = properties.point_count;
+
+    return (
+      <Marker
+        key={`cluster-${id}`}
+        coordinate={{
+          latitude: geometry.coordinates[1],
+          longitude: geometry.coordinates[0],
+        }}
+        onPress={onPress}
+      >
+        <View style={styles.clusterContainer}>
+          <Text style={styles.clusterText}>{points}</Text>
+        </View>
+      </Marker>
+    );
+  };
 
   const defaultFilters = {
     sortBy: 'Recommended',
@@ -45,8 +68,8 @@ export default function MapScreen() {
   const initialRegion: Region = {
     latitude: 35.5785, // Tetouan
     longitude: -5.3684,
-    latitudeDelta: 0.0922,
-    longitudeDelta: 0.0421,
+    latitudeDelta: 0.2, // Zoom out to see more markers
+    longitudeDelta: 0.1,
   };
 
   const moroccoBounds = {
@@ -136,6 +159,9 @@ export default function MapScreen() {
     }
   };
 
+  const openSearchModal = () => setSearchModalVisible(true);
+  const closeSearchModal = () => setSearchModalVisible(false);
+
   const filteredVenues = venues
     .filter(venue => {
       const priceMatch = filters.maxPrice === 700 || venue.price <= filters.maxPrice;
@@ -170,30 +196,34 @@ export default function MapScreen() {
         style={styles.map}
         initialRegion={initialRegion}
         onRegionChangeComplete={onRegionChangeComplete}
+        renderCluster={renderCluster}
+        radius={500} // Increase cluster radius
       >
-        {venues.map((venue) => (
-          <Marker
+        {filteredVenues.map((venue) => (
+          <CustomMarker
             key={venue.id}
             coordinate={venue.coordinate}
             title={venue.name}
             onPress={() => handleMarkerPress(venue.id)}
+            type={venue.type}
           />
         ))}
       </AnyMapView>
-      <View style={styles.searchContainer}>
+      <TouchableOpacity style={styles.searchContainer} onPress={openSearchModal}>
         <Ionicons name="search" size={24} color="black" style={styles.searchIcon} />
-        <View style={{ flex: 1, marginLeft: 10 }}>
+        <View style={{ flex: 1, marginLeft: 10 }} pointerEvents="none">
           <TextInput
             placeholder="Any venue"
             style={styles.searchInput}
             placeholderTextColor="black"
+            editable={false} // To prevent keyboard from showing up
           />
           <Text style={styles.locationText}>Current location</Text>
         </View>
         <View style={styles.listIconContainer}>
           <Ionicons name="map-outline" size={20} color="black" />
         </View>
-      </View>
+      </TouchableOpacity>
       <View
         style={[styles.bottomSheet, isFilterModalVisible && { height: '75%' }]}
         onLayout={(event) => setBottomSheetHeight(event.nativeEvent.layout.height)}
@@ -238,7 +268,9 @@ export default function MapScreen() {
         onClose={handleCloseFilter}
         onApply={handleApplyFilter}
         activeFilter={activeFilter}
+        initialFilters={filters}
       />
+      <SearchModal visible={isSearchModalVisible} onClose={closeSearchModal} />
     </View>
   );
 }
@@ -330,5 +362,20 @@ const styles = StyleSheet.create({
     marginBottom: 15,
     textAlign: 'center',
     color: '#333',
+  },
+  clusterContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#3674B5',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: 'white',
+  },
+  clusterText: {
+    color: 'white',
+    fontWeight: 'bold',
+    fontSize: 16,
   },
 });
