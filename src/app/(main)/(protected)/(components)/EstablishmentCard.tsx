@@ -65,8 +65,8 @@ const EstablishmentCard = ({ item, layout = 'horizontal', onPress }: { item: Est
 
   return (
     <TouchableOpacity style={styles.card} onPress={() => onPress && onPress(item)}>
-      {item.image ? (
-        <Image source={item.image} style={styles.cardImage} />
+      {item.images ? (
+        <Image source={{ uri: item.images[0] }} style={styles.cardImage} />
       ) : (
         <View style={[styles.cardImage, { backgroundColor: '#f0f0f0' }]} />
       )}
@@ -74,7 +74,7 @@ const EstablishmentCard = ({ item, layout = 'horizontal', onPress }: { item: Est
       <View style={styles.ratingContainer}>
         <Ionicons name="star" size={16} color="#FFC107" />
         <Text style={styles.ratingText}>
-          {item.rating.toFixed(1)} <Text style={styles.reviewsText}>({item.reviews})</Text>
+          {item.rating.toFixed(1)} <Text style={styles.reviewsText}>({item.numberReviews})</Text>
         </Text>
       </View>
       <Text style={styles.cardAddress}>{item.address}</Text>

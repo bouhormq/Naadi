@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useStorageState } from '../useStorageState';
-import { getRecommendedData, getNewToNaadiData, getTrendingData, EstablishmentData } from '../api/homepage';
+import { getRecommendedData, getNewToNaadiData, getTrendingData } from '../api/homepage';
+import { EstablishmentData } from '../../types/index';
 
 interface CachedHomepageData {
   recommended: EstablishmentData[];
@@ -9,7 +10,7 @@ interface CachedHomepageData {
   timestamp: number;
 }
 
-export function useCachedHomepageData() {
+export function useCachedHomepageData(forceRefresh = false) {
   const [[isLoadingStorage, cachedData], setCachedData] = useStorageState('homepageData');
 
   const [recommendedData, setRecommendedData] = useState<EstablishmentData[]>([]);
@@ -20,10 +21,10 @@ export function useCachedHomepageData() {
 
   useEffect(() => {
     const loadData = async () => {
-      if (cachedData) {
+      if (cachedData && !forceRefresh) {
         try {
           const parsedData: CachedHomepageData = JSON.parse(cachedData);
-          const oneDay = 1; // 24 hours in milliseconds
+          const oneDay = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
 
           if (Date.now() - parsedData.timestamp < oneDay) {
             console.log("Using cached homepage data.");
@@ -71,7 +72,12 @@ export function useCachedHomepageData() {
       loadData();
     }
 
-  }, [isLoadingStorage, cachedData, setCachedData]);
+    // If forceRefresh changes to true, force a reload
+    if (forceRefresh) {
+      loadData();
+    }
+
+  }, [isLoadingStorage, cachedData, setCachedData, forceRefresh]);
 
   return { recommendedData, newToNaadiData, trendingData, loading };
 }

@@ -37,7 +37,7 @@
     "**/*.ts",
     "**/*.tsx",
     "env.d.ts"
-  ],
+, "app/(main)/(protected)/(tabs)/BottomSheet.js"  ],
   "exclude": [
     "node_modules",
     "dist"

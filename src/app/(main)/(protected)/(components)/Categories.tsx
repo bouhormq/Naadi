@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image, Platform, useWindowDimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useNavigation } from '@react-navigation/native';
 
 const categories = [
   { name: 'Fitness' },
@@ -16,6 +17,18 @@ interface CategoriesProps {
 
 const Categories: React.FC<CategoriesProps> = ({ variant = 'default', onCategorySelect }) => {
   const { width } = useWindowDimensions();
+  const navigation = useNavigation();
+
+  const handleCategoryPress = (categoryName: string) => {
+    if (variant === 'default') {
+      navigation.navigate('search', {
+        initialActivity: categoryName,
+        triggerSearch: true,
+      });
+    } else {
+      onCategorySelect?.(categoryName);
+    }
+  };
 
   const styles = useMemo(() => {
     const breakpointRow = 1200;
@@ -94,7 +107,7 @@ const Categories: React.FC<CategoriesProps> = ({ variant = 'default', onCategory
           <TouchableOpacity
             key={category.name}
             style={styles.categoryCard}
-            onPress={() => onCategorySelect?.(category.name)}
+            onPress={() => handleCategoryPress(category.name)}
           >
             <Text style={styles.categoryText}>{category.name}</Text>
             {category.name === 'Fitness' &&

@@ -356,12 +356,18 @@ export interface EstablishmentData {
   id: string;
   name: string;
   rating: number;
-  reviews: number;
+  numberReviews: number;
+  reviews: string[]; // Array of reviews, can be refined further
   address: string;
   type: string;
-  image?: any;
+  images: string[]; // Array of image URLs
   coordinate: {
     latitude: number;
     longitude: number;
   };
+  createdAt?: string; // ISO string format for created date
+  updatedAt?: string; // ISO string format for updated date
+  activities?: string[]; // Optional array of activities, can be refined further
+  gender: string;
+  location: string;
 }
