@@ -1,4 +1,4 @@
-import { View, Text, TouchableOpacity, StyleSheet, Dimensions, ScrollView } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Dimensions, ScrollView, Linking } from 'react-native';
 import React, { useMemo, useRef } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
@@ -96,11 +96,27 @@ const Appointments = () => {
                 </TouchableOpacity>
               </View>
               {/* Calendar icon absolutely positioned in bottom right */}
-              <View style={{ position: 'absolute', bottom: 18, right: 18 }}>
+              <TouchableOpacity
+                style={{ position: 'absolute', bottom: 18, right: 18 }}
+                onPress={() => {
+                  // Google Calendar event creation link
+                  const start = `${a.date}T10:00:00`;
+                  const end = `${a.date}T11:00:00`;
+                  const details = [
+                    `action=TEMPLATE`,
+                    `text=${encodeURIComponent(a.venue + ' - ' + a.service)}`,
+                    `dates=${start.replace(/[-:]/g, '')}Z/${end.replace(/[-:]/g, '')}Z`,
+                    `details=${encodeURIComponent(a.service)}`,
+                    `location=${encodeURIComponent(a.address)}`
+                  ].join('&');
+                  const url = `https://www.google.com/calendar/render?${details}`;
+                  Linking.openURL(url);
+                }}
+              >
                 <View style={{ borderWidth: 1, borderColor: '#e0e0e0', borderRadius: 22, paddingHorizontal: 18, paddingVertical: 9, backgroundColor: '#fff', elevation: 2 }}>
                   <Ionicons name="calendar-outline" size={22} color="#222" />
                 </View>
-              </View>
+              </TouchableOpacity>
             </View>
           </View>
         ))}
