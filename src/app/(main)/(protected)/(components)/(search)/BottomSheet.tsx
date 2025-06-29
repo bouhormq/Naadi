@@ -1,5 +1,5 @@
 // BottomSheet component: displays a draggable, animated sheet with venue cards and filter controls
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useImperativeHandle, forwardRef } from 'react';
 import {
   View,
   StyleSheet,
@@ -35,16 +35,20 @@ type BottomSheetProps = {
   };
   filteredVenues: EstablishmentData[];
   onCardPress: (venue: EstablishmentData, bottomSheetHeight: number) => void;
+  isSheetExpanded: boolean;
+  sheetHeightAnim: Animated.Value;
 };
 
-export default function BottomSheet({
+const BottomSheet = forwardRef(function BottomSheet({
   animatedY,
   isFilterModalVisible,
   handleFilterPress,
   filters,
   filteredVenues,
   onCardPress,
-}: BottomSheetProps) {
+  isSheetExpanded,
+  sheetHeightAnim,
+}: BottomSheetProps, ref) {
   // State for sheet and header heights
   const [bottomSheetHeight, setBottomSheetHeight] = useState(0);
   const [bottomSheetHeaderHeight, setBottomSheetHeaderHeight] = useState(0);
@@ -64,7 +68,7 @@ export default function BottomSheet({
   const panResponder = useRef(
     PanResponder.create({
       onMoveShouldSetPanResponder: (_, gestureState) => {
-        if (isFilterModalVisible) return false;
+        if (isFilterModalVisible || isSheetExpanded) return false;
         return Math.abs(gestureState.dy) > Math.abs(gestureState.dx) && Math.abs(gestureState.dy) > 5;
       },
       onPanResponderGrant: () => animatedY.setOffset(animatedYValue.current),
@@ -93,6 +97,12 @@ export default function BottomSheet({
     extrapolate: 'clamp',
   });
 
+  // Animated height interpolation
+  const animatedHeight = sheetHeightAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['50%', '100%'],
+  });
+
   // Default filter values for comparison
   const defaultFilters = {
     sortBy: 'Recommended',
@@ -106,12 +116,57 @@ export default function BottomSheet({
   const maxPriceAltered = filters.maxPrice !== defaultFilters.maxPrice;
   const anyFilterAltered = sortByAltered || venueTypeAltered || maxPriceAltered;
 
+  // Calculate offset for filterButtonsContainer when in list mode (100% height)
+  // The search bar is at top: 60, height: 56 (paddingVertical: 10 + font/input), plus margin. Let's set marginTop to 130 for enough space below search bar.
+  const filterContainerOffset = isSheetExpanded ? { marginTop: 130 } : {};
+
+  // Animated values for filter buttons and grabber
+  const [filterAnim] = useState(new Animated.Value(isSheetExpanded ? 1 : 0));
+  const [grabberAnim] = useState(new Animated.Value(isSheetExpanded ? 0 : 1));
+
+  // Animate filter buttons and grabber when isSheetExpanded changes
+  React.useEffect(() => {
+    if (isSheetExpanded) {
+      Animated.sequence([
+        Animated.delay(200),
+        Animated.timing(filterAnim, { toValue: 1, duration: 250, useNativeDriver: false }),
+        Animated.timing(grabberAnim, { toValue: 0, duration: 150, useNativeDriver: false }),
+      ]).start();
+    } else {
+      Animated.sequence([
+        Animated.timing(filterAnim, { toValue: 0, duration: 250, useNativeDriver: false }),
+        Animated.delay(200),
+        Animated.timing(grabberAnim, { toValue: 1, duration: 150, useNativeDriver: false }),
+      ]).start();
+    }
+  }, [isSheetExpanded]);
+
+  // Expose scrollToVenue method via ref
+  useImperativeHandle(ref, () => ({
+    scrollToVenue: (venueId: string) => {
+      if (cardLayouts.current[venueId] !== undefined && scrollViewRef.current) {
+        scrollViewRef.current.scrollTo({
+          y: cardLayouts.current[venueId],
+          animated: true,
+        });
+      }
+    },
+  }));
+
+  // Animated style for filter buttons
+  const filterButtonsStyle = isSheetExpanded
+    ? { marginTop: filterAnim.interpolate({ inputRange: [0, 1], outputRange: [0, 120] }), opacity: filterAnim }
+    : { marginTop: 0, opacity: 1 };
+  // Animated style for grabber
+  const grabberStyle = { opacity: grabberAnim };
+
   // Render animated bottom sheet with filter chips and venue cards
   return (
     <Animated.View
       style={[
         styles.bottomSheet,
         isFilterModalVisible && { height: '75%' },
+        { height: animatedHeight },
         { transform: [{ translateY }] },
       ]}
       onLayout={(event) => {
@@ -129,8 +184,10 @@ export default function BottomSheet({
           }
         }}
       >
-        <View style={styles.grabber} />
-        <View style={styles.filterButtonsContainer}>
+        {/* Animated grabber */}
+        <Animated.View style={[styles.grabber, grabberStyle]} />
+        {/* Animated filter buttons */}
+        <Animated.View style={[styles.filterButtonsContainer, filterButtonsStyle]}>
           {/* All filters chip */}
           <TouchableOpacity style={[styles.filterChip, anyFilterAltered && styles.activeFilterChip]} onPress={() => handleFilterPress('all')}>
             <Ionicons name="options-outline" size={18} />
@@ -150,7 +207,7 @@ export default function BottomSheet({
             <Text style={styles.filterText}>Venue type</Text>
             <Ionicons name="chevron-down-outline" size={18} />
           </TouchableOpacity>
-        </View>
+        </Animated.View>
         <Text style={styles.bottomSheetTitle}>{filteredVenues.length} venues nearby</Text>
       </View>
       {/* Venue cards list */}
@@ -170,7 +227,7 @@ export default function BottomSheet({
       </ScrollView>
     </Animated.View>
   );
-}
+});
 
 // Styles for the bottom sheet and its elements
 const styles = StyleSheet.create({
@@ -225,3 +282,5 @@ const styles = StyleSheet.create({
     color: '#333',
   },
 });
+
+export default BottomSheet;

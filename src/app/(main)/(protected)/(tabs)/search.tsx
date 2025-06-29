@@ -3,6 +3,7 @@ import React, { useRef, useState, useCallback } from 'react';
 import { View, StyleSheet, LayoutAnimation, UIManager, Platform, Animated } from 'react-native';
 import type MapView from 'react-native-maps';
 import { useRoute } from '@react-navigation/native';
+import { Ionicons, Octicons } from '@expo/vector-icons';
 
 import MapViewComponent from '../(components)/(search)/MapViewComponent'; // Map display
 import SearchBar from '../(components)/(search)/SearchBar'; // Top search bar
@@ -25,6 +26,7 @@ interface VenueForFilter extends EstablishmentData {
 export default function MapScreen() {
   // Refs and state for map, modals, filters, search, and animation
   const mapRef = useRef<MapView>(null);
+  const bottomSheetRef = useRef<any>(null); // Ref for BottomSheet
   const [isFilterModalVisible, setFilterModalVisible] = useState(false);
   const [activeFilter, setActiveFilter] = useState<'all' | 'sortBy' | 'maxPrice' | 'venueType'>('all');
   const [filters, setFilters] = useState({
@@ -42,6 +44,17 @@ export default function MapScreen() {
     date: 'Any date',
     time: 'Any time',
   });
+  const [isSheetExpanded, setSheetExpanded] = useState(false);
+  const [sheetHeightAnim] = useState(new Animated.Value(0)); // 0 for collapsed, 1 for expanded
+
+  // Animate sheet height when isSheetExpanded changes
+  React.useEffect(() => {
+    Animated.timing(sheetHeightAnim, {
+      toValue: isSheetExpanded ? 1 : 0,
+      duration: 350,
+      useNativeDriver: false,
+    }).start();
+  }, [isSheetExpanded]);
 
   const animatedY = useRef(new Animated.Value(0)).current;
 
@@ -196,7 +209,19 @@ export default function MapScreen() {
         longitudeDelta: region.longitudeDelta,
       });
     }
+    // Scroll to the card in BottomSheet
+    if (bottomSheetRef.current && item.id) {
+      bottomSheetRef.current.scrollToVenue(item.id);
+    }
   }, [containerHeight]);
+
+  // Handler for marker press from MapViewComponent
+  const handleMarkerPress = (venueId: string) => {
+    const venue = filteredVenues.find((v) => v.id === venueId);
+    if (venue) {
+      handleCardPress(venue, 300); // Approximate bottom sheet height
+    }
+  };
 
   const route = useRoute();
 
@@ -214,6 +239,19 @@ export default function MapScreen() {
     }
   }, [route.params]);
 
+  // Handler for list/search icon press
+  const handleListIconPress = () => {
+    if (!isSheetExpanded) {
+      // Animate the bottom sheet to the top (translateY = 0)
+      Animated.timing(animatedY, {
+        toValue: 0,
+        duration: 350,
+        useNativeDriver: false,
+      }).start();
+    }
+    setSheetExpanded((prev) => !prev);
+  };
+
   // Render map, search bar, bottom sheet, and modals
   return (
     <View
@@ -225,19 +263,29 @@ export default function MapScreen() {
         filteredVenues={filteredVenues}
         animatedY={animatedY}
         handleCardPress={handleCardPress}
+        onMarkerPress={handleMarkerPress} // Pass handler
       />
       <SearchBar
         onPress={openSearchModal}
         searchQuery={searchQuery}
         searchLocation={searchLocation}
+        icon={isSheetExpanded ? (
+          <Ionicons name="map-outline" size={20} color="black" />
+        ) : (
+          <Octicons name="list-unordered" size={20} color="black" />
+        )}
+        onListIconPress={handleListIconPress}
       />
       <BottomSheet
+        ref={bottomSheetRef}
         animatedY={animatedY}
         isFilterModalVisible={isFilterModalVisible}
         handleFilterPress={handleFilterPress}
         filters={filters}
         filteredVenues={filteredVenues}
         onCardPress={handleCardPress}
+        isSheetExpanded={isSheetExpanded}
+        sheetHeightAnim={sheetHeightAnim}
       />
       <FilterModal
         visible={isFilterModalVisible}

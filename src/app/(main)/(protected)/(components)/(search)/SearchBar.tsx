@@ -6,12 +6,13 @@ type SearchBarProps = {
   onPress: () => void;
   searchQuery: string;
   searchLocation: string;
+  icon: React.ReactNode;
+  onListIconPress: () => void;
 };
 
-export default function SearchBar({ onPress, searchQuery, searchLocation }: SearchBarProps) {
+export default function SearchBar({ onPress, searchQuery, searchLocation, icon, onListIconPress }: SearchBarProps) {
   return (
     <TouchableOpacity style={styles.searchContainer} onPress={onPress}>
-      <Ionicons name="search" size={24} color="black" style={styles.searchIcon} />
       <View style={{ flex: 1, marginLeft: 10 }} pointerEvents="none">
         <TextInput
           placeholder="Any venue"
@@ -22,9 +23,9 @@ export default function SearchBar({ onPress, searchQuery, searchLocation }: Sear
         />
         <Text style={styles.locationText}>{searchLocation}</Text>
       </View>
-      <View style={styles.listIconContainer}>
-        <Ionicons name="map-outline" size={20} color="black" />
-      </View>
+      <TouchableOpacity style={styles.listIconContainer} onPress={onListIconPress} activeOpacity={0.7}>
+        {icon}
+      </TouchableOpacity>
     </TouchableOpacity>
   );
 }
@@ -46,6 +47,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
     elevation: 5,
+    zIndex: 1000,
   },
   searchIcon: {
     marginRight: 10,
