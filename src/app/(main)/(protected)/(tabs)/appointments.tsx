@@ -1,4 +1,4 @@
-import { View, Text, TouchableOpacity, StyleSheet, Dimensions, ScrollView, Linking } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Dimensions, ScrollView, Linking, Platform } from 'react-native';
 import React, { useMemo, useRef } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
@@ -91,7 +91,15 @@ const Appointments = () => {
               <Text style={{ color: '#444', marginBottom: 2 }}>{formatDate(a.date)} at {a.time}</Text>
               <Text style={{ color: '#888', marginBottom: 10 }}>{a.duration}  •  {a.price}  •  {a.service}</Text>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-                <TouchableOpacity style={{ borderWidth: 1, borderColor: '#e0e0e0', borderRadius: 22, paddingHorizontal: 22, paddingVertical: 10, backgroundColor: '#fff', marginRight: 8 }}>
+                <TouchableOpacity 
+                  style={{ borderWidth: 1, borderColor: '#e0e0e0', borderRadius: 22, paddingHorizontal: 22, paddingVertical: 10, backgroundColor: '#fff', marginRight: 8 }}
+                  onPress={() => {
+                    const lat = a.coordinate.latitude;
+                    const lng = a.coordinate.longitude;
+                    const url = `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
+                    Linking.openURL(url);
+                  }}
+                >
                   <Text style={{ fontWeight: '600', fontSize: 15 }}>Get directions</Text>
                 </TouchableOpacity>
               </View>

@@ -242,6 +242,7 @@ const styles = StyleSheet.create({
     padding: 20,
     paddingTop: 8,
     height: '50%',
+    paddingBottom: 0, // Remove extra bottom padding
   },
   grabber: {
     width: 100,
