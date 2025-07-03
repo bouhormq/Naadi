@@ -1,0 +1,73 @@
+{
+  "compilerOptions": {
+    "target": "es2020",
+    "module": "esnext",
+    "lib": [
+      "es2020",
+      "dom"
+    ],
+    "jsx": "react-jsx",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "moduleResolution": "bundler",
+    "allowSyntheticDefaultImports": true,
+    "paths": {
+      "@naadi": [
+        "./"
+      ],
+      "@naadi/*": [
+        "./*"
+      ],
+      "@naadi/types": [
+        "../types"
+      ],
+      "@naadi/types/*": [
+        "../types/*"
+      ],
+      "@/components/*": [
+        "./components/*"
+      ],
+      "@naadi/api/*": [
+        "./utils/api/*"
+      ],
+      "@naadi/api": [
+        "./utils/api"
+      ],
+      "@naadi/config/*": [
+        "./config/*"
+      ],
+      "@naadi/config": [
+        "./config"
+      ],
+      "@naadi/hooks/*": [
+        "./hooks/*"
+      ],
+      "@naadi/hooks": [
+        "./hooks"
+      ],
+      "@naadi/assets/*": [
+        "./assets/*"
+      ],
+      "@naadi/assets": [
+        "./assets"
+      ],
+      "@naadi/ctx": [
+        "./hooks/ctx.tsx"
+      ]
+    }
+  },
+  "extends": "expo/tsconfig.base",
+  "include": [
+    "**/*.ts",
+    "**/*.tsx",
+    "../types/env.d.ts"
+, "app/(main)/(protected)/(tabs)/BottomSheet.js"  ],
+  "exclude": [
+    "node_modules",
+    "dist"
+  ]
+}
+

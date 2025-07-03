@@ -23,7 +23,7 @@ export interface PhoneInfo {
 export interface User {
   uid: string;
   email: string;
-  role: 'user' | 'partner';
+  role: 'user' | 'partner' | 'admin'; // Include admin role
   profilePic?: string;
   photoURL?: string;
   phone: PhoneInfo; 
@@ -370,4 +370,17 @@ export interface EstablishmentData {
   activities?: string[]; // Optional array of activities, can be refined further
   gender: string;
   location: string;
+}
+
+export interface PartnerContactFormData {
+  email: string;
+  firstName: string;
+  lastName: string;
+  businessName: string;
+  website: string;
+  businessType: string; // Assuming this might still be relevant for a partner contact
+  location: string;
+  phone: PhoneInfo;
+  message: string; // Added message field
+  consent: boolean;
 }

@@ -1,0 +1,622 @@
+import { useState } from 'react';
+import {
+  View,
+  StyleSheet,
+  TextInput,
+  TouchableOpacity,
+  ActivityIndicator,
+  // @ts-ignore
+  CheckBox,
+  Platform,
+  useWindowDimensions,
+  Linking,
+  ScrollView
+} from 'react-native';
+import { Picker } from '@react-native-picker/picker';
+import CustomText from '@/components/CustomText';
+// Import PhoneInput, countriesData, and PhoneInfo type
+import PhoneInput, { countriesData, PhoneInfo } from '@/components/PhoneInput'; // Adjust path if needed
+// Import the new API helper function
+import { submitPartnerContactRequest } from '@naadi/api'; // Adjust path if needed
+import { PartnerContactFormData } from '@naadi/types'; // Adjust path if needed
+
+
+export default function ContactForm() {
+  const defaultCountryData = countriesData.find(country => country.code === 'MA') || countriesData[0];
+
+  const [formData, setFormData] = useState<PartnerContactFormData>({
+    email: '',
+    firstName: '',
+    lastName: '',
+    businessName: '',
+    website: '',
+    businessType: '',
+    location: '',
+    phone: {
+      code: defaultCountryData.code,
+      name: defaultCountryData.name,
+      number: '', // Raw number
+      dialCode: defaultCountryData.dialCode,
+    },
+    message: '', // Initialize message field
+    consent: false,
+  });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [phoneValid, setPhoneValid] = useState(true); // Validity determined on submit
+  const [successfullySubmitted, setSuccessfullySubmitted] = useState(false);
+  const [validationErrors, setValidationErrors] = useState<Record<string, boolean>>({});
+
+  const { width } = useWindowDimensions();
+  const isSmallScreen = width <= 800;
+
+  const handleChange = (field: string, value: string | boolean) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+    if (error) setError(null);
+    if (successMessage) setSuccessMessage(null);
+    if (validationErrors[field]) {
+        setValidationErrors(prev => {
+            const newState = {...prev};
+            delete newState[field];
+            return newState;
+        });
+    }
+     // Clear generic error message if user types in a field that wasn't the one causing the error
+     if (error && !validationErrors[field]) {
+         setError(null);
+     }
+    if (successfullySubmitted) setSuccessfullySubmitted(false);
+  };
+
+   const handlePhoneInputChange = (info: PhoneInfo | null) => {
+      if (info) {
+          setFormData(prev => ({
+             ...prev,
+             phone: info, // Update with the received object
+          }));
+      } else {
+           // If info is null, update state (clear number, keep country)
+      setFormData(prev => ({
+         ...prev,
+              phone: {
+                  ...prev.phone, // Keep country info
+                  number: '' // Clear number
+              },
+      }));
+      }
+
+      // --- Validation error clearing logic (remains similar) ---
+      const phoneErrorExists = validationErrors.phone || error === 'Please enter a valid phone number.' || error === 'Please fill out all required fields (*).';
+      if (error && phoneErrorExists) {
+         setError(null); 
+      }
+      if (validationErrors.phone) {
+         setValidationErrors(prev => {
+            const newState = {...prev};
+            delete newState.phone;
+            return newState;
+         });
+         setPhoneValid(true);
+      }
+
+      if (successfullySubmitted) {
+         setSuccessfullySubmitted(false);
+      }
+   };
+
+
+  const validateEmail = (email: string): boolean => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
+  const handleSubmit = async () => {
+    setError(null);
+    setSuccessMessage(null);
+    setValidationErrors({});
+    setSuccessfullySubmitted(false);
+    // Assume valid initially for this submission attempt
+    let isSubmissionValid = true;
+    // Reset phoneValid state before new validation
+    setPhoneValid(true);
+
+
+    let currentValidationErrors: Record<string, boolean> = {};
+    let firstErrorMessage: string | null = null;
+
+    // --- Validation ---
+    // 1. Required Fields
+    if (!formData.email.trim()) currentValidationErrors.email = true;
+    if (!formData.firstName.trim()) currentValidationErrors.firstName = true;
+    if (!formData.lastName.trim()) currentValidationErrors.lastName = true;
+    if (!formData.businessName.trim()) currentValidationErrors.businessName = true;
+    if (!formData.location) currentValidationErrors.location = true;
+    if (!formData.businessType) currentValidationErrors.businessType = true;
+    if (!formData.phone.number.trim()) currentValidationErrors.phone = true;
+    if (!formData.message.trim()) currentValidationErrors.message = true;
+
+    if (Object.keys(currentValidationErrors).length > 0) {
+        firstErrorMessage = 'Please fill out all required fields (*).';
+        isSubmissionValid = false;
+        // Explicitly set phoneValid to false ONLY if phone itself was empty
+        if (currentValidationErrors.phone) {
+            setPhoneValid(false);
+        }
+    } else {
+        // 2. Email Format
+        if (!validateEmail(formData.email)) {
+            currentValidationErrors.email = true;
+            firstErrorMessage = 'Please enter a valid email address.';
+            isSubmissionValid = false;
+        } else {
+            // 3. Phone Number Validity (e.g., length)
+            const rawPhoneNumber = formData.phone.number;
+            // Replace with your actual desired validation logic
+            const isPhoneNumberValid = rawPhoneNumber.length >= 8 && rawPhoneNumber.length <= 15;
+
+            if (!isPhoneNumberValid) {
+                setPhoneValid(false); // Update state for styling prop
+                currentValidationErrors.phone = true; // Mark field for border
+                firstErrorMessage = 'Please enter a valid phone number.';
+                isSubmissionValid = false;
+            }
+        }
+    }
+
+    // Update field errors for styling
+    setValidationErrors(currentValidationErrors);
+
+    // If any validation failed, set the error message and stop
+    if (!isSubmissionValid) {
+        setError(firstErrorMessage);
+        return;
+    }
+
+    // --- Proceed with API Call using Callable Function ---
+    setLoading(true);
+    try {
+      // Call the helper function instead of fetch
+      const result = await submitPartnerContactRequest(formData);
+
+      // Assuming result contains { success: boolean, message: string }
+      if (result.success) {
+          setSuccessMessage(result.message || 'Thank you for your message! We will be in touch shortly.');
+          setSuccessfullySubmitted(true);
+          // Reset form
+          setFormData({
+            email: '', firstName: '', lastName: '', businessName: '', website: '',
+            businessType: '', location: '', message: '',
+            phone: { code: defaultCountryData.code, name: defaultCountryData.name, number: '', dialCode: defaultCountryData.dialCode },
+            consent: false,
+          });
+          setValidationErrors({});
+          setPhoneValid(true);
+      } else {
+           setError(result.message || 'Submission failed. Please try again.');
+           setSuccessfullySubmitted(false);
+      }
+
+    } catch (err: any) { // Catch errors thrown by the helper function or httpsCallable
+      console.error('Contact form submission error (callable):', err);
+      setError(err.message || 'An unexpected error occurred.');
+      setSuccessMessage(null);
+      setSuccessfullySubmitted(false);
+      setValidationErrors({});
+      setPhoneValid(true);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Moroccan cities data
+  const moroccanCities = [
+    { label: 'Please select', value: '', enabled: false },
+    { label: 'Tetouan', value: 'Tetouan' }, { label: 'Tangier', value: 'Tangier' },
+    { label: 'Casablanca', value: 'Casablanca' }, { label: 'Rabat', value: 'Rabat' },
+    { label: 'Fes', value: 'Fes' }, { label: 'Marrakech', value: 'Marrakech' },
+    { label: 'Agadir', value: 'Agadir' }, { label: 'Meknes', value: 'Meknes' },
+    { label: 'Oujda', value: 'Oujda' }, { label: 'Kenitra', value: 'Kenitra' },
+  ];
+
+  const formRowStyle = [styles.formRow, isSmallScreen && styles.formRowMobile];
+  const formGroupHalfStyle = [styles.formGroupHalf, isSmallScreen && styles.formGroupFullMobile];
+
+  return (
+    <View style={styles.formWrapper}>
+      <View style={styles.formContainer}>
+        <View style={styles.formHeader}>
+          <CustomText style={styles.formTitle}>Get in touch with our partner team</CustomText>
+          <CustomText style={styles.formSubtitle}>We look forward to hearing from you.</CustomText>
+        </View>
+
+        <View style={styles.form}>
+          {/* Email Field */}
+          <View style={styles.formGroup}>
+            <CustomText style={styles.label}>Email <CustomText style={styles.required}>*</CustomText></CustomText>
+            <TextInput
+              style={[styles.input, validationErrors.email ? styles.inputError : null]}
+              value={formData.email}
+              onChangeText={(text) => handleChange('email', text)}
+              keyboardType="email-address"
+              autoCapitalize="none"
+              placeholder="Enter your email"
+              placeholderTextColor="#9ca3af"
+            />
+          </View>
+
+          {/* Name Row */}
+          <View style={formRowStyle}>
+            {/* First Name Group */}
+            <View style={[
+                formGroupHalfStyle,
+                isSmallScreen && styles.formGroupFullMobile,
+                isSmallScreen && { marginBottom: 18 } // Apply margin below First Name in mobile
+            ]}>
+              <CustomText style={styles.label}>First name <CustomText style={styles.required}>*</CustomText></CustomText>
+              <TextInput
+                style={[styles.input, validationErrors.firstName ? styles.inputError : null]}
+                value={formData.firstName}
+                onChangeText={(text) => handleChange('firstName', text)}
+                placeholder="First name"
+                placeholderTextColor="#9ca3af"
+              />
+            </View>
+            {/* Last Name Group */}
+            <View style={[formGroupHalfStyle, isSmallScreen && styles.formGroupFullMobile, { marginRight: 0 }]}>
+              <CustomText style={styles.label}>Last name <CustomText style={styles.required}>*</CustomText></CustomText>
+              <TextInput
+                style={[styles.input, validationErrors.lastName ? styles.inputError : null]}
+                value={formData.lastName}
+                onChangeText={(text) => handleChange('lastName', text)}
+                placeholder="Last name"
+                placeholderTextColor="#9ca3af"
+              />
+            </View>
+          </View>
+
+          {/* Business Name */}
+          <View style={styles.formGroup}>
+            <CustomText style={styles.label}>Business name <CustomText style={styles.required}>*</CustomText></CustomText>
+            <TextInput
+              style={[styles.input, validationErrors.businessName ? styles.inputError : null]}
+              value={formData.businessName}
+              onChangeText={(text) => handleChange('businessName', text)}
+              placeholder="Your business name"
+              placeholderTextColor="#9ca3af"
+            />
+          </View>
+
+          {/* Business Type */}
+          <View style={styles.formGroup}>
+            <CustomText style={styles.label}>Business type <CustomText style={styles.required}>*</CustomText></CustomText>
+            <View style={[styles.pickerWrapper, validationErrors.businessType ? styles.inputError : null]}>
+              <Picker
+                selectedValue={formData.businessType}
+                onValueChange={(itemValue) => handleChange('businessType', itemValue as string)}
+                style={[styles.picker, !formData.businessType && { color: '#9ca3af' }]}
+                dropdownIconColor="#9ca3af" >
+                <Picker.Item label="Please select" value="" enabled={false} style={{ color: '#9ca3af' }} />
+                <Picker.Item label="Fitness (studios, gyms, etc.)" value="Studio" />
+                <Picker.Item label="Wellness (salons, spas, etc.)" value="Wellness" />
+                <Picker.Item label="Food & beverage (restaurants, coffee shops, etc.)" value="Food and Beverage" />
+              </Picker>
+            </View>
+          </View>
+
+          {/* Website */}
+          <View style={styles.formGroup}>
+            <CustomText style={styles.label}>Website <CustomText style={styles.optional}>(Optional)</CustomText></CustomText>
+            <TextInput
+              style={styles.input}
+              value={formData.website}
+              onChangeText={(text) => handleChange('website', text)}
+              placeholder="Your website URL"
+              placeholderTextColor="#9ca3af"
+              keyboardType="url"
+              autoCapitalize="none"
+            />
+          </View>
+
+          {/* Location */}
+          <View style={styles.formGroup}>
+            <CustomText style={styles.label}>Location <CustomText style={styles.required}>*</CustomText></CustomText>
+            <View style={[styles.pickerWrapper, validationErrors.location ? styles.inputError : null]}>
+              <Picker
+                selectedValue={formData.location}
+                onValueChange={(itemValue) => handleChange('location', itemValue as string)}
+                style={[styles.picker, !formData.location && { color: '#9ca3af' }]}
+                dropdownIconColor="#9ca3af" >
+                {moroccanCities.map((city) => (
+                  <Picker.Item
+                    key={city.value || 'placeholder'}
+                    label={city.label}
+                    value={city.value}
+                    enabled={city.enabled !== false}
+                    style={city.enabled === false ? { color: '#9ca3af' } : {}}
+                  />
+                ))}
+              </Picker>
+            </View>
+          </View>
+
+          {/* Phone Field */}
+          <View style={styles.phoneContainer}>
+            <CustomText style={styles.label}>Phone <CustomText style={styles.required}>*</CustomText></CustomText>
+            <View style={[styles.phoneInputWrapper, validationErrors.phone ? styles.inputError : null]}>
+                <PhoneInput
+                  // Pass the PhoneInfo object directly
+                  value={formData.phone}
+                  // Use onChangeInfo prop
+                  onChangeInfo={handlePhoneInputChange}
+                  placeholder="Your phone number"
+                  isValid={phoneValid}
+                  defaultCountryCode="MA" // Use code for default
+                />
+            </View>
+          </View>
+
+          {/* Message Field (Added) */}
+          <View style={styles.formGroup}>
+            <CustomText style={styles.label}>Message <CustomText style={styles.required}>*</CustomText></CustomText>
+            <TextInput
+              style={[styles.input, styles.textArea, validationErrors.message ? styles.inputError : null]}
+              value={formData.message}
+              onChangeText={(text) => handleChange('message', text)}
+              placeholder="Your message"
+              placeholderTextColor="#9ca3af"
+              multiline
+              numberOfLines={4}
+              textAlignVertical="top"
+            />
+          </View>
+
+          {/* Consent Checkbox */}
+          <View style={styles.checkboxContainer}>
+             {Platform.OS === 'web' ? (
+              <input
+                type="checkbox"
+                checked={formData.consent}
+                onChange={(e) => handleChange('consent', e.target.checked)}
+                style={{ marginRight: 10, marginTop: 2 }} />
+            ) : (
+              <CheckBox
+                value={formData.consent}
+                onValueChange={(value: boolean) => handleChange('consent', value)}
+                tintColors={{ true: '#007bff', false: '#adb5bd' }}
+                style={styles.checkbox} />
+            )}
+            <View style={styles.checkboxTextContainer}>
+              <CustomText style={styles.checkboxText}>
+                I agree to receive marketing and other communications from Naadi PR Group, and/or its affiliates.{' '}
+              </CustomText>
+              <CustomText style={styles.checkboxSubtext}>
+                You can unsubscribe from these communications at any time. For more information, please review our{' '}
+                <CustomText style={styles.link}>Terms of Use</CustomText> and{' '}
+                <CustomText style={styles.link}>Privacy Policy</CustomText>.
+              </CustomText>
+            </View>
+          </View>
+
+          {/* Error & Success Messages */}
+          {error && <CustomText style={styles.errorText}>{error}</CustomText>}
+          {successMessage && <CustomText style={styles.successText}>{successMessage}</CustomText>}
+
+          {/* Submit Button */}
+          <TouchableOpacity
+            style={[styles.submitButton, loading && styles.submitButtonDisabled]}
+            onPress={handleSubmit}
+            disabled={loading} >
+            {loading ? <ActivityIndicator color="#fff" size="small" /> : <CustomText style={styles.submitButtonText}>Submit</CustomText>}
+          </TouchableOpacity>
+        </View>
+      </View>
+    </View>
+  );
+}
+
+// Styles (Updated to include textArea style for message field)
+const styles = StyleSheet.create({
+  formWrapper: {
+    width: '100%',
+    maxWidth: 550,
+    alignSelf: 'center',
+    marginTop: 'auto',
+    marginBottom: 'auto',
+    paddingHorizontal: 20,
+    paddingVertical: 40
+  },
+  formContainer: {
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    padding: 30,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.15,
+    shadowRadius: 15,
+    elevation: 10,
+    zIndex: 0, // Ensure form container doesn't obscure the PhoneInput dropdown
+  },
+  formHeader: {
+    marginBottom: 25,
+    alignItems: 'flex-start',
+  },
+  formTitle: {
+    fontSize: 20,
+    fontWeight: '600',
+    color: '#1f2937',
+    marginBottom: 8,
+  },
+  formSubtitle: {
+    fontSize: 14,
+    color: '#6b7280',
+    lineHeight: 20,
+  },
+  form: {
+    zIndex: 1, // Keep form elements above container background
+  },
+  formGroup: {
+    marginBottom: 18,
+  },
+  formRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 18, // Keep margin for horizontal layout (after the row)
+  },
+  formRowMobile: {
+    flexDirection: 'column',
+    justifyContent: 'flex-start',
+  },
+  formGroupHalf: {
+    width: '48%',
+  },
+  formGroupFullMobile: {
+    width: '100%',
+  },
+  label: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#374151',
+    marginBottom: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  required: {
+    color: '#ef4444',
+    marginLeft: 4,
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  optional: {
+    color: '#6b7280',
+    marginLeft: 4,
+    fontSize: 12,
+    fontWeight: '400',
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: '#d1d5db', // Default border color
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: Platform.OS === 'ios' ? 10 : 8,
+    fontSize: 14,
+    color: '#1f2937',
+    backgroundColor: '#fff',
+    minHeight: 40,
+  },
+  textArea: {
+    minHeight: 100,
+    textAlignVertical: 'top',
+    paddingTop: 10,
+  },
+  inputError: {
+    borderColor: '#ef4444', // Red border for error state
+  },
+  pickerWrapper: {
+    borderWidth: 1,
+    borderColor: '#d1d5db', // Default border color
+    borderRadius: 8,
+    backgroundColor: '#fff',
+    minHeight: 40,
+    justifyContent: 'center',
+    overflow: 'hidden',
+    zIndex: 1,
+  },
+  picker: {
+    height: Platform.OS === 'ios' ? undefined : 40,
+    width: '100%',
+    color: '#1f2937',
+    backgroundColor: 'transparent',
+    borderWidth: 0,
+    paddingHorizontal: Platform.OS === 'ios' ? 10 : 6,
+    paddingVertical: 0,
+  },
+  phoneContainer: {
+    marginBottom: 18,
+    zIndex: 10, // Keep high for dropdown visibility
+  },
+  phoneInputWrapper: { // Added wrapper for PhoneInput border control
+    borderWidth: 1,
+    borderColor: '#d1d5db', // Default border
+    borderRadius: 8,
+  },
+  checkboxContainer: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    marginBottom: 10,
+    marginTop: 10,
+    zIndex: 0,
+  },
+  checkbox: {
+    marginRight: 10,
+    marginTop: 2,
+    height: 18,
+    width: 18,
+  },
+  checkboxTextContainer: {
+    flex: 1,
+  },
+  checkboxText: {
+    fontSize: 14,
+    color: '#374151',
+    lineHeight: 20,
+    marginBottom: 5,
+  },
+  checkboxSubtext: {
+    fontSize: 12,
+    color: '#6b7280',
+    lineHeight: 18,
+  },
+  link: {
+    color: '#007bff',
+    textDecorationLine: 'underline',
+  },
+  errorText: {
+    color: '#ef4444',
+    borderRadius: 6,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    fontSize: 14,
+    textAlign: 'left',
+    fontWeight: '500',
+    overflow: 'hidden',
+    marginTop: 10, // Space above the message
+    zIndex: 0,
+  },
+  successText: {
+    color: '#28a745', // Green success color
+    borderRadius: 6,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    fontSize: 14,
+    textAlign: 'left',
+    fontWeight: '500',
+    overflow: 'hidden',
+    marginTop: 10, // Space above the message
+    zIndex: 0,
+  },
+  submitButton: {
+    backgroundColor: '#007bff',
+    borderRadius: 8,
+    paddingVertical: 14,
+    alignItems: 'center',
+    marginTop: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 4,
+    zIndex: 0,
+  },
+  submitButtonDisabled: {
+    backgroundColor: '#adb5bd',
+    opacity: 0.7,
+    shadowOpacity: 0,
+    elevation: 0,
+  },
+  submitButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+});
