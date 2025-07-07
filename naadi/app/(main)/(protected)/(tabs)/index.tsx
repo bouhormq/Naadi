@@ -203,7 +203,7 @@ export default function MainProtectedIndex() {
         {Platform.OS !== 'web' && (
         <View style={styles.header}>
           <Text style={styles.headerText}>Hey, {session?.firstName}</Text>
-          <TouchableOpacity onPress={() => router.push('profile')}>
+          <TouchableOpacity onPress={() => router.push('/profile')}>
             <View style={styles.avatar}>
               <Text style={styles.avatarText}>{session?.firstName?.charAt(0)}{session?.lastName?.charAt(0)}</Text>
             </View>

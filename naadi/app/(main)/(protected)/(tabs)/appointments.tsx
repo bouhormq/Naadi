@@ -1,10 +1,11 @@
-import { View, Text, TouchableOpacity, StyleSheet, Dimensions, ScrollView, Linking, Platform } from 'react-native';
-import React, { useMemo, useRef } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet, Dimensions, ScrollView, Linking, Platform, SafeAreaView } from 'react-native';
+import React, { useRef } from 'react';
 import { useNavigation } from '@react-navigation/native';
-import { Ionicons } from '@expo/vector-icons';
+import { FontAwesome, Ionicons } from '@expo/vector-icons';
 import { useSession } from '@naadi/hooks/ctx';
 import { venues } from '@naadi/assets/data/venues'; // Adjust path if needed
 import MapViewComponent from '../(components)/(search)/MapViewComponent';
+import { appointments } from '@naadi/assets/data/appointments';
 
 const { width } = Dimensions.get('window');
 
@@ -13,26 +14,30 @@ const Appointments = () => {
   const { session } = useSession();
   const mapRef = useRef(null);
 
-  // Generate mock appointments from venues
-  const mockAppointments = venues.slice(0, 10).map((venue, idx) => ({
-    id: venue.id,
-    type: idx % 2 === 0 ? 'upcoming' : 'past',
-    venue: venue.name,
-    date: `2024-09-${24 + idx}`,
-    time: '10:00 AM',
-    duration: '1 hr',
-    price: `${venue.price}MAD`,
-    service: venue.activities[0]?.name || 'Service',
-    address: venue.address,
-    coordinate: venue.coordinate,
-    status: idx % 2 === 0 ? undefined : 'Completed',
-  }));
+  // Use imported appointments from shared data file
+  const mockAppointments = appointments;
+
+  // Helper to get end datetime
+  function getEndDateTime(date: string, time: string, duration: string) {
+    // time: '10:00 AM', duration: '1 hr' or '2 hr'
+    const [hourMin, ampm] = time.split(' ');
+    let [hour, min] = hourMin.split(':').map(Number);
+    if (ampm === 'PM' && hour !== 12) hour += 12;
+    if (ampm === 'AM' && hour === 12) hour = 0;
+    let durHrs = parseInt(duration);
+    let durMins = duration.includes('30') ? 30 : 0;
+    const start = new Date(`${date}T${hour.toString().padStart(2, '0')}:${min.toString().padStart(2, '0')}:00`);
+    return new Date(start.getTime() + durHrs * 60 * 60 * 1000 + durMins * 60 * 1000);
+  }
+
+  // Categorise based on current date
+  const now = new Date();
+  const upcoming = mockAppointments.filter(a => getEndDateTime(a.date, a.time, a.duration) > now);
+  const past = mockAppointments.filter(a => getEndDateTime(a.date, a.time, a.duration) <= now);
 
   // AppointmentList component
   const AppointmentList: React.FC = () => {
-    const upcoming = useMemo(() => mockAppointments.filter(a => a.type === 'upcoming'), []);
-    const past = useMemo(() => mockAppointments.filter(a => a.type === 'past'), []);
-
+    // Use the categorised arrays from above
     if (upcoming.length === 0 && past.length === 0) {
       return (
         <View style={styles.card}>
@@ -68,8 +73,15 @@ const Appointments = () => {
           </View>
         </View>
         {upcoming.map((a) => (
-          <View key={a.id} style={{ backgroundColor: '#fff', borderRadius: 16, marginHorizontal: 16, marginBottom: 20, padding: 0, shadowColor: '#000', shadowOpacity: 0.04, shadowRadius: 8, elevation: 2, borderColor: '#E0E0E0', borderWidth: 1, position: 'relative' }}>
-            <View style={{ height: 140, borderTopLeftRadius: 16, borderTopRightRadius: 16, overflow: 'hidden' }}>
+          <TouchableOpacity key={a.id} onPress={() => navigation.navigate('appointment/[id]', { id: a.id })}>
+          <View style={{ backgroundColor: '#fff', borderRadius: 16, marginHorizontal: 16, marginBottom: 20, padding: 0, shadowColor: '#000', shadowOpacity: 0.04, shadowRadius: 8, elevation: 2, borderColor: '#E0E0E0', borderWidth: 1, position: 'relative' }}>
+            {/* Map Container with pointer events disabled to prevent scroll interference */}
+            <View style={{ 
+              height: 140, 
+              borderTopLeftRadius: 16, 
+              borderTopRightRadius: 16, 
+              overflow: 'hidden'
+            }}>
               <MapViewComponent
                 mapRef={mapRef}
                 filteredVenues={[{ ...venues.find(v => v.id === a.id) }]}
@@ -84,7 +96,22 @@ const Appointments = () => {
                 singleVenueMode={true}
                 scrollEnabled={false}
                 zoomEnabled={false}
+                pitchEnabled={false}
+                rotateEnabled={false}
+                // Add these props to disable all interactions
+                pointerEvents="none"
+                style={{ pointerEvents: 'none' }}
               />
+              {/* Invisible overlay to capture touches and prevent map interaction */}
+              <View style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                backgroundColor: 'transparent',
+                zIndex: 1
+              }} />
             </View>
             <View style={{ padding: 18 }}>
               <Text style={{ fontSize: 18, fontWeight: '700', marginBottom: 2 }}>{a.venue}</Text>
@@ -122,11 +149,12 @@ const Appointments = () => {
                 }}
               >
                 <View style={{ borderWidth: 1, borderColor: '#e0e0e0', borderRadius: 22, paddingHorizontal: 18, paddingVertical: 9, backgroundColor: '#fff', elevation: 2 }}>
-                  <Ionicons name="calendar-outline" size={22} color="#222" />
+                  <FontAwesome name="calendar-plus-o" size={22} color="#222" />
                 </View>
               </TouchableOpacity>
             </View>
           </View>
+          </TouchableOpacity>
         ))}
         {/* Past section */}
         <View style={{ flexDirection: 'row', alignItems: 'center', marginLeft: 24, marginBottom: 8 }}>
@@ -144,7 +172,8 @@ const Appointments = () => {
           </View>
         </View>
         {past.map((a) => (
-          <View key={a.id} style={{ flexDirection: 'row', alignItems: 'center', marginHorizontal: 16, marginBottom: 18, backgroundColor: '#fff', borderRadius: 14, padding: 10, elevation: 1 }}>
+          <TouchableOpacity key={a.id} onPress={() => navigation.navigate('appointment/[id]', { id: a.id } as never)}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', marginHorizontal: 16, marginBottom: 18, backgroundColor: '#fff', borderRadius: 14, padding: 10, elevation: 1 }}>
             <View style={{ width: 54, height: 54, borderRadius: 12, backgroundColor: '#f3f3f3', marginRight: 12, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
               <Ionicons name="image-outline" size={28} color="#bbb" />
             </View>
@@ -157,6 +186,7 @@ const Appointments = () => {
               <Text style={{ fontWeight: '600', fontSize: 15 }}>Book again</Text>
             </TouchableOpacity>
           </View>
+          </TouchableOpacity>
         ))}
       </View>
     );
@@ -169,57 +199,55 @@ const Appointments = () => {
   }
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Appointments</Text>
-        <TouchableOpacity onPress={() => navigation.navigate('profile' as never)}>
-          <View style={styles.avatar}>
-            <Text style={styles.avatarText}>{session?.firstName?.charAt(0)}{session?.lastName?.charAt(0)}</Text>
-          </View>
-        </TouchableOpacity>
+    <SafeAreaView style={styles.safeArea}>
+      <View style={styles.container}>
+        <ScrollView 
+          style={{ width: '100%' }} 
+          contentContainerStyle={{ paddingBottom: 40 }} 
+          showsVerticalScrollIndicator={false}
+          // Add these props to improve scroll behavior
+          bounces={true}
+          scrollEventThrottle={16}
+        >
+          {Platform.OS !== 'web' && (
+            <View style={styles.header}>
+              <Text style={styles.headerText}>Appointments</Text>
+              <TouchableOpacity onPress={() => navigation.navigate('profile' as never)}>
+                <View style={styles.avatar}>
+                  <Text style={styles.avatarText}>{session?.firstName?.charAt(0)}{session?.lastName?.charAt(0)}</Text>
+                </View>
+              </TouchableOpacity>
+            </View>
+          )}
+          <AppointmentList />
+        </ScrollView>
       </View>
-      <ScrollView style={{ width: '100%' }} contentContainerStyle={{ paddingBottom: 40 }} showsVerticalScrollIndicator={false}>
-        <AppointmentList />
-      </ScrollView>
-      {/* <View style={styles.card}>
-        <View style={styles.iconContainer}>
-          <Ionicons name="calendar-outline" size={40} color="#3674B5" />
-        </View>
-        <Text style={styles.noAppointments}>No appointments</Text>
-        <Text style={styles.description}>
-          Your upcoming and past appointments will appear when you book
-        </Text>
-        <TouchableOpacity style={styles.button} onPress={handleSearchSalons}>
-          <Text style={styles.buttonText}>Search Activities</Text>
-        </TouchableOpacity>
-      </View> */}
-    </View>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: '#fff',
+  },
   container: {
     flex: 1,
     backgroundColor: '#fff',
-    paddingTop: 60,
     alignItems: 'center',
   },
   header: {
     width: '100%',
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'flex-start', // avatar stays at the top
-    paddingHorizontal: 24,
-    marginBottom: 0,
-    marginTop: 0,
+    alignItems: 'center',
+    paddingHorizontal: 20,
     position: 'relative',
+    height: 60,
   },
-  title: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: '#111',
-    marginTop: 50, // Lower the title a lot
-    marginBottom: 20, // Space below title
+  headerText: {
+    fontSize: 28,
+    fontWeight: 'bold',
   },
   avatar: {
     width: 44,
@@ -228,14 +256,17 @@ const styles = StyleSheet.create({
     backgroundColor: '#EFEFEF',
     justifyContent: 'center',
     alignItems: 'center',
-    position: 'absolute',
-    top: 0,
-    right: 24,
   },
   avatarText: {
     fontSize: 18,
     fontWeight: 'bold',
     color: '#333',
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#111',
+    marginBottom: 20, // Space below title
   },
   card: {
     width: width - 32,

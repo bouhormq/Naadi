@@ -4,3 +4,4 @@ export * from './partner';
 export * from './admin';
 export * from './business';
 export * from './homepage';
+export * from './profile';

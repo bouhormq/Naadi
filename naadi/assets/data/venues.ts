@@ -27,7 +27,8 @@ export const venues = [
       { name: 'Sports', emoji: '🏀' }
     ],
     createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
+    updatedAt: new Date().toISOString(),
+    cancellationPolicy: 'Free cancellation up to 24 hours before the appointment.'
   },
   {
     id: '2',
@@ -49,7 +50,8 @@ export const venues = [
       { name: 'Brows', emoji: '✏️' }
     ],
     createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
+    updatedAt: new Date().toISOString(),
+    cancellationPolicy: 'Free cancellation up to 24 hours before the appointment.'
   },
   {
     id: '3',
@@ -75,7 +77,8 @@ export const venues = [
       { name: 'Paddleboard', emoji: '🏄‍♀️' }
     ],
     createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
+    updatedAt: new Date().toISOString(),
+    cancellationPolicy: 'Free cancellation up to 24 hours before the appointment.'
   },
   {
     id: '4',
@@ -100,7 +103,8 @@ export const venues = [
       { name: 'Cupping', emoji: '💨' }
     ],
     createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
+    updatedAt: new Date().toISOString(),
+    cancellationPolicy: 'Free cancellation up to 24 hours before the appointment.'
   },
   {
     id: '5',
@@ -130,7 +134,8 @@ export const venues = [
       { name: 'Sports', emoji: '🏀' }
     ],
     createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
+    updatedAt: new Date().toISOString(),
+    cancellationPolicy: 'Free cancellation up to 24 hours before the appointment.'
   },
   {
     id: '6',
@@ -152,7 +157,8 @@ export const venues = [
       { name: 'Brows', emoji: '✏️' }
     ],
     createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
+    updatedAt: new Date().toISOString(),
+    cancellationPolicy: 'Free cancellation up to 24 hours before the appointment.'
   },
   {
     id: '7',
@@ -178,7 +184,8 @@ export const venues = [
       { name: 'Paddleboard', emoji: '🏄‍♀️' }
     ],
     createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
+    updatedAt: new Date().toISOString(),
+    cancellationPolicy: 'Free cancellation up to 24 hours before the appointment.'
   },
   {
     id: '8',
@@ -203,7 +210,8 @@ export const venues = [
       { name: 'Cupping', emoji: '💨' }
     ],
     createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
+    updatedAt: new Date().toISOString(),
+    cancellationPolicy: 'Free cancellation up to 24 hours before the appointment.'
   },
   {
     id: '9',
@@ -233,7 +241,8 @@ export const venues = [
       { name: 'Sports', emoji: '🏀' }
     ],
     createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
+    updatedAt: new Date().toISOString(),
+    cancellationPolicy: 'Free cancellation up to 24 hours before the appointment.'
   },
   {
     id: '10',
@@ -255,7 +264,8 @@ export const venues = [
       { name: 'Brows', emoji: '✏️' }
     ],
     createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
+    updatedAt: new Date().toISOString(),
+    cancellationPolicy: 'Free cancellation up to 24 hours before the appointment.'
   },
   {
     id: '11',
@@ -280,7 +290,8 @@ export const venues = [
       { name: 'Cupping', emoji: '💨' }
     ],
     createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
+    updatedAt: new Date().toISOString(),
+    cancellationPolicy: 'Free cancellation up to 24 hours before the appointment.'
   },
   {
     id: '12',
@@ -310,7 +321,8 @@ export const venues = [
       { name: 'Sports', emoji: '🏀' }
     ],
     createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
+    updatedAt: new Date().toISOString(),
+    cancellationPolicy: 'Free cancellation up to 24 hours before the appointment.'
   },
   {
     id: '13',
@@ -332,7 +344,8 @@ export const venues = [
       { name: 'Brows', emoji: '✏️' }
     ],
     createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
+    updatedAt: new Date().toISOString(),
+    cancellationPolicy: 'Free cancellation up to 24 hours before the appointment.'
   },
   {
     id: '14',
@@ -357,7 +370,8 @@ export const venues = [
       { name: 'Cupping', emoji: '💨' }
     ],
     createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
+    updatedAt: new Date().toISOString(),
+    cancellationPolicy: 'Free cancellation up to 24 hours before the appointment.'
   },
   {
     id: '15',
@@ -387,7 +401,8 @@ export const venues = [
       { name: 'Sports', emoji: '🏀' }
     ],
     createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
+    updatedAt: new Date().toISOString(),
+    cancellationPolicy: 'Free cancellation up to 24 hours before the appointment.'
   },
   {
     id: '16',
@@ -409,7 +424,8 @@ export const venues = [
       { name: 'Brows', emoji: '✏️' }
     ],
     createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
+    updatedAt: new Date().toISOString(),
+    cancellationPolicy: 'Free cancellation up to 24 hours before the appointment.'
   },
   {
     id: '17',
@@ -435,7 +451,8 @@ export const venues = [
       { name: 'Paddleboard', emoji: '🏄‍♀️' }
     ],
     createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
+    updatedAt: new Date().toISOString(),
+    cancellationPolicy: 'Free cancellation up to 24 hours before the appointment.'
   },
   {
     id: '18',
@@ -460,7 +477,8 @@ export const venues = [
       { name: 'Cupping', emoji: '💨' }
     ],
     createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
+    updatedAt: new Date().toISOString(),
+    cancellationPolicy: 'Free cancellation up to 24 hours before the appointment.'
   },
   {
     id: '19',
@@ -490,7 +508,8 @@ export const venues = [
       { name: 'Sports', emoji: '🏀' }
     ],
     createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
+    updatedAt: new Date().toISOString(),
+    cancellationPolicy: 'Free cancellation up to 24 hours before the appointment.'
   },
   {
     id: '20',
@@ -512,7 +531,8 @@ export const venues = [
       { name: 'Brows', emoji: '✏️' }
     ],
     createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
+    updatedAt: new Date().toISOString(),
+    cancellationPolicy: 'Free cancellation up to 24 hours before the appointment.'
   },
   {
     id: '21',
@@ -537,7 +557,8 @@ export const venues = [
       { name: 'Cupping', emoji: '💨' }
     ],
     createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
+    updatedAt: new Date().toISOString(),
+    cancellationPolicy: 'Free cancellation up to 24 hours before the appointment.'
   }
 ];
 

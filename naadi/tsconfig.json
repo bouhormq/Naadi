@@ -22,7 +22,7 @@
         "./*"
       ],
       "@naadi/types": [
-        "../types"
+        "../types/index.ts"
       ],
       "@naadi/types/*": [
         "../types/*"
@@ -63,6 +63,7 @@
   "include": [
     "**/*.ts",
     "**/*.tsx",
+    "../types/**/*.ts",
     "../types/env.d.ts"
 , "app/(main)/(protected)/(tabs)/BottomSheet.js"  ],
   "exclude": [

@@ -1,5 +1,5 @@
 import React, { ReactNode, ForwardedRef } from 'react';
-import { Marker, Polyline, PROVIDER_GOOGLE, MapViewProps, Region } from 'react-native-maps';
+import { Marker, Polyline, PROVIDER_GOOGLE, MapViewProps } from 'react-native-maps';
 import Clustering from 'react-native-map-clustering';
 
 export interface CustomMapViewProps extends MapViewProps {
@@ -8,7 +8,7 @@ export interface CustomMapViewProps extends MapViewProps {
   radius?: number;
 }
 
-const CustomMapView = React.forwardRef<any, CustomMapViewProps>(
+const CustomMapView: React.FC<CustomMapViewProps & { ref?: ForwardedRef<any> }> = React.forwardRef<any, CustomMapViewProps>(
   (props, ref: ForwardedRef<any>) => {
     return (
       <Clustering

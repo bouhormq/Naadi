@@ -34,7 +34,7 @@ export default function TabLayout() {
         name="profile"
         options={{
           title: 'Profile',
-          href: null, 
+          href: null, // Prevents the tab from being rendered as a link
         }}
       />
     </Tabs>

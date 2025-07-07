@@ -8,7 +8,7 @@ import { SessionProvider, useSession } from '@naadi/hooks/ctx';
 import { I18nextProvider } from 'react-i18next';
 import i18n from '../utils/languageDetector/i18n';
 import * as SplashScreen from 'expo-splash-screen';
-import type { StackAnimationTypes } from '@react-navigation/stack';
+import type { NativeStackNavigationOptions } from '@react-navigation/native-stack'; // Added this import
 
 // Keep the splash screen visible while we initialize
 SplashScreen.preventAutoHideAsync();
@@ -97,9 +97,9 @@ function PartnerLayoutNav() {
   }
 
   // Configure screen options based on platform
-  const screenOptions = {
+  const screenOptions: NativeStackNavigationOptions = { // Explicitly typed screenOptions
     headerShown: false, 
-    animation: 'none' as StackAnimationTypes,
+    animation: 'none', 
     contentStyle: isMobile ? { 
       paddingTop: 0 
     } : undefined
@@ -115,7 +115,7 @@ function PartnerLayoutNav() {
         name="partners" 
         options={{
           headerShown: false,
-          animation: 'none' as StackAnimationTypes,
+          animation: 'none', 
           contentStyle: isMobile ? { paddingTop: 0 } : undefined
         }}
       />
@@ -123,7 +123,7 @@ function PartnerLayoutNav() {
         name="admin" 
         options={{
           headerShown: false,
-          animation: 'none' as StackAnimationTypes,
+          animation: 'none', 
           contentStyle: isMobile ? { paddingTop: 0 } : undefined
         }} 
       />
@@ -131,7 +131,7 @@ function PartnerLayoutNav() {
         name="_redirects/index" 
         options={{
           headerShown: false,
-          animation: 'none' as StackAnimationTypes,
+          animation: 'none', 
           contentStyle: isMobile ? { paddingTop: 0 } : undefined
         }} 
       />
@@ -200,9 +200,9 @@ function MainLayoutNav() {
   }
 
   // Configure screen options based on platform
-  const screenOptions = {
+  const screenOptions: NativeStackNavigationOptions = { // Explicitly typed screenOptions
     headerShown: false,
-    animation: 'none' as StackAnimationTypes,
+    animation: 'none', 
     contentStyle: isMobile ? { 
       paddingTop: 0
     } : undefined
@@ -218,7 +218,7 @@ function MainLayoutNav() {
         name="(main)" 
         options={{
           headerShown: false,
-          animation: 'none' as StackAnimationTypes,
+          animation: 'none', 
           contentStyle: isMobile ? { paddingTop: 0 } : undefined
         }}
       />
@@ -226,7 +226,7 @@ function MainLayoutNav() {
         name="partners" 
         options={{
           headerShown: false,
-          animation: 'none' as StackAnimationTypes,
+          animation: 'none', 
           contentStyle: isMobile ? { paddingTop: 0 } : undefined
         }} 
       />
@@ -234,7 +234,7 @@ function MainLayoutNav() {
         name="admin" 
         options={{
           headerShown: false,
-          animation: 'none' as StackAnimationTypes,
+          animation: 'none', 
           contentStyle: isMobile ? { paddingTop: 0 } : undefined
         }} 
       />
@@ -242,7 +242,7 @@ function MainLayoutNav() {
         name="_redirects/index" 
         options={{
           headerShown: false,
-          animation: 'none' as StackAnimationTypes,
+          animation: 'none', 
           contentStyle: isMobile ? { paddingTop: 0 } : undefined
         }} 
       />

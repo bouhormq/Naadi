@@ -1,17 +1,13 @@
-import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, ScrollView, Platform } from 'react-native';
-import { Ionicons, Octicons, MaterialIcons, MaterialCommunityIcons, FontAwesome, FontAwesome5 } from '@expo/vector-icons';
+import { Octicons, MaterialIcons, MaterialCommunityIcons, Ionicons } from '@expo/vector-icons';
 import { useSession } from '@naadi/hooks/ctx';
 import { useRouter } from 'expo-router';
+import Footer from '@naadi/components/Footer';
 
 const profileOptions = [
-  { label: 'Favourites', icon: <Octicons name="heart" size={22} color="#222" />, route: 'favourites' },
+  { label: 'Favourites', icon: <Octicons name="heart" size={22} color="#222" />, route: '/(main)/(protected)/favourites' },
   { label: 'Vouchers', icon: <MaterialIcons name="confirmation-number" size={22} color="#222" />, route: 'vouchers' },
-  { label: 'Gift cards', icon: <MaterialCommunityIcons name="gift-outline" size={22} color="#222" />, route: 'gift-cards' },
   { label: 'Memberships', icon: <MaterialCommunityIcons name="autorenew" size={22} color="#222" />, route: 'memberships' },
-  { label: 'Forms', icon: <FontAwesome name="wpforms" size={22} color="#222" />, route: 'forms' },
-  { label: 'Orders', icon: <FontAwesome5 name="shopping-bag" size={22} color="#222" />, route: 'orders' },
-  { label: 'Payment methods', icon: <FontAwesome name="credit-card" size={22} color="#222" />, route: 'payment-methods' },
   { label: 'Settings', icon: <Ionicons name="settings-outline" size={22} color="#222" />, route: 'settings' },
 ];
 
@@ -26,19 +22,19 @@ export default function ProfileScreen() {
           <Ionicons name="chevron-back" size={28} color="#222" />
         </TouchableOpacity>
         <Text style={styles.title}>Profile</Text>
-        <View style={styles.profileCard}>
-          <View style={styles.avatarCircle}>
-            <Text style={styles.avatarText}>
-              {session?.firstName?.charAt(0)}{session?.lastName?.charAt(0)}
-            </Text>
+        <TouchableOpacity onPress={() => router.push('/(main)/(protected)/(tabs)/profile/myprofile')}>
+          <View style={styles.profileCard}>
+            <View style={styles.avatarCircle}>
+              <Text style={styles.avatarText}>
+                {session?.firstName?.charAt(0)}{session?.lastName?.charAt(0)}
+              </Text>
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.nameText}>{session?.firstName} {session?.lastName}</Text>
+              <Text style={styles.editProfileText}>Edit Profile</Text>
+            </View>
           </View>
-          <View style={{ flex: 1 }}>
-            <Text style={styles.nameText}>{session?.firstName} {session?.lastName}</Text>
-            <TouchableOpacity>
-              <Text style={styles.editProfileText}>Edit profile</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
+        </TouchableOpacity>
         <View style={styles.optionsList}>
           {profileOptions.map((opt, idx) => (
             <TouchableOpacity
@@ -52,15 +48,8 @@ export default function ProfileScreen() {
             </TouchableOpacity>
           ))}
         </View>
-        <View style={styles.bottomRow}>
-          <TouchableOpacity style={styles.bottomButton}>
-            <Ionicons name="globe-outline" size={18} color="#8B5CF6" />
-            <Text style={styles.bottomText}>English</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.bottomButton}>
-            <Ionicons name="person-circle-outline" size={18} color="#8B5CF6" />
-            <Text style={styles.bottomText}>Support</Text>
-          </TouchableOpacity>
+        <View style={{ marginHorizontal: 30 }}>
+          <Footer />
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -95,7 +84,6 @@ const styles = StyleSheet.create({
   profileCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FAFAFA',
     borderRadius: 16,
     marginHorizontal: 16,
     marginBottom: 24,
@@ -103,6 +91,8 @@ const styles = StyleSheet.create({
     shadowColor: '#000',
     shadowOpacity: 0.04,
     shadowRadius: 4,
+    borderColor: '#f0f0f0', 
+    borderWidth: 1,
     shadowOffset: { width: 0, height: 2 },
     elevation: 1,
   },
@@ -110,7 +100,7 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: '#E4E1FB',
+    backgroundColor: '#EFEFEF',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 16,
@@ -118,7 +108,7 @@ const styles = StyleSheet.create({
   avatarText: {
     fontSize: 22,
     fontWeight: 'bold',
-    color: '#7C5AF6',
+    color: '#333',
   },
   nameText: {
     fontSize: 18,

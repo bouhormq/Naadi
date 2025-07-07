@@ -9,7 +9,9 @@ const WebMapView = React.forwardRef((props, ref) => (
     ref={ref}
     googleMapsApiKey={process.env.EXPO_PUBLIC_Maps_API_KEY_WEB}
     {...props}
-  />
+  >
+    {props.children}
+  </MapView>
 ));
 
 export default WebMapView;

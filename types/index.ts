@@ -33,6 +33,8 @@ export interface User {
   lastName: string;
   agreeToMarketing: boolean;
   createdAt: Date; 
+  favorites?: string[]; // Array of establishment IDs
+  gender?: 'male' | 'female'; 
 }
 
 /**
@@ -357,30 +359,35 @@ export interface EstablishmentData {
   name: string;
   rating: number;
   numberReviews: number;
-  reviews: string[]; // Array of reviews, can be refined further
+  reviews: any[]; // Can be typed more strictly if the structure is known
   address: string;
+  location: string;
+  images: string[];
+  coordinate: { latitude: number; longitude: number };
   type: string;
-  images: string[]; // Array of image URLs
+  price: number;
+  gender: string;
+  activities: { name: string; emoji: string }[];
+  createdAt: string;
+  updatedAt: string;
+  cancellationPolicy?: string;
+}
+
+export interface PartnerContactFormData {}
+
+export interface Appointment {
+  id: string;
+  venue: string;
+  date: string;
+  time: string;
+  duration: string;
+  price: string;
+  service: string;
+  address: string;
   coordinate: {
     latitude: number;
     longitude: number;
   };
-  createdAt?: string; // ISO string format for created date
-  updatedAt?: string; // ISO string format for updated date
-  activities?: string[]; // Optional array of activities, can be refined further
-  gender: string;
-  location: string;
-}
-
-export interface PartnerContactFormData {
-  email: string;
-  firstName: string;
-  lastName: string;
-  businessName: string;
-  website: string;
-  businessType: string; // Assuming this might still be relevant for a partner contact
-  location: string;
-  phone: PhoneInfo;
-  message: string; // Added message field
-  consent: boolean;
+  status?: 'Completed' | 'Cancelled' | 'Confirmed';
+  bookingRef?: string;
 }

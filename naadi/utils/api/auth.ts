@@ -6,7 +6,7 @@
 // Use the initialized services from your config file
 import { auth as firebaseAuth, db } from '@naadi/config/firebase/firebase'; // Adjust the import path as necessary
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut as firebaseSignOut } from 'firebase/auth';
-import { collection, doc, getDocs, getDoc, limit, query, serverTimestamp, setDoc, where } from 'firebase/firestore';
+import { collection, doc, getDocs, getDoc, limit, query, serverTimestamp, setDoc, where, updateDoc } from 'firebase/firestore';
 import { getFunctions, httpsCallable } from 'firebase/functions';
 import { PhoneInfo, User } from '@naadi/types'; // Adjust the import path as necessary
 
@@ -195,6 +195,26 @@ export const signupNormalUser = async (data: SignupData): Promise<any> => {
         throw error;    
     }
 }
+
+export const editUser = async (uid: string, data: Partial<User>): Promise<User | null> => {
+    try {
+        const userRef = doc(db, "Users", uid);
+        await updateDoc(userRef, {
+            ...data,
+            updatedAt: serverTimestamp(),
+        });
+        console.log("User profile updated in Firestore for UID:", uid);
+
+        const updatedUserDoc = await getDoc(userRef);
+        if (updatedUserDoc.exists()) {
+            return updatedUserDoc.data() as User;
+        }
+        return null;
+    } catch (error) {
+        console.error("User profile update error:", error);
+        throw error;
+    }
+};
 
 export const logout = async () => {
     try {

@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, StyleSheet, Text } from 'react-native';
-import CustomMapView, { Marker } from '@/components/Map/index';
-import CustomMarker from '@/components/Marker/index';
+import CustomMapView, { Marker } from '@/components/Map/Map';
+import CustomMarker from '@/components/Marker/Markers';
 
 // Define Region locally to avoid importing from react-native-maps
 interface Region {
@@ -79,6 +79,8 @@ export default function MapViewComponent({ mapRef, filteredVenues, animatedY, ha
       }
     }
   };
+
+  
 
   const handleMarkerPress = (venueId: string) => {
     animatedY.setValue(0);
