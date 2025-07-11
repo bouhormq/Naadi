@@ -5,3 +5,4 @@ export * from './admin';
 export * from './business';
 export * from './homepage';
 export * from './profile';
+export * from './venue';

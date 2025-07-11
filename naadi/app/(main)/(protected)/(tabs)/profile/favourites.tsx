@@ -1,104 +1,108 @@
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView } from 'react-native';
-import { useRouter } from 'expo-router';
-import { Ionicons, Octicons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
+import { useFocusEffect, useRouter } from 'expo-router';
+import React, { useCallback, useEffect, useState } from 'react';
+import { View, Text, FlatList, StyleSheet, ActivityIndicator, TouchableOpacity } from 'react-native';
+import { useSession } from '@naadi/hooks/ctx';
+import { getFavorites } from '@naadi/api';
+import { EstablishmentData } from '@naadi/types';
+import EstablishmentCard from '../../(components)/EstablishmentCard';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
+import EmptyFavorites from '../../(components)/EmptyFavorites';
 
-export default function FavouritesScreen() {
+const FavoritesScreen = () => {
+  const { session, isLoading: isSessionLoading } = useSession();
+  const [favorites, setFavorites] = useState<EstablishmentData[]>([]);
+  const [loading, setLoading] = useState(true);
   const router = useRouter();
 
-  const handleStartSearching = () => {
-    router.push('/(main)/(protected)/(tabs)/search');
-  };
+  const fetchFavorites = useCallback(async () => {
+    if (isSessionLoading) {
+      return; 
+    }
+
+    if (session?.uid) {
+      try {
+        setLoading(true);
+        const favs = await getFavorites(session.uid);
+        setFavorites(favs);
+      } catch (error) {
+        console.error('Failed to fetch favorites:', error);
+      } finally {
+        setLoading(false);
+      }
+    } else {
+      setLoading(false);
+      setFavorites([]);
+    }
+  }, [session, isSessionLoading]);
+
+  useEffect(() => {
+    fetchFavorites();
+  }, [fetchFavorites]);
+
+  useFocusEffect(
+    useCallback(() => {
+      fetchFavorites();
+    }, [fetchFavorites])
+  );
+
+  if (loading || isSessionLoading) {
+    return <ActivityIndicator style={styles.centered} size="large" />;
+  }
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <View style={styles.container}>
-        <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-          <Ionicons name="arrow-back" size={24} color="black" />
-        </TouchableOpacity>
-        <Text style={styles.title}>Favourites</Text>
-        <View style={styles.content}>
-          <View style={styles.heartContainer}>
-            <LinearGradient
-              colors={['#A594F9', '#6C56F8']}
-              style={styles.heartBackground}
-            >
-              <Octicons name="heart" size={50} color="white" />
-            </LinearGradient>
-          </View>
-          <Text style={styles.noFavouritesText}>No favourites</Text>
-          <Text style={styles.subtext}>Your favourites list is empty. Let's fill it up!</Text>
-          <TouchableOpacity style={styles.searchButton} onPress={handleStartSearching}>
-            <Text style={styles.searchButtonText}>Start searching</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
+    <SafeAreaView style={styles.container} edges={['top']}>
+        <FlatList
+            data={favorites}
+            keyExtractor={(item) => item.id}
+            renderItem={({ item }) => <EstablishmentCard item={item} layout='vertical' />}
+            contentContainerStyle={styles.listContent}
+            ListEmptyComponent={<EmptyFavorites />}
+            ListHeaderComponent={
+              <>
+                <View style={styles.header}>
+                  <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+                    <Ionicons name="chevron-back"  size={28} color="#000" />
+                  </TouchableOpacity>
+                </View>
+                <Text style={styles.title}>Favourites</Text>
+              </>
+            }
+        />
     </SafeAreaView>
   );
-}
+};
 
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: '#fff',
-  },
   container: {
     flex: 1,
-    paddingHorizontal: 20,
+    backgroundColor: '#fff',
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 4,
+    paddingTop: 10,
   },
   backButton: {
-    position: 'absolute',
-    top: 50,
-    left: 20,
-    zIndex: 1,
+    padding: 6,
   },
-  title: {
-    fontSize: 34,
-    fontWeight: 'bold',
-    marginTop: 90,
-    marginBottom: 20,
-    textAlign: 'left',
-  },
-  content: {
+  centered: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingBottom: 50,
   },
-  heartContainer: {
-    marginBottom: 30,
-  },
-  heartBackground: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    justifyContent: 'center',
-    alignItems: 'center',
-    transform: [{ rotate: '-15deg' }],
-  },
-  noFavouritesText: {
-    fontSize: 22,
+  title: {
+    fontSize: 28,
     fontWeight: 'bold',
-    marginBottom: 10,
+    marginLeft: 10,
+    marginTop: 15,
+    marginBottom: 15,
   },
-  subtext: {
-    fontSize: 16,
-    color: 'gray',
-    textAlign: 'center',
-    marginBottom: 30,
-  },
-  searchButton: {
-    backgroundColor: '#fff',
-    paddingVertical: 15,
-    paddingHorizontal: 40,
-    borderRadius: 30,
-    borderWidth: 1,
-    borderColor: '#E0E0E0',
-  },
-  searchButtonText: {
-    fontSize: 16,
-    fontWeight: '500',
-    color: 'black',
+  listContent: {
+    flexGrow: 1,
+    paddingHorizontal: 16,
   },
 });
+
+export default FavoritesScreen;

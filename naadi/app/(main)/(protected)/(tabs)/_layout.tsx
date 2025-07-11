@@ -1,7 +1,9 @@
-import { Tabs } from 'expo-router';
+import { Tabs, usePathname } from 'expo-router';
 import { Ionicons, Octicons } from '@expo/vector-icons';
+import { useMemo } from 'react';
 
 export default function TabLayout() {
+
   return (
     <Tabs
       screenOptions={{
@@ -34,7 +36,8 @@ export default function TabLayout() {
         name="profile"
         options={{
           title: 'Profile',
-          href: null, // Prevents the tab from being rendered as a link
+          href: null,
+          tabBarStyle: { display: 'none' }, // This will hide the tab bar specifically for this screen
         }}
       />
     </Tabs>

@@ -17,7 +17,7 @@ export default function MyProfileScreen() {
     <SafeAreaView style={styles.safeArea}>
       <ScrollView style={styles.container}>
         <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+          <TouchableOpacity onPress={() => router.push('/(main)/(protected)/(tabs)/profile')} style={styles.backButton}>
             <Ionicons name="chevron-back"  size={28} color="#000" />
           </TouchableOpacity>
         </View>
@@ -36,7 +36,7 @@ export default function MyProfileScreen() {
 
           <Text style={styles.name}>{session?.firstName} {session?.lastName}</Text>
 
-          <TouchableOpacity style={styles.editButton} onPress={() => router.push('/(main)/(protected)/(tabs)/profile/editProfile')}>
+          <TouchableOpacity style={styles.editButton} onPress={() => router.push('/(main)/(protected)/(tabs)/profile/my-profile/editProfile')}>
             <Text style={styles.editButtonText}>Edit</Text>
           </TouchableOpacity>
 
@@ -71,7 +71,7 @@ export default function MyProfileScreen() {
         <View style={styles.deleteSection}>
           <Text style={styles.deleteSectionTitle}>Delete account</Text>
           <Text style={styles.deleteSectionSubtitle}>Are you sure you want to leave Naadi?</Text>
-          <TouchableOpacity style={styles.deleteButton}>
+          <TouchableOpacity style={styles.deleteButton} onPress={() => router.push('/(main)/(protected)/(tabs)/profile/delete-account')}>
             <Text style={styles.deleteButtonText}>Delete my account</Text>
           </TouchableOpacity>
         </View>
@@ -178,6 +178,23 @@ const styles = StyleSheet.create({
   detailValue: {
     fontSize: 16,
     color: '#000',
+  },
+  optionsSection: {
+    marginHorizontal: 16,
+    marginTop: 16,
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+    borderRadius: 16,
+    overflow: 'hidden',
+  },
+  optionButton: {
+    backgroundColor: '#fff',
+    paddingVertical: 15,
+    paddingHorizontal: 20,
+  },
+  optionButtonText: {
+    fontSize: 16,
+    fontWeight: '500',
   },
   deleteSection: {
     marginHorizontal: 16,

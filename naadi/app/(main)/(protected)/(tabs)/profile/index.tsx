@@ -5,11 +5,13 @@ import { useRouter } from 'expo-router';
 import Footer from '@naadi/components/Footer';
 
 const profileOptions = [
-  { label: 'Favourites', icon: <Octicons name="heart" size={22} color="#222" />, route: '/(main)/(protected)/favourites' },
-  { label: 'Vouchers', icon: <MaterialIcons name="confirmation-number" size={22} color="#222" />, route: 'vouchers' },
-  { label: 'Memberships', icon: <MaterialCommunityIcons name="autorenew" size={22} color="#222" />, route: 'memberships' },
-  { label: 'Settings', icon: <Ionicons name="settings-outline" size={22} color="#222" />, route: 'settings' },
+  { label: 'Favourites', icon: <Octicons name="heart" size={22} color="#222" />, route: '/(main)/(protected)/(tabs)/profile/favourites' },
+  { label: 'Vouchers', icon: <MaterialIcons name="confirmation-number" size={22} color="#222" />, route: '/(main)/(protected)/(tabs)/profile/vouchers' },
+  { label: 'Memberships', icon: <MaterialCommunityIcons name="autorenew" size={22} color="#222" />, route: '/(main)/(protected)/(tabs)/profile/memberships' },
+  { label: 'Settings', icon: <Ionicons name="settings-outline" size={22} color="#222" />, route: '/(main)/(protected)/(tabs)/profile/settings' },
 ];
+
+
 
 export default function ProfileScreen() {
   const { session } = useSession();
@@ -18,11 +20,11 @@ export default function ProfileScreen() {
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-        <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+        <TouchableOpacity style={styles.backButton} onPress={() => router.push('/(main)/(protected)/(tabs)')}>
           <Ionicons name="chevron-back" size={28} color="#222" />
         </TouchableOpacity>
         <Text style={styles.title}>Profile</Text>
-        <TouchableOpacity onPress={() => router.push('/(main)/(protected)/(tabs)/profile/myprofile')}>
+        <TouchableOpacity onPress={() => router.push('/(main)/(protected)/(tabs)/profile/my-profile')}>
           <View style={styles.profileCard}>
             <View style={styles.avatarCircle}>
               <Text style={styles.avatarText}>

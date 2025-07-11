@@ -2,10 +2,20 @@ import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, useWindowDimensions, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { EstablishmentData } from '../../../../../types';
+import { useRouter } from 'expo-router';
 
 const EstablishmentCard = ({ item, layout = 'horizontal', onPress }: { item: EstablishmentData, layout?: 'horizontal' | 'vertical', onPress?: (item: EstablishmentData) => void }) => {
   const { width } = useWindowDimensions();
   const isHorizontal = layout === 'horizontal';
+  const router = useRouter();
+
+  const handlePress = () => {
+    if (onPress) {
+      onPress(item);
+    } else {
+      router.push(`/(main)/(protected)/venue/${item.id}`);
+    }
+  };
 
   const styles = StyleSheet.create({
     card: {
@@ -14,6 +24,10 @@ const EstablishmentCard = ({ item, layout = 'horizontal', onPress }: { item: Est
       marginRight: isHorizontal ? 15 : 0,
       marginBottom: isHorizontal ? 0 : 20,
       backgroundColor: '#fff',
+      borderColor: '#f0f0f0',
+      borderWidth: 1,
+      borderRadius: 12,
+      padding: 12,
     },
     cardImage: {
       width: '100%',
@@ -64,8 +78,8 @@ const EstablishmentCard = ({ item, layout = 'horizontal', onPress }: { item: Est
   });
 
   return (
-    <TouchableOpacity style={styles.card} onPress={() => onPress && onPress(item)}>
-      {item.images ? (
+    <TouchableOpacity style={styles.card} onPress={handlePress}>
+      {item.images && item.images.length > 0 ? (
         <Image source={{ uri: item.images[0] }} style={styles.cardImage} />
       ) : (
         <View style={[styles.cardImage, { backgroundColor: '#f0f0f0' }]} />

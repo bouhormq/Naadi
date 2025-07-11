@@ -17,7 +17,7 @@ export const getFavorites = async (userId: string): Promise<EstablishmentData[]>
   return new Promise((resolve) => {
     setTimeout(() => {
       const shuffled = [...venues].sort(() => 0.5 - Math.random());
-      const selected = shuffled.slice(0, Math.floor(Math.random() * 5) + 1); // Get 1 to 5 random venues
+      const selected = shuffled.slice(0, Math.floor(Math.random() * 5) + 1); // Math.floor(Math.random() * 5) + 1
       console.log('Fetched favorites:', selected);
       resolve(selected);
     }, 500); // Simulate network delay

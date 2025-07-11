@@ -5,27 +5,14 @@ import {
     StyleSheet,
     Linking,
     Modal,
-    ScrollView,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import CustomText from './CustomText';
 import i18n from '../utils/languageDetector/i18n';
-
-interface Language {
-    code: string;
-    name: string;
-    emoji: string;
-}
+import LanguageSelector, { languages, Language } from './LanguageSelector';
 
 const Footer: React.FC = () => {
     const [isLanguageModalVisible, setIsLanguageModalVisible] = useState(false);
-
-    const languages: Language[] = [
-        { code: 'en', name: 'English', emoji: '🇬🇧' },
-        { code: 'fr', name: 'Français', emoji: '🇫🇷' },
-        { code: 'ma', name: 'Darija', emoji: '🇲🇦' },
-        { code: 'es', name: 'Español', emoji: '🇪🇸' },
-    ];
 
     const [selectedLanguage, setSelectedLanguage] = useState<Language>(() => {
         const currentLangCode = i18n.language;
@@ -72,20 +59,7 @@ const Footer: React.FC = () => {
                 >
                     <View style={styles.modalContent}>
                         <CustomText style={styles.modalTitle}>Select a Language</CustomText>
-                        <ScrollView>
-                            {languages.map((lang) => (
-                                <TouchableOpacity
-                                    key={lang.code}
-                                    style={[
-                                        styles.languageOption,
-                                        selectedLanguage.code === lang.code && styles.selectedLanguage,
-                                    ]}
-                                    onPress={() => changeLanguage(lang)}
-                                >
-                                    <CustomText style={styles.languageOptionText}>{lang.emoji} {lang.name}</CustomText>
-                                </TouchableOpacity>
-                            ))}
-                        </ScrollView>
+                        <LanguageSelector onSelectLanguage={changeLanguage} />
                     </View>
                 </TouchableOpacity>
             </Modal>
@@ -132,21 +106,6 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         marginBottom: 15,
         textAlign: 'center',
-    },
-    languageOption: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        paddingVertical: 12,
-        paddingHorizontal: 15,
-        borderBottomWidth: 1,
-        borderBottomColor: '#eee',
-    },
-    languageOptionText: {
-        fontSize: 16,
-        color: '#000',
-    },
-    selectedLanguage: {
-        backgroundColor: '#f0f0f0',
     },
 });
 

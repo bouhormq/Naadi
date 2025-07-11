@@ -68,12 +68,31 @@ const BottomSheet = forwardRef(function BottomSheet({
   const panResponder = useRef(
     PanResponder.create({
       onMoveShouldSetPanResponder: (_, gestureState) => {
-        if (isFilterModalVisible || isSheetExpanded) return false;
+        // In list mode (expanded sheet), only allow scrolling the list, not dragging the sheet.
+        if (isSheetExpanded) {
+          return false;
+        }
+        // When filter modal is visible, disable dragging.
+        if (isFilterModalVisible) {
+          return false;
+        }
+        // Otherwise, activate pan responder for vertical gestures.
         return Math.abs(gestureState.dy) > Math.abs(gestureState.dx) && Math.abs(gestureState.dy) > 5;
       },
-      onPanResponderGrant: () => animatedY.setOffset(animatedYValue.current),
-      onPanResponderMove: Animated.event([null, { dy: animatedY }], { useNativeDriver: false }),
+      onPanResponderGrant: () => {
+        // When not in list mode, set the animation offset.
+        if (!isSheetExpanded) {
+          animatedY.setOffset(animatedYValue.current);
+        }
+      },
+      onPanResponderMove: isSheetExpanded
+        ? undefined // Do not handle move events when in list mode.
+        : Animated.event([null, { dy: animatedY }], { useNativeDriver: false }),
       onPanResponderRelease: (_, gestureState) => {
+        // If in list mode, do nothing on release.
+        if (isSheetExpanded) {
+          return;
+        }
         animatedY.flattenOffset();
         const { vy } = gestureState;
         const currentPosition = animatedYValue.current;
@@ -127,15 +146,13 @@ const BottomSheet = forwardRef(function BottomSheet({
   // Animate filter buttons and grabber when isSheetExpanded changes
   React.useEffect(() => {
     if (isSheetExpanded) {
-      Animated.sequence([
-        Animated.delay(200),
+      Animated.parallel([
         Animated.timing(filterAnim, { toValue: 1, duration: 250, useNativeDriver: false }),
         Animated.timing(grabberAnim, { toValue: 0, duration: 150, useNativeDriver: false }),
       ]).start();
     } else {
-      Animated.sequence([
+      Animated.parallel([
         Animated.timing(filterAnim, { toValue: 0, duration: 250, useNativeDriver: false }),
-        Animated.delay(200),
         Animated.timing(grabberAnim, { toValue: 1, duration: 150, useNativeDriver: false }),
       ]).start();
     }

@@ -1,13 +1,12 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Ionicons, Octicons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
+import { Ionicons } from '@expo/vector-icons';
 
-export default function FavouritesScreen() {
+export default function VouchersScreen() {
   const router = useRouter();
 
-  const handleStartSearching = () => {
+  const handleFindSalons = () => {
     router.push('/(main)/(protected)/(tabs)/search');
   };
 
@@ -17,20 +16,16 @@ export default function FavouritesScreen() {
         <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
           <Ionicons name="arrow-back" size={24} color="black" />
         </TouchableOpacity>
-        <Text style={styles.title}>Favourites</Text>
+        <Text style={styles.title}>My vouchers</Text>
         <View style={styles.content}>
-          <View style={styles.heartContainer}>
-            <LinearGradient
-              colors={['#A594F9', '#6C56F8']}
-              style={styles.heartBackground}
-            >
-              <Octicons name="heart" size={50} color="white" />
-            </LinearGradient>
+          <View style={styles.iconContainer}>
+            <View style={styles.iconBackground} />
+            <Ionicons name="ticket-outline" size={50} color="black" style={styles.icon} />
           </View>
-          <Text style={styles.noFavouritesText}>No favourites</Text>
-          <Text style={styles.subtext}>Your favourites list is empty. Let's fill it up!</Text>
-          <TouchableOpacity style={styles.searchButton} onPress={handleStartSearching}>
-            <Text style={styles.searchButtonText}>Start searching</Text>
+          <Text style={styles.noVouchersText}>You have no active vouchers</Text>
+          <Text style={styles.subtext}>Find venues to buy a voucher or book a service.</Text>
+          <TouchableOpacity style={styles.searchButton} onPress={handleFindSalons}>
+            <Text style={styles.searchButtonText}>Find venues near you</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -66,18 +61,24 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingBottom: 50,
   },
-  heartContainer: {
-    marginBottom: 30,
-  },
-  heartBackground: {
+  iconContainer: {
     width: 100,
     height: 100,
-    borderRadius: 50,
     justifyContent: 'center',
     alignItems: 'center',
-    transform: [{ rotate: '-15deg' }],
+    marginBottom: 30,
   },
-  noFavouritesText: {
+  iconBackground: {
+    position: 'absolute',
+    width: 70,
+    height: 50,
+    backgroundColor: '#FFD44D',
+    opacity: 0.8,
+  },
+  icon: {
+    transform: [{ rotate: '-30deg' }],
+  },
+  noVouchersText: {
     fontSize: 22,
     fontWeight: 'bold',
     marginBottom: 10,
@@ -89,16 +90,14 @@ const styles = StyleSheet.create({
     marginBottom: 30,
   },
   searchButton: {
-    backgroundColor: '#fff',
+    backgroundColor: '#111827',
     paddingVertical: 15,
     paddingHorizontal: 40,
-    borderRadius: 30,
-    borderWidth: 1,
-    borderColor: '#E0E0E0',
+    borderRadius: 8,
   },
   searchButtonText: {
     fontSize: 16,
     fontWeight: '500',
-    color: 'black',
+    color: 'white',
   },
 });
