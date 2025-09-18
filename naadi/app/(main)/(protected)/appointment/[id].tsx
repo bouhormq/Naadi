@@ -122,7 +122,7 @@ const AppointmentDetail = () => {
             <ActionButton icon="calendar-plus-o" iconFamily="FontAwesome" title="Add to calendar" subtitle="Set yourself a reminder" onPress={handleAddToCalendar}/>
             <ActionButton icon="navigate" title="Getting there" subtitle={appointment.address} onPress={handleGetDirections} />
             <ActionButton icon="create" title="Manage appointment" subtitle="Reschedule or cancel your appointment" disabled />
-            <ActionButton icon="business-outline" title="Venue details" subtitle={appointment.venue} disabled />
+            <ActionButton icon="business-outline" title="Venue details" subtitle={appointment.venue} onPress={() => router.push(`/(main)/(protected)/venue/${venue.id}`)} />
           </View>
 
           {/* Overview Section */}

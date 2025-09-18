@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useStorageState } from './useStorageState';
 import { getRecommendedData, getNewToNaadiData, getTrendingData } from '@naadi/api'; // Adjust the import path as necessary
-import { EstablishmentData } from '../../types/index';
+import { EstablishmentData } from '@naadi/types';
 
 interface CachedHomepageData {
   recommended: EstablishmentData[];

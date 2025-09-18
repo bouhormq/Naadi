@@ -27,7 +27,8 @@ const EstablishmentCard = ({ item, layout = 'horizontal', onPress }: { item: Est
       borderColor: '#f0f0f0',
       borderWidth: 1,
       borderRadius: 12,
-      padding: 12,
+      padding: 10,
+      overflow: 'hidden',
     },
     cardImage: {
       width: '100%',
@@ -82,7 +83,7 @@ const EstablishmentCard = ({ item, layout = 'horizontal', onPress }: { item: Est
       {item.images && item.images.length > 0 ? (
         <Image source={{ uri: item.images[0] }} style={styles.cardImage} />
       ) : (
-        <View style={[styles.cardImage, { backgroundColor: '#f0f0f0' }]} />
+        <View style={styles.cardImage} />
       )}
       <Text style={styles.cardTitle}>{item.name}</Text>
       <View style={styles.ratingContainer}>

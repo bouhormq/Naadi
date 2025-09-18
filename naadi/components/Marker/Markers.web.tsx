@@ -5,14 +5,9 @@ import { subCategoriesData } from '@naadi/assets/data/venues'; // Adjust the imp
 import Droplet from './Droplet';
 import { Marker } from '../Map/Map.web'; // Adjust the import path as necessary
 
-const getMarkerIcon = (type: string, activities: Array<any>) => {
-  if (activities && activities.length === 1) {
-    return activities[0].emoji || '📍';
-  } else if (activities && activities.length > 1) {
-    const subCategory = subCategoriesData.find(
-      (cat: { category: string; emoji: string }) => cat.category.toLowerCase() === type.toLowerCase()
-    );
-    return subCategory?.emoji || '📍';
+const getMarkerIcon = (type: string, services: any[]) => {
+  if (services && services.length > 0 && services[0].items.length === 1) {
+    return '📍'; // Simplified for now, can be enhanced
   }
   return '📍';
 };
@@ -20,15 +15,15 @@ const getMarkerIcon = (type: string, activities: Array<any>) => {
 // A simplified interface for web, omitting native-only MapMarkerProps
 interface CustomMarkerProps {
   type: string;
-  activities: any[];
+  services: any[];
   [key: string]: any; // Allow other props
 }
 
-const CustomMarker: React.FC<CustomMarkerProps> = ({ type, activities, ...rest }) => {
+const CustomMarker: React.FC<CustomMarkerProps> = ({ type, services, ...rest }) => {
   return (
     <Marker {...rest}>
       <Droplet>
-        <Text style={styles.emoji}>{getMarkerIcon(type, activities)}</Text>
+        <Text style={styles.emoji}>{getMarkerIcon(type, services)}</Text>
       </Droplet>
     </Marker>
   );

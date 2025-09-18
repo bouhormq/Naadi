@@ -12,7 +12,7 @@
  */
 export interface PhoneInfo {
   code: string; // e.g., "MA"
-  name: string; // e.g., "Morocco"
+  name: string; // Country name
   number: string; // The raw phone number part (e.g., "612345678")
   dialCode: string; // e.g., "+212"
 }
@@ -354,6 +354,19 @@ export interface StudioAnalyticsData {
   }>;
 }
 
+export interface Service {
+  id: string;
+  name:string;
+  duration: string;
+  price: string;
+  category: string;
+}
+
+export interface ServiceCategory {
+  name: string;
+  items: Omit<Service, 'id' | 'category'>[];
+}
+
 export interface EstablishmentData {
   id: string;
   name: string;
@@ -367,10 +380,20 @@ export interface EstablishmentData {
   type: string;
   price: number;
   gender: string;
-  activities: { name: string; emoji: string }[];
+  services: ServiceCategory[];
   createdAt: string;
   updatedAt: string;
   cancellationPolicy?: string;
+  about?: string;
+  openingHours?: {
+    monday?: string;
+    tuesday?: string;
+    wednesday?: string;
+    thursday?: string;
+    friday?: string;
+    saturday?: string;
+    sunday?: string;
+  };
 }
 
 export interface PartnerContactFormData {}
@@ -390,4 +413,32 @@ export interface Appointment {
   };
   status?: 'Completed' | 'Cancelled' | 'Confirmed';
   bookingRef?: string;
+}
+
+export interface TeamMember {
+  id: string;
+  name: string;
+  role: string;
+  image?: string;
+  rating?: number;
+  specialties: string[];
+  bio?: string;
+  experience?: string;
+  venueId: string;
+  serviceIds: string[]; // Services this team member can provide
+  reviews: Review[]; // Reviews for this team member
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Review {
+  id: string;
+  userId: string;
+  userName: string;
+  userInitials?: string;
+  rating: number;
+  comment: string;
+  date: string;
+  teamMemberId?: string; // Optional, for team member specific reviews
+  serviceId?: string; // Optional, for service specific reviews
 }

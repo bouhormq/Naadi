@@ -112,7 +112,7 @@ export default function MapViewComponent({ mapRef, filteredVenues, animatedY, ha
         coordinate={filteredVenues[0].coordinate}
         onPress={() => {}}
         type={filteredVenues[0].type}
-        activities={filteredVenues[0].activities}
+        services={filteredVenues[0].services || filteredVenues[0].activities || []}
       />
       ) : (
       filteredVenues.map((venue) => (
@@ -121,7 +121,7 @@ export default function MapViewComponent({ mapRef, filteredVenues, animatedY, ha
         coordinate={venue.coordinate}
         onPress={() => handleMarkerPress(venue.id)}
         type={venue.type}
-        activities={venue.activities}
+        services={venue.services || venue.activities || []}
         />
       ))
       )}
