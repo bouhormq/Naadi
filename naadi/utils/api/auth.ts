@@ -4,13 +4,11 @@
 // import firestore from '@react-native-firebase/firestore';
 
 // Use the initialized services from your config file
-import { auth as firebaseAuth, db } from '@naadi/config/firebase/firebase'; // Adjust the import path as necessary
+import { auth as firebaseAuth, db, functions as firebaseFunctions } from '@naadi/config/firebase/firebase'; // Adjust the import path as necessary
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut as firebaseSignOut } from 'firebase/auth';
 import { collection, doc, getDocs, getDoc, limit, query, serverTimestamp, setDoc, where, updateDoc } from 'firebase/firestore';
-import { getFunctions, httpsCallable } from 'firebase/functions';
+import { httpsCallable } from 'firebase/functions';
 import { PhoneInfo, User } from '@naadi/types'; // Adjust the import path as necessary
-
-const firebaseFunctions = getFunctions();
 
 // --- Role Definitions ---
 export type UserRole = 'admin' | 'partner' | 'user' | null;

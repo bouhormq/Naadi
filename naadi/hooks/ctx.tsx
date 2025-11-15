@@ -94,7 +94,17 @@ export function SessionProvider({ children }: PropsWithChildren) {
     setUserData(null);
     setStoredSession(null);
     console.log("SessionProvider: Signed out, session cleared.");
-    router.replace('/');
+    
+    // Determine redirect based on app variant
+    const appVariant = process.env.EXPO_PUBLIC_APP_VARIANT || 'main';
+    
+    if (appVariant === 'partner') {
+      // Partner app: redirect to partner login
+      router.replace('/partners/login');
+    } else {
+      // Main app: redirect to onboarding
+      router.replace('/(main)/onboarding');
+    }
   };
 
   const handleSignUp = async (data: SignupData): Promise<{ success: boolean; error?: string }> => {

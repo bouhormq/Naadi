@@ -31,13 +31,13 @@ function PartnerLayoutNav() {
     }
   }, [isLoading]);
 
-  // Handle route protection - only on mobile platforms
+  // Handle route protection - on all platforms
   useEffect(() => {
-    // Skip if not mobile or app is not ready yet
-    if (!isMobile || !isReady || isLoading) return;
+    // Skip if app is not ready yet
+    if (!isReady || isLoading) return;
     
     const path = segments.join('/');
-    console.log(`[PartnerLayoutNav] Checking route protection (mobile): ${path}, isLoggedIn: ${!!session}`);
+    console.log(`[PartnerLayoutNav] Checking route protection: ${path}, isLoggedIn: ${!!session}`);
     
     const isAuthRoute = path === 'partners/login';
     const isProtectedRoute = path.startsWith('partners/(protected)') || path.startsWith('admin/(protected)');
@@ -85,7 +85,7 @@ function PartnerLayoutNav() {
         router.replace('/partners/login');
       }
     }
-  }, [isReady, isLoading, session, segments, router, isMobile]);
+  }, [isReady, isLoading, session, segments, router]);
 
   // Show loading indicator while preparing
   if (isLoading || !isReady) {
@@ -157,13 +157,13 @@ function MainLayoutNav() {
     }
   }, [isLoading]);
 
-  // Handle route protection - only on mobile platforms
+  // Handle route protection - on all platforms
   useEffect(() => {
-    // Skip if not mobile or app is not ready yet
-    if (!isMobile || !isReady || isLoading) return;
+    // Skip if app is not ready yet
+    if (!isReady || isLoading) return;
     
     const path = segments.join('/');
-    console.log(`[MainLayoutNav] Checking route protection (mobile): ${path}, isLoggedIn: ${!!session}`);
+    console.log(`[MainLayoutNav] Checking route protection: ${path}, isLoggedIn: ${!!session}`);
     
     // Public routes that can be accessed without being logged in
     const publicRoutes = ['(main)/onboarding', '(main)/login', '(main)/signup'];
@@ -188,7 +188,7 @@ function MainLayoutNav() {
         router.replace('/(main)/(protected)');
       }
     }
-  }, [isReady, isLoading, session, segments, router, isMobile]);
+  }, [isReady, isLoading, session, segments, router]);
 
   // Show loading indicator while preparing
   if (isLoading || !isReady) {

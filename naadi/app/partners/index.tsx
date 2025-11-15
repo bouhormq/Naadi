@@ -1,5 +1,6 @@
 import { Redirect } from 'expo-router';
 import { ScrollView, StyleSheet, View, Text } from 'react-native';
+import { useSession } from '@naadi/hooks/ctx';
 import PartnerSignupFormMain from './(components)/PartnerSignupFormMain';
 import Footer from './(components)/Footer';
 import Benefits from './(components)/Benefits';
@@ -9,10 +10,15 @@ import Corporate from './(components)/Corporate';
 import Integrations from './(components)/Integrations';
 
 export default function PartnersIndex() {
-  const user = false; // Or your actual user check
+  const { session } = useSession();
   
-  if (user) {
-    return <Redirect href="/(main)" />; // Assuming '/main' is another route
+  // If user is logged in as partner or admin, redirect to protected area
+  if (session) {
+    if (session.role === 'partner') {
+      return <Redirect href="/partners/(protected)" />;
+    } else if (session.role === 'admin') {
+      return <Redirect href="/admin/(protected)" />;
+    }
   }
   
   return (
