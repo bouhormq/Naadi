@@ -504,6 +504,36 @@ export const completePartnerRegistration = onCall({
             throw new HttpsError("internal", "Failed to create authentication account.", authError.message);
         }
 
+        // --- Create Users Document in Firestore ---
+        try {
+            const usersRef = db.collection("Users").doc(newUserUid);
+            await usersRef.set({
+                uid: newUserUid,
+                email: normalizedEmail,
+                role: 'partner',
+                firstName: accountData.firstName,
+                lastName: accountData.lastName,
+                phone: accountData.phone, // PhoneInfo object
+                authMethod: 'email',
+                agreeToMarketing: accountData.consent,
+                onboardingCompleted: false, // Partners see onboarding on first login
+                createdAt: admin.firestore.FieldValue.serverTimestamp(),
+                lastLoginAt: admin.firestore.FieldValue.serverTimestamp(),
+            });
+            logger.info(`Created Users document for partner ${newUserUid}`);
+        } catch (firestoreError: any) {
+            logger.error(`Error creating Users document for ${newUserUid}:`, firestoreError);
+            // Critical issue: Auth user exists but Firestore document failed
+            // Try to clean up by deleting the just-created Auth user
+            try {
+                await admin.auth().deleteUser(newUserUid);
+                logger.warn(`Cleaned up orphaned Auth user ${newUserUid} due to Firestore error.`);
+            } catch (deleteError) {
+                logger.error(`CRITICAL: Failed to delete orphaned Auth user ${newUserUid}. Manual cleanup required.`, deleteError);
+            }
+            throw new HttpsError("internal", "Failed to create user profile.", firestoreError.message);
+        }
+
         // --- Update PartnerAccounts Document ---
         try {
              await accountDoc.ref.update({
@@ -514,13 +544,13 @@ export const completePartnerRegistration = onCall({
              logger.info(`Updated PartnerAccount ${accountDoc.id} with UID ${newUserUid} and removed code.`);
         } catch (updateError: any) {
              logger.error(`Failed to update PartnerAccount ${accountDoc.id} after Auth creation:`, updateError);
-            // Critical issue: Auth user exists but account linking failed.
-            // Try to clean up by deleting the just-created Auth user.
+            // Critical issue: Auth user and Users doc exist but PartnerAccount update failed
+            // Try to clean up by deleting the just-created Auth user
             try {
                 await admin.auth().deleteUser(newUserUid);
-                logger.warn(`Cleaned up orphaned Auth user ${newUserUid} due to Firestore update failure.`);
+                logger.warn(`Cleaned up orphaned Auth user ${newUserUid} due to PartnerAccount update failure.`);
             } catch (deleteError) {
-                logger.error(`CRITICAL: Failed to delete orphaned Auth user ${newUserUid} after Firestore update failure. Manual cleanup required.`, deleteError);
+                logger.error(`CRITICAL: Failed to delete orphaned Auth user ${newUserUid} after PartnerAccount update failure. Manual cleanup required.`, deleteError);
             }
             throw new HttpsError("internal", "Account created but failed to finalize registration. Please try again or contact support.");
         }

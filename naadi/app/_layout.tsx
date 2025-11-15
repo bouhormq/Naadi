@@ -39,35 +39,54 @@ function PartnerLayoutNav() {
     const path = segments.join('/');
     console.log(`[PartnerLayoutNav] Checking route protection: ${path}, isLoggedIn: ${!!session}`);
     
-    const isAuthRoute = path === 'partners/login';
+    // Define public routes that don't require login
+    const isPublicRoute = path === 'partners' || 
+                         path === 'partners/login' || 
+                         path === 'partners/signup' || 
+                         path === 'partners/how-it-works' || 
+                         path === 'partners/faq' || 
+                         path === 'partners/contact' ||
+                         path === 'partners/set-password';
+    
+    const isOnboardingRoute = path === 'partners/onboarding-flow';
     const isProtectedRoute = path.startsWith('partners/(protected)') || path.startsWith('admin/(protected)');
     
-    // Not logged in - redirect to login
+    // Not logged in - only redirect if accessing protected routes
     if (!session) {
       if (isProtectedRoute) {
         console.log('[PartnerLayoutNav] Unauthorized access to protected route, redirecting to login');
         router.replace('/partners/login');
-      } else if (!isAuthRoute && path.startsWith('partners')) {
-        console.log('[PartnerLayoutNav] Unauthenticated access to partner route, redirecting to login');
-        router.replace('/partners/login');
       }
+      // Allow access to public pages (no redirect needed)
       return;
     }
     
-    // Logged in - ensure proper access based on role
+    // Logged in - check onboarding status
+    if (!session.onboardingCompleted && !isOnboardingRoute) {
+      // Redirect to onboarding based on role
+      if (session.role === 'partner') {
+        console.log('[PartnerLayoutNav] Partner needs to complete onboarding');
+        router.replace('/partners/onboarding-flow');
+        return;
+      } else if (session.role === 'admin') {
+        // Admins skip onboarding, redirect to admin area
+        console.log('[PartnerLayoutNav] Admin logged in, skipping onboarding');
+        router.replace('/admin/(protected)');
+        return;
+      }
+    }
+    
+    // Logged in and onboarding complete (or admin) - ensure proper access based on role
     const userRole = session.role;
     
-    // Already on login page but logged in - redirect to appropriate area
-    if (isAuthRoute) {
+    // Already on a public page but logged in - redirect to appropriate protected area
+    if (isPublicRoute && session.onboardingCompleted) {
       if (userRole === 'partner') {
-        console.log('[PartnerLayoutNav] Already logged in, redirecting from login to partner area');
+        console.log('[PartnerLayoutNav] Authenticated partner on public route, redirecting to partner area');
         router.replace('/partners/(protected)');
       } else if (userRole === 'admin') {
-        console.log('[PartnerLayoutNav] Admin logged in, redirecting from login to admin area');
+        console.log('[PartnerLayoutNav] Admin on public route, redirecting to admin area');
         router.replace('/admin/(protected)');
-      } else {
-        console.log('[PartnerLayoutNav] User with invalid role, staying on login');
-        // Invalid role for partner app - let them stay on login
       }
       return;
     }
@@ -171,6 +190,9 @@ function MainLayoutNav() {
 
     // Protected routes that require a user to be logged in
     const isProtectedRoute = path.startsWith('(main)/(protected)');
+    
+    // Onboarding route for logged in users
+    const isOnboardingRoute = path === '(main)/onboarding-flow';
 
     if (!session) {
       // If the user is not logged in and trying to access a protected route,
@@ -181,9 +203,14 @@ function MainLayoutNav() {
       }
       // If it's a public route, do nothing and let the user stay.
     } else {
-      // If the user is logged in and on a public route (like login or onboarding),
-      // redirect them to the main protected area.
-      if (isPublicRoute) {
+      // If the user is logged in, check onboarding status
+      if (!session.onboardingCompleted && !isOnboardingRoute) {
+        // User hasn't completed onboarding, redirect to onboarding flow
+        console.log('[MainLayoutNav] User not onboarded, redirecting to onboarding flow.');
+        router.replace('/(main)/onboarding-flow');
+      } else if (session.onboardingCompleted && isPublicRoute) {
+        // If the user is logged in, onboarded, and on a public route (like login or onboarding),
+        // redirect them to the main protected area.
         console.log('[MainLayoutNav] Authenticated user on public route, redirecting to home.');
         router.replace('/(main)/(protected)');
       }

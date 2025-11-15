@@ -32,6 +32,7 @@ export interface User {
   firstName: string;
   lastName: string;
   agreeToMarketing: boolean;
+  onboardingCompleted: boolean; // Track if user has completed onboarding
   createdAt: Date; 
   favorites?: string[]; // Array of establishment IDs
   gender?: 'male' | 'female'; 

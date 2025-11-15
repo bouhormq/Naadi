@@ -4,13 +4,11 @@
 // import firestore from '@react-native-firebase/firestore';
 
 // Use the initialized services from your config file
-import { auth as firebaseAuth, db } from '../config/firebase';
+import { auth as firebaseAuth, db, functions as firebaseFunctions } from '../config/firebase';
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut as firebaseSignOut } from 'firebase/auth';
 import { collection, doc, getDocs, getDoc, limit, query, serverTimestamp, setDoc, where } from 'firebase/firestore';
-import { getFunctions, httpsCallable } from 'firebase/functions';
+import { httpsCallable } from 'firebase/functions';
 import { PhoneInfo, User } from '../../types';
-
-const firebaseFunctions = getFunctions();
 
 // --- Role Definitions ---
 export type UserRole = 'admin' | 'partner' | 'user' | null;
@@ -124,7 +122,8 @@ export const loginWithEmail = async (email: string, password: string): Promise<A
         if (authUser.email === "bouhormq@gmail.com") { // Explicit admin check
             userRole = 'admin';
             console.log(`Admin user ${authUser.email} logged in.`);
-            return { user: { ...userData, role: 'admin' }, role: userRole };
+            // Admin users always have onboarding completed
+            return { user: { ...userData, role: 'admin', onboardingCompleted: true }, role: userRole };
         }
         
         if (userRole === 'partner') {
@@ -178,6 +177,7 @@ export const signupNormalUser = async (data: SignupData): Promise<any> => {
             phone,
             agreeToMarketing,
             authMethod: 'email',
+            onboardingCompleted: false, // New users haven't completed onboarding
         };
 
         // Create a user profile document in a 'users' collection
@@ -263,6 +263,22 @@ export const completePartnerRegistration = async ({ email, code, password }: Com
 
 export const setupAuthListener = (callback: (user: any) => void) => {
     return firebaseAuth.onAuthStateChanged(callback);
+};
+
+/**
+ * Marks onboarding as completed for the current user
+ */
+export const completeOnboarding = async (userId: string): Promise<void> => {
+    try {
+        const userRef = doc(db, "Users", userId);
+        await updateDoc(userRef, {
+            onboardingCompleted: true,
+        });
+        console.log(`Onboarding completed for user ${userId}`);
+    } catch (error: any) {
+        console.error("Error completing onboarding:", error);
+        throw error;
+    }
 };
 
 // Remove or update isPartnerEnabled if check is done directly in loginWithEmail

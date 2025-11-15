@@ -99,6 +99,26 @@ const PartnerLayout = () => {
         }} 
       />
       <Stack.Screen 
+        name="set-password" 
+        options={{ 
+          title: 'Set Password',
+          ...(isMobile ? { 
+            animation: 'none' as const,
+            headerShown: false 
+          } : {})
+        }} 
+      />
+      <Stack.Screen 
+        name="onboarding-flow" 
+        options={{ 
+          title: 'Onboarding',
+          ...(isMobile ? { 
+            animation: 'none' as const,
+            headerShown: false 
+          } : {})
+        }} 
+      />
+      <Stack.Screen 
         name="(protected)/index" 
         options={{ 
           ...(isMobile ? { 

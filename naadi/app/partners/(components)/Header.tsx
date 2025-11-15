@@ -19,14 +19,12 @@ export default function Header() {
   };
 
   const handleLogoPress = () => {
-    // Only navigate if the user is NOT logged in.
-    if (!session) {
-      // If the current path starts with /admin, do nothing (already handled by !session).
-      // Otherwise, navigate to the partner root.
-      // Note: The admin check is technically redundant now, but kept for clarity.
-      if (!pathname.startsWith('/admin')) {
-        router.push('/partners'); 
-      }
+    // Navigate to partner home if on a partner page
+    if (pathname.startsWith('/partners')) {
+      router.replace('/partners'); // Use replace to clear navigation stack
+    } else if (!pathname.startsWith('/admin')) {
+      // If not on admin page, navigate to partner home
+      router.push('/partners');
     }
   };
 
