@@ -63,7 +63,7 @@ Naadi uses a client-server architecture within a single Expo project:
 
 ```
 naadi/
-├── cloud-functions/      # Firebase functions project
+├── api/      # Firebase functions project
 │   ├── functions/        # Functions source code
 │   │   ├── src/          # Example TS source folder
 │   │   ├── utils/        # Shared logic for functions

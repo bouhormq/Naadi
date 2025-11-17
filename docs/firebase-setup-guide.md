@@ -187,7 +187,7 @@ service cloud.firestore {
 ### 4.2 Function Setup
 
 ```bash
-cd cloud-functions
+cd api
 npm install
 ```
 

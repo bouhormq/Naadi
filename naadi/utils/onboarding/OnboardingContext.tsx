@@ -20,7 +20,10 @@ export interface OnboardingData {
   teamSize?: string;
   
   // Step 5: Services offered
-  services?: string[];
+  services?: string | {
+    primary: string;
+    related: string[];
+  };
   
   // Step 6: Business name
   businessName?: string;
@@ -68,11 +71,13 @@ export interface OnboardingContextType {
   currentStep: number;
   totalSteps: number;
   updateData: (key: string, value: any) => void;
+  saveToFirebase: () => Promise<void>;
   nextStep: () => void;
   prevStep: () => void;
   goToStep: (step: number) => void;
   resetOnboarding: () => void;
   isLoading: boolean;
+  isSaving: boolean;
 }
 
 export const OnboardingContext = createContext<OnboardingContextType | undefined>(undefined);
@@ -87,7 +92,8 @@ export function OnboardingProvider({
   const [data, setData] = useState<OnboardingData>({});
   const [currentStep, setCurrentStep] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
-  const totalSteps = 14;
+  const [isSaving, setIsSaving] = useState(false);
+  const totalSteps = 8; // 6 action steps + 1 complete screen + 1 dashboard
 
   // Load draft data on mount
   useEffect(() => {
@@ -135,6 +141,24 @@ export function OnboardingProvider({
     }));
   }, []);
 
+  const saveToFirebase = useCallback(async () => {
+    if (!userId) {
+      console.warn('No userId provided, skipping Firebase save');
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      await saveDraftToFirestore(userId, data);
+      console.log('Onboarding data saved to Firebase');
+    } catch (error) {
+      console.error('Error saving to Firebase:', error);
+      throw error;
+    } finally {
+      setIsSaving(false);
+    }
+  }, [data, userId]);
+
   const nextStep = useCallback(() => {
     setCurrentStep(prev => Math.min(prev + 1, totalSteps));
   }, [totalSteps]);
@@ -161,11 +185,13 @@ export function OnboardingProvider({
         currentStep,
         totalSteps,
         updateData,
+        saveToFirebase,
         nextStep,
         prevStep,
         goToStep,
         resetOnboarding,
         isLoading,
+        isSaving,
       }}
     >
       {children}

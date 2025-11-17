@@ -130,7 +130,7 @@ interface StudioState {
 #### 3.2.1 Cloud Functions Structure
 
 ```
-cloud-functions/
+api/
 ├── functions/
 │   ├── src/
 │   │   ├── auth/
@@ -275,7 +275,7 @@ export const handleError = (error: unknown) => {
 ### 5.2 Backend Error Handling
 
 ```typescript
-// cloud-functions/functions/utils/errorHandling.ts
+// api/functions/utils/errorHandling.ts
 export class FunctionError extends Error {
   constructor(
     message: string,

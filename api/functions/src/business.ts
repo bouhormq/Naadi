@@ -265,6 +265,6 @@ export const getMyBusinesses = onCall({ region: TARGET_REGION }, async (request)
 });
 
 // Ensure this new function is exported from the main index file if needed
-// Example in cloud-functions/functions/src/index.ts:
+// Example in api/functions/src/index.ts:
 // export { getMyBusinesses } from './business';
 // (This might already be handled by exporting *) 

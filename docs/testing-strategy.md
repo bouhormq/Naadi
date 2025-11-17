@@ -89,11 +89,11 @@ appId: ma.naadi.app
 
 #### Unit Tests
 - **Tools**: Jest
-- **Location**: `cloud-functions/functions/__tests__/`
+- **Location**: `api/functions/__tests__/`
 - **Coverage**: Cloud Functions, utilities
 - **Example**:
 ```typescript
-// cloud-functions/functions/__tests__/auth.test.ts
+// api/functions/__tests__/auth.test.ts
 import { onUserCreated } from '../src/auth';
 
 describe('onUserCreated', () => {
@@ -122,11 +122,11 @@ describe('onUserCreated', () => {
 
 #### Integration Tests
 - **Tools**: Firebase Emulator Suite + Jest
-- **Location**: `cloud-functions/functions/__tests__/integration/`
+- **Location**: `api/functions/__tests__/integration/`
 - **Coverage**: Function interactions with Firestore
 - **Example**:
 ```typescript
-// cloud-functions/functions/__tests__/integration/studios.test.ts
+// api/functions/__tests__/integration/studios.test.ts
 import { initializeTestEnvironment } from '@firebase/rules-unit-testing';
 import { createStudio } from '../src/studios';
 
@@ -170,7 +170,7 @@ naadi/
 │   │   ├── hooks/
 │   │   ├── integration/
 │   │   └── utils/
-├── cloud-functions/
+├── api/
 │   └── functions/
 │       ├── __tests__/
 │       │   ├── unit/

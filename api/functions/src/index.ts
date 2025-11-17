@@ -16,11 +16,13 @@ import { logger } from "firebase-functions";
 import * as businessFunctions from './business';
 
 const db = admin.firestore();
+const fetch = require('node-fetch');
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL || "bouhormq@gmail.com"; // Use environment variable with fallback
 const PARTNER_REGISTRATION_REQUEST_COLLECTION = "PartnerRegistrationRequest";
 const PARTNER_CONTACT_REQUEST_COLLECTION = "PartnerContactRequest"; // Added constant
 const PARTNER_ACCOUNTS_COLLECTION = "PartnerAccounts";
 const TARGET_REGION = "europe-southwest1"; // Set to europe-southwest1
+const GOOGLE_PLACES_API_KEY = process.env.GOOGLE_PLACES_API_KEY || "";
 
 
 // Define the interface for the PhoneInfo structure as expected from the frontend
@@ -67,6 +69,56 @@ export const setMyBusinessProfile = businessFunctions.setMyBusinessProfile;
 
 // Add export for the new getMyBusinesses function
 export const getMyBusinesses = businessFunctions.getMyBusinesses;
+
+// --- Callable Function v2: Get Google Places Autocomplete Suggestions ---
+export const getPlacesSuggestions = onCall({ 
+  region: TARGET_REGION,
+  cors: true // Allow all origins
+}, async (request) => {
+  const data = request.data;
+  
+  if (!data || typeof data.input !== "string") {
+    throw new HttpsError("invalid-argument", "Input string is required.");
+  }
+
+  const { input } = data;
+
+  if (!input.trim() || input.length < 2) {
+    throw new HttpsError("invalid-argument", "Input must be at least 2 characters.");
+  }
+
+  if (!GOOGLE_PLACES_API_KEY) {
+    logger.error("Google Places API key is not configured.");
+    throw new HttpsError("internal", "Places API is not configured.");
+  }
+
+  try {
+    const response = await fetch(
+      `https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${encodeURIComponent(
+        input
+      )}&key=${GOOGLE_PLACES_API_KEY}`
+    );
+
+    const data = await response.json();
+
+    if (data.predictions) {
+      logger.info(`Google Places API call successful for input: ${input}`);
+      return { 
+        success: true, 
+        predictions: data.predictions 
+      };
+    } else {
+      logger.warn(`No predictions returned from Google Places API for input: ${input}`);
+      return { 
+        success: true, 
+        predictions: [] 
+      };
+    }
+  } catch (error: any) {
+    logger.error(`Error calling Google Places API:`, error);
+    throw new HttpsError("internal", "Failed to fetch place suggestions.", error.message);
+  }
+});
 
 // --- NEW Callable Function v2: Partner Register Request ---
 export const partnerRegisterRequest = onCall({ 

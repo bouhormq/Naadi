@@ -9,18 +9,13 @@ import CustomText from '@/components/CustomText';
 
 // Import step components
 import Step1BusinessName from './(onboarding-steps)/Step1HearAboutUs';
-import Step2HearAboutUs from './(onboarding-steps)/Step2HearAboutUs';
-import Step3Location from './(onboarding-steps)/Step3Location';
-import Step4TeamSize from './(onboarding-steps)/Step4TeamSize';
-import Step5Services from './(onboarding-steps)/Step5Services';
-import Step6BusinessName from './(onboarding-steps)/Step6BusinessName';
-import Step7BusinessDescription from './(onboarding-steps)/Step7BusinessDescription';
-import Step8WorkingHours from './(onboarding-steps)/Step8WorkingHours';
-import Step9Photos from './(onboarding-steps)/Step9Photos';
-import Step10StaffSetup from './(onboarding-steps)/Step10StaffSetup';
-import Step11Pricing from './(onboarding-steps)/Step11Pricing';
-import Step12PaymentMethods from './(onboarding-steps)/Step12PaymentMethods';
-import Step13Complete from './(onboarding-steps)/Step13Complete';
+import Step2Services from './(onboarding-steps)/Step5Services';
+import Step3TeamSize from './(onboarding-steps)/Step4TeamSize';
+import Step4Location from './(onboarding-steps)/Step3Location';
+import Step5CurrentSoftware from './(onboarding-steps)/Step2CurrentSoftware';
+import Step6HearAboutUs from './(onboarding-steps)/Step2HearAboutUs';
+import Step7Complete from './(onboarding-steps)/Step13Complete';
+import SetupCompleteScreen from './(onboarding-steps)/SetupCompleteScreen';
 
 function OnboardingContent() {
   const router = useRouter();
@@ -46,17 +41,11 @@ function OnboardingContent() {
       // Verify all required steps are completed
       const requiredFields = [
         'businessName',           // Step 1
-        'hearAboutUs',            // Step 2
-        'currentSoftware',        // Step 3 (was Step 2)
-        'businessLocation',       // Step 4 (was Step 3)
-        'teamSize',               // Step 5 (was Step 4)
-        'services',               // Step 6 (was Step 5)
-        'businessDescription',    // Step 7 (was Step 6)
-        'workingHours',           // Step 8 (was Step 7)
-        'photos',                 // Step 9 (was Step 8)
-        'staff',                  // Step 10 (was Step 9)
-        'packages',               // Step 11 (was Step 10)
-        'paymentMethods',         // Step 12 (was Step 11)
+        'services',               // Step 2
+        'teamSize',               // Step 3
+        'businessLocation',       // Step 4
+        'currentSoftware',        // Step 5
+        'hearAboutUs',            // Step 6
       ];
 
       const allStepsComplete = requiredFields.every(field => data[field] !== undefined && data[field] !== null);
@@ -91,34 +80,19 @@ function OnboardingContent() {
       case 1:
         return <Step1BusinessName onNext={nextStep} />;
       case 2:
-        return <Step2HearAboutUs onNext={nextStep} onBack={prevStep} />;
+        return <Step2Services onNext={nextStep} onBack={prevStep} />;
       case 3:
-        return <Step3Location onNext={nextStep} onBack={prevStep} />;
+        return <Step3TeamSize onNext={nextStep} onBack={prevStep} />;
       case 4:
-        return <Step4TeamSize onNext={nextStep} onBack={prevStep} />;
+        return <Step4Location onNext={nextStep} onBack={prevStep} />;
       case 5:
-        return <Step5Services onNext={nextStep} onBack={prevStep} />;
+        return <Step5CurrentSoftware onNext={nextStep} onBack={prevStep} />;
       case 6:
-        return <Step6BusinessName onNext={nextStep} onBack={prevStep} />;
+        return <Step6HearAboutUs onNext={nextStep} onBack={prevStep} />;
       case 7:
-        return <Step7BusinessDescription onNext={nextStep} onBack={prevStep} />;
+        return <Step7Complete onNext={nextStep} onBack={prevStep} />;
       case 8:
-        return <Step8WorkingHours onNext={nextStep} onBack={prevStep} />;
-      case 9:
-        return <Step9Photos onNext={nextStep} onBack={prevStep} />;
-      case 10:
-        return <Step10StaffSetup onNext={nextStep} onBack={prevStep} />;
-      case 11:
-        return <Step11Pricing onNext={nextStep} onBack={prevStep} />;
-      case 12:
-        return <Step12PaymentMethods onNext={nextStep} onBack={prevStep} />;
-      case 13:
-        return (
-          <Step13Complete 
-            onComplete={handleComplete} 
-            loading={loading}
-          />
-        );
+        return <SetupCompleteScreen onNext={handleComplete} loading={loading} />;
       default:
         return <Step1BusinessName onNext={nextStep} />;
     }
@@ -126,21 +100,17 @@ function OnboardingContent() {
 
   return (
     <View style={styles.container}>
-      {/* Progress bar */}
+      {/* Progress bar - 5 separate chunks with spacing */}
       <View style={styles.progressContainer}>
-        <View
-          style={[
-            styles.progressBar,
-            { width: `${(currentStep / totalSteps) * 100}%` },
-          ]}
-        />
-      </View>
-
-      {/* Step counter */}
-      <View style={styles.stepCounterContainer}>
-        <CustomText style={styles.stepCounter}>
-          Step {currentStep} of {totalSteps}
-        </CustomText>
+        {[1, 2, 3, 4, 5].map((chunk) => (
+          <View
+            key={chunk}
+            style={[
+              styles.progressChunk,
+              { backgroundColor: currentStep >= chunk ? '#2563eb' : '#e0e0e0' },
+            ]}
+          />
+        ))}
       </View>
 
       {/* Step content */}
@@ -167,25 +137,22 @@ const styles = StyleSheet.create({
     backgroundColor: '#f8f9fa',
   },
   progressContainer: {
+    flexDirection: 'row',
     height: 4,
-    backgroundColor: '#e0e0e0',
-    overflow: 'hidden',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    gap: 6,
+    alignItems: 'center',
+    backgroundColor: 'transparent',
+  },
+  progressChunk: {
+    flex: 1,
+    height: 4,
+    borderRadius: 2,
   },
   progressBar: {
     height: '100%',
     backgroundColor: '#2563eb',
-  },
-  stepCounterContainer: {
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    backgroundColor: '#fff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
-  },
-  stepCounter: {
-    fontSize: 12,
-    color: '#64748b',
-    fontWeight: '500',
   },
   content: {
     flex: 1,
