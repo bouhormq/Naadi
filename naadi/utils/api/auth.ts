@@ -29,40 +29,6 @@ export interface SignupData {
 
 // --- Role Check Functions ---
 
-// Helper function to check partner status
-async function checkPartnerStatus(uid: string, email: string): Promise<{ exists: boolean; enabled: boolean }> {
-    try {
-        console.log(`Checking partner status for email: ${email}`);
-        // Query PartnerAccounts collection where email matches
-        const partnerQuery = query(
-            collection(db, 'PartnerAccounts'),
-            where('email', '==', email.toLowerCase()),
-            limit(1)
-        );
-        
-        const querySnapshot = await getDocs(partnerQuery);
-        console.log(`Found ${querySnapshot.size} partner documents`);
-        
-        if (querySnapshot.empty) {
-            console.log(`No partner document found for email: ${email}`);
-            return { exists: false, enabled: false };
-        }
-        
-        const partnerDoc = querySnapshot.docs[0];
-        const data = partnerDoc.data();
-        console.log(`Partner document data:`, data);
-        console.log(`Partner status: ${data?.status}`);
-        
-        return { 
-            exists: true, 
-            enabled: data?.status === 'enabled' 
-        };
-    } catch (error) {
-        console.error("Error checking partner status:", error);
-        return { exists: false, enabled: false };
-    }
-}
-
 /**
  * Checks if a user exists in the Firestore 'Users' collection by email.
  * @param email The email to check.
@@ -93,26 +59,14 @@ export const loginWithEmail = async (email: string, password: string): Promise<A
         const authUser = userCredential.user;
 
         if (!authUser || !authUser.email) {
-             console.error("Login succeeded but user object or email is missing.");
-             throw new Error("Login failed, user data missing.");
+            console.error("Login succeeded but user object or email is missing.");
+            throw new Error("Login failed, user data missing.");
         }
 
         console.log(`User logged in successfully. UID: ${authUser.uid}`);
 
-        // Fetch user data from Firestore
-        const userDocRef = doc(db, "Users", authUser.uid);
-        const userDoc = await getDoc(userDocRef);
-
-        if (!userDoc.exists()) {
-            console.error(`CRITICAL: User ${authUser.email} is authenticated but has no document in 'Users' collection!`);
-            await firebaseSignOut(firebaseAuth);
-            throw new Error("User data not found. Please contact support.");
-        }
-
-        const userData = userDoc.data() as User;
-
         // Force refresh to get latest claims
-        const tokenResult = await authUser.getIdTokenResult(true); 
+        const tokenResult = await authUser.getIdTokenResult(true);
         const claims = tokenResult.claims;
         let userRole: UserRole = claims.role === 'partner' ? 'partner' : 'user'; // Default to user if no/other claim
 
@@ -122,41 +76,89 @@ export const loginWithEmail = async (email: string, password: string): Promise<A
         if (authUser.email === "bouhormq@gmail.com") { // Explicit admin check
             userRole = 'admin';
             console.log(`Admin user ${authUser.email} logged in.`);
-            // Admin users always have onboarding completed
-            return { user: { ...userData, role: 'admin', onboardingCompleted: true }, role: userRole };
         }
-        
+
+        let userData: any = null;
+
         if (userRole === 'partner') {
-            // If identified as partner via claim, double-check Firestore status
-            console.log(`Checking partner status for ${authUser.email} (UID: ${authUser.uid})`);
-            const partnerStatus = await checkPartnerStatus(authUser.uid, authUser.email);
-            console.log(`Partner status check result:`, partnerStatus);
+            // Fetch from PartnerAccounts
+            console.log(`Fetching PartnerAccount for ${authUser.email} (UID: ${authUser.uid})`);
             
-            if (partnerStatus.exists && partnerStatus.enabled) {
+            // Check by querying the 'uid' field
+            const partnersRef = collection(db, 'PartnerAccounts');
+            const q = query(partnersRef, where('uid', '==', authUser.uid));
+            const querySnapshot = await getDocs(q);
+
+            let partnerExists = !querySnapshot.empty;
+            let partnerDocSnap = querySnapshot.empty ? null : querySnapshot.docs[0];
+
+            // Fallback: Check if the document ID matches the UID (legacy check)
+            if (!partnerExists) {
+                const docRef = doc(db, 'PartnerAccounts', authUser.uid);
+                const docSnap = await getDoc(docRef);
+                if (docSnap.exists()) {
+                    partnerExists = true;
+                    partnerDocSnap = docSnap;
+                }
+            }
+
+            if (partnerExists && partnerDocSnap) {
+                userData = partnerDocSnap.data();
+                // Ensure status is enabled
+                if (userData.status !== 'enabled') {
+                    console.warn(`Partner login denied for ${authUser.email}. Status: ${userData.status}`);
+                    await firebaseSignOut(firebaseAuth);
+                    throw new Error("Partner account is disabled.");
+                }
+                userData.role = 'partner'; // Ensure role is present
                 console.log(`Enabled partner ${authUser.email} logged in.`);
-                 return { user: userData, role: userRole };
             } else {
-                 console.warn(`Partner login denied for ${authUser.email}. Status exists: ${partnerStatus.exists}, enabled: ${partnerStatus.enabled}`);
-                await firebaseSignOut(firebaseAuth); // Log out user if partner checks fail
-                 throw new Error("Partner account is disabled or not found.");
+                console.warn(`Partner claim found but no PartnerAccount for ${authUser.uid}`);
+                // Fallback: Check if they are in Users (migration or error)
+                // But request says "use partneraccount instead of user", so we might fail here.
+                // Let's fail to enforce the rule.
+                await firebaseSignOut(firebaseAuth);
+                throw new Error("Partner account not found.");
             }
         } else {
-             // Assume normal user if no partner claim
-             console.log(`Normal user ${authUser.email} logged in.`);
-            // Check if they accidentally exist in PartnerAccounts (shouldn't happen)
-            const partnerCheck = await checkPartnerStatus(authUser.uid, authUser.email);
-             if (partnerCheck.exists) {
-                 console.error(`CRITICAL: User ${authUser.email} logged in as normal user but exists in PartnerAccounts!`);
-                await firebaseSignOut(firebaseAuth);
-                 throw new Error("Account configuration error. Please contact support.");
-             }
-             return { user: userData, role: 'user' };
+            // Fetch user data from Firestore Users collection
+            const userDocRef = doc(db, "Users", authUser.uid);
+            const userDoc = await getDoc(userDocRef);
+
+            if (userDoc.exists()) {
+                userData = userDoc.data();
+                // Check if they accidentally exist in PartnerAccounts (shouldn't happen for normal user)
+                // Optional check
+            } else if (userRole === 'admin') {
+                 // Admin might not have a doc in Users, create a mock one or handle it
+                 userData = {
+                     uid: authUser.uid,
+                     email: authUser.email!,
+                     role: 'admin',
+                     firstName: 'Admin',
+                     lastName: 'User',
+                     onboardingCompleted: true
+                 };
+            }
         }
+
+        if (!userData) {
+            console.error(`CRITICAL: User ${authUser.email} is authenticated but has no document!`);
+            await firebaseSignOut(firebaseAuth);
+            throw new Error("User data not found. Please contact support.");
+        }
+
+        if (userRole === 'admin') {
+             userData.role = 'admin';
+             userData.onboardingCompleted = true;
+        }
+
+        return { user: userData as User, role: userRole };
 
     } catch (error: any) {
         console.error("Login error:", error);
         // Let the UI handle specific error codes from Firebase Auth
-        throw error; 
+        throw error;
     }
 };
 
@@ -192,13 +194,38 @@ export const signupNormalUser = async (data: SignupData): Promise<any> => {
         return user;
     } catch (error: any) {
         console.error("Normal user signup error:", error);
-        throw error;    
+        throw error;
     }
 }
 
 export const editUser = async (uid: string, data: Partial<User>): Promise<User | null> => {
     try {
-        const userRef = doc(db, "Users", uid);
+        let userRef: any = doc(db, "Users", uid);
+        let userDoc = await getDoc(userRef);
+
+        if (!userDoc.exists()) {
+            // Try PartnerAccounts (direct lookup by UID)
+            const partnerRef = doc(db, 'PartnerAccounts', uid);
+            const partnerDoc = await getDoc(partnerRef);
+            if (partnerDoc.exists()) {
+                userRef = partnerRef;
+                userDoc = partnerDoc;
+            } else {
+                // Try querying PartnerAccounts by uid field
+                const partnersCollection = collection(db, 'PartnerAccounts');
+                const q = query(partnersCollection, where('uid', '==', uid));
+                const querySnapshot = await getDocs(q);
+                
+                if (!querySnapshot.empty) {
+                    userRef = querySnapshot.docs[0].ref;
+                    userDoc = querySnapshot.docs[0];
+                } else {
+                    // Not found in either
+                    return null;
+                }
+            }
+        }
+
         await updateDoc(userRef, {
             ...data,
             updatedAt: serverTimestamp(),
@@ -207,12 +234,56 @@ export const editUser = async (uid: string, data: Partial<User>): Promise<User |
 
         const updatedUserDoc = await getDoc(userRef);
         if (updatedUserDoc.exists()) {
-            return updatedUserDoc.data() as User;
+            const userData = updatedUserDoc.data() as any;
+            // Add role if missing (for PartnerAccount)
+            if (!userData.role && userRef.parent.id === 'PartnerAccounts') {
+                userData.role = 'partner';
+            }
+            return userData as User;
         }
         return null;
     } catch (error) {
         console.error("User profile update error:", error);
         throw error;
+    }
+};
+
+/**
+ * Fetches the user profile from Firestore by UID.
+ * @param uid The user's UID.
+ * @returns The User object or null if not found.
+ */
+export const getUserProfile = async (uid: string): Promise<User | null> => {
+    try {
+        // Try Users first (direct lookup)
+        const userDocRef = doc(db, "Users", uid);
+        const userDoc = await getDoc(userDocRef);
+        if (userDoc.exists()) {
+            return userDoc.data() as User;
+        }
+
+        // Try PartnerAccounts (direct lookup by UID)
+        const partnerDocRef = doc(db, 'PartnerAccounts', uid);
+        const partnerDoc = await getDoc(partnerDocRef);
+        if (partnerDoc.exists()) {
+            const data = partnerDoc.data();
+            return { ...data, role: 'partner' } as unknown as User;
+        }
+
+        // Try querying PartnerAccounts by uid field
+        const partnersCollection = collection(db, 'PartnerAccounts');
+        const q = query(partnersCollection, where('uid', '==', uid));
+        const querySnapshot = await getDocs(q);
+        
+        if (!querySnapshot.empty) {
+            const data = querySnapshot.docs[0].data();
+            return { ...data, role: 'partner' } as unknown as User;
+        }
+
+        return null;
+    } catch (error) {
+        console.error("Error fetching user profile:", error);
+        return null;
     }
 };
 
@@ -290,7 +361,30 @@ export const setupAuthListener = (callback: (user: any) => void) => {
  */
 export const completeOnboarding = async (userId: string): Promise<void> => {
     try {
-        const userRef = doc(db, "Users", userId);
+        let userRef: any = doc(db, "Users", userId);
+        let userDoc = await getDoc(userRef);
+
+        if (!userDoc.exists()) {
+             // Try PartnerAccounts (direct lookup by UID)
+             const partnerRef = doc(db, 'PartnerAccounts', userId);
+             const partnerDoc = await getDoc(partnerRef);
+             if (partnerDoc.exists()) {
+                 userRef = partnerRef;
+             } else {
+                 // Try querying PartnerAccounts by uid field
+                 const partnersCollection = collection(db, 'PartnerAccounts');
+                 const q = query(partnersCollection, where('uid', '==', userId));
+                 const querySnapshot = await getDocs(q);
+                 
+                 if (!querySnapshot.empty) {
+                     userRef = querySnapshot.docs[0].ref;
+                 } else {
+                     console.warn(`User ${userId} not found for onboarding completion.`);
+                     return;
+                 }
+             }
+        }
+
         await updateDoc(userRef, {
             onboardingCompleted: true,
         });

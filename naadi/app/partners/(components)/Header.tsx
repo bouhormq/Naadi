@@ -8,7 +8,11 @@ import { useRouter, usePathname } from 'expo-router'; // Import usePathname
 import CustomText from '@/components/CustomText';
 import { useSession } from '@naadi/hooks/ctx';
 
-export default function Header() {
+interface HeaderProps {
+  customAction?: React.ReactNode;
+}
+
+export default function Header({ customAction }: HeaderProps) {
   const router = useRouter();
   const pathname = usePathname(); // Get the current path
   const { width } = useWindowDimensions();
@@ -36,6 +40,7 @@ export default function Header() {
         <CustomText style={styles.logo}>naadi</CustomText>
       </TouchableOpacity>
       <View style={styles.headerButtons}>
+        {customAction}
         {isLoginPage ? (
           // On login page, only show "How it works" if width allows
           width > 360 && (

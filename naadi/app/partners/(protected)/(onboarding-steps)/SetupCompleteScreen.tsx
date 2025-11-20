@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { View, StyleSheet, ActivityIndicator } from 'react-native';
+import { View, StyleSheet, ActivityIndicator, Image } from 'react-native';
 import CustomText from '@/components/CustomText';
 
 interface SetupCompleteScreenProps {
@@ -8,10 +8,13 @@ interface SetupCompleteScreenProps {
 }
 
 export default function SetupCompleteScreen({ onNext, loading }: SetupCompleteScreenProps) {
+  const hasCalledNext = React.useRef(false);
+
   useEffect(() => {
     // Auto-proceed after 2 seconds
     const timer = setTimeout(() => {
-      if (!loading) {
+      if (!loading && !hasCalledNext.current) {
+        hasCalledNext.current = true;
         onNext();
       }
     }, 2000);
@@ -22,6 +25,7 @@ export default function SetupCompleteScreen({ onNext, loading }: SetupCompleteSc
   return (
     <View style={styles.container}>
       <View style={styles.content}>
+
         {/* Success checkmark */}
         <View style={styles.checkmarkContainer}>
           <CustomText style={styles.checkmark}>✓</CustomText>
@@ -93,5 +97,10 @@ const styles = StyleSheet.create({
   loadingText: {
     fontSize: 13,
     color: '#64748b',
+  },
+  onboardingGif: {
+    width: 200,
+    height: 200,
+    marginBottom: 16,
   },
 });

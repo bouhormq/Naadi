@@ -51,34 +51,6 @@ export const loadDraftFromFirestore = async (
 };
 
 /**
- * Finalize onboarding - save all data to permanent location
- * This is called when onboarding is completed
- */
-export const finalizeOnboarding = async (
-  userId: string,
-  data: OnboardingData
-): Promise<void> => {
-  try {
-    // Save to permanent onboarding data collection
-    const onboardingRef = doc(db, ONBOARDING_DATA_COLLECTION, userId);
-    await setDoc(onboardingRef, {
-      userId,
-      data,
-      completedAt: new Date(),
-      version: 1,
-    });
-
-    console.log('Onboarding finalized for user:', userId);
-
-    // Delete the draft after successful completion
-    await deleteDraftFromFirestore(userId);
-  } catch (error) {
-    console.error('Error finalizing onboarding:', error);
-    throw error;
-  }
-};
-
-/**
  * Delete onboarding draft from Firestore
  * This is called after onboarding is completed or when starting over
  */

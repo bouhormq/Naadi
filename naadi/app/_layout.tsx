@@ -20,7 +20,7 @@ function PartnerLayoutNav() {
   const router = useRouter();
   const [isReady, setIsReady] = useState(false);
   const isMobile = Platform.OS === 'ios' || Platform.OS === 'android';
-  
+
   console.log(`[PartnerLayoutNav] App variant: partner, isPartner: true, isMobile: ${isMobile}, isLoggedIn: ${!!session}`);
 
   // Hide splash screen when we're ready to show content
@@ -35,22 +35,28 @@ function PartnerLayoutNav() {
   useEffect(() => {
     // Skip if app is not ready yet
     if (!isReady || isLoading) return;
-    
+
     const path = segments.join('/');
-    console.log(`[PartnerLayoutNav] Checking route protection: ${path}, isLoggedIn: ${!!session}`);
-    
+    console.log(`[PartnerLayoutNav] Route check - path: ${path}, session:`, {
+      isLoggedIn: !!session,
+      role: session?.role,
+      onboardingCompleted: session?.onboardingCompleted
+    });
+
     // Define public routes that don't require login
-    const isPublicRoute = path === 'partners' || 
-                         path === 'partners/login' || 
-                         path === 'partners/signup' || 
-                         path === 'partners/how-it-works' || 
-                         path === 'partners/faq' || 
-                         path === 'partners/contact' ||
-                         path === 'partners/set-password';
-    
+    const isPublicRoute = path === 'partners' ||
+      path === 'partners/login' ||
+      path === 'partners/signup' ||
+      path === 'partners/how-it-works' ||
+      path === 'partners/faq' ||
+      path === 'partners/contact' ||
+      path === 'partners/set-password';
+
     const isOnboardingRoute = path === 'partners/onboarding-flow';
     const isProtectedRoute = path.startsWith('partners/(protected)') || path.startsWith('admin/(protected)');
-    
+
+    console.log(`[PartnerLayoutNav] Route flags - isPublic: ${isPublicRoute}, isOnboarding: ${isOnboardingRoute}, isProtected: ${isProtectedRoute}`);
+
     // Not logged in - only redirect if accessing protected routes
     if (!session) {
       if (isProtectedRoute) {
@@ -60,12 +66,12 @@ function PartnerLayoutNav() {
       // Allow access to public pages (no redirect needed)
       return;
     }
-    
-    // Logged in - check onboarding status
+
+    // Logged in - check onboarding status FIRST before anything else
     if (!session.onboardingCompleted && !isOnboardingRoute) {
       // Redirect to onboarding based on role
       if (session.role === 'partner') {
-        console.log('[PartnerLayoutNav] Partner needs to complete onboarding');
+        console.log('[PartnerLayoutNav] Partner needs to complete onboarding, redirecting...');
         router.replace('/partners/onboarding-flow');
         return;
       } else if (session.role === 'admin') {
@@ -74,11 +80,22 @@ function PartnerLayoutNav() {
         router.replace('/admin/(protected)');
         return;
       }
+    } else if (session.onboardingCompleted && isOnboardingRoute) {
+      // User has completed onboarding but is on the onboarding route - redirect to protected area
+      if (session.role === 'partner') {
+        console.log('[PartnerLayoutNav] Partner completed onboarding, redirecting from onboarding flow');
+        router.replace('/partners/(protected)');
+        return;
+      } else if (session.role === 'admin') {
+        console.log('[PartnerLayoutNav] Admin on onboarding flow, redirecting to admin area');
+        router.replace('/admin/(protected)');
+        return;
+      }
     }
-    
+
     // Logged in and onboarding complete (or admin) - ensure proper access based on role
     const userRole = session.role;
-    
+
     // Already on a public page but logged in - redirect to appropriate protected area
     if (isPublicRoute && session.onboardingCompleted) {
       if (userRole === 'partner') {
@@ -90,7 +107,7 @@ function PartnerLayoutNav() {
       }
       return;
     }
-    
+
     // Role-based access control for protected routes
     if (isProtectedRoute) {
       if (userRole === 'partner' && !path.startsWith('partners/(protected)')) {
@@ -109,7 +126,7 @@ function PartnerLayoutNav() {
   // Show loading indicator while preparing
   if (isLoading || !isReady) {
     return (
-      <View style={{flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#fff'}}>
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#fff' }}>
         <ActivityIndicator size="large" color="#0000ff" />
       </View>
     );
@@ -117,42 +134,42 @@ function PartnerLayoutNav() {
 
   // Configure screen options based on platform
   const screenOptions: NativeStackNavigationOptions = { // Explicitly typed screenOptions
-    headerShown: false, 
-    animation: 'none', 
-    contentStyle: isMobile ? { 
-      paddingTop: 0 
+    headerShown: false,
+    animation: 'none',
+    contentStyle: isMobile ? {
+      paddingTop: 0
     } : undefined
   };
-  
+
   // Render partner-specific layout with modified animation options
   return (
-    <Stack 
+    <Stack
       screenOptions={screenOptions}
       initialRouteName="partners"
     >
-      <Stack.Screen 
-        name="partners" 
+      <Stack.Screen
+        name="partners"
         options={{
           headerShown: false,
-          animation: 'none', 
+          animation: 'none',
           contentStyle: isMobile ? { paddingTop: 0 } : undefined
         }}
       />
-      <Stack.Screen 
-        name="admin" 
+      <Stack.Screen
+        name="admin"
         options={{
           headerShown: false,
-          animation: 'none', 
+          animation: 'none',
           contentStyle: isMobile ? { paddingTop: 0 } : undefined
-        }} 
+        }}
       />
-      <Stack.Screen 
-        name="_redirects/index" 
+      <Stack.Screen
+        name="_redirects/index"
         options={{
           headerShown: false,
-          animation: 'none', 
+          animation: 'none',
           contentStyle: isMobile ? { paddingTop: 0 } : undefined
-        }} 
+        }}
       />
     </Stack>
   );
@@ -165,7 +182,7 @@ function MainLayoutNav() {
   const router = useRouter();
   const [isReady, setIsReady] = useState(false);
   const isMobile = Platform.OS === 'ios' || Platform.OS === 'android';
-  
+
   console.log(`[MainLayoutNav] App variant: main, isPartner: false, isMobile: ${isMobile}, isLoggedIn: ${!!session}`);
 
   // Hide splash screen when we're ready to show content
@@ -180,17 +197,17 @@ function MainLayoutNav() {
   useEffect(() => {
     // Skip if app is not ready yet
     if (!isReady || isLoading) return;
-    
+
     const path = segments.join('/');
     console.log(`[MainLayoutNav] Checking route protection: ${path}, isLoggedIn: ${!!session}`);
-    
+
     // Public routes that can be accessed without being logged in
     const publicRoutes = ['(main)/onboarding', '(main)/login', '(main)/signup'];
     const isPublicRoute = publicRoutes.some(r => path.startsWith(r));
 
     // Protected routes that require a user to be logged in
     const isProtectedRoute = path.startsWith('(main)/(protected)');
-    
+
     // Onboarding route for logged in users
     const isOnboardingRoute = path === '(main)/onboarding-flow';
 
@@ -208,6 +225,10 @@ function MainLayoutNav() {
         // User hasn't completed onboarding, redirect to onboarding flow
         console.log('[MainLayoutNav] User not onboarded, redirecting to onboarding flow.');
         router.replace('/(main)/onboarding-flow');
+      } else if (session.onboardingCompleted && isOnboardingRoute) {
+        // User has completed onboarding but is on the onboarding route
+        console.log('[MainLayoutNav] User completed onboarding, redirecting from onboarding flow.');
+        router.replace('/(main)/(protected)');
       } else if (session.onboardingCompleted && isPublicRoute) {
         // If the user is logged in, onboarded, and on a public route (like login or onboarding),
         // redirect them to the main protected area.
@@ -220,7 +241,7 @@ function MainLayoutNav() {
   // Show loading indicator while preparing
   if (isLoading || !isReady) {
     return (
-      <View style={{flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#fff'}}>
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#fff' }}>
         <ActivityIndicator size="large" color="#0000ff" />
       </View>
     );
@@ -229,49 +250,49 @@ function MainLayoutNav() {
   // Configure screen options based on platform
   const screenOptions: NativeStackNavigationOptions = { // Explicitly typed screenOptions
     headerShown: false,
-    animation: 'none', 
-    contentStyle: isMobile ? { 
+    animation: 'none',
+    contentStyle: isMobile ? {
       paddingTop: 0
     } : undefined
   };
-  
+
   // Render main-specific layout with modified animation options
   return (
-    <Stack 
+    <Stack
       screenOptions={screenOptions}
       initialRouteName="(main)"
     >
-      <Stack.Screen 
-        name="(main)" 
+      <Stack.Screen
+        name="(main)"
         options={{
           headerShown: false,
-          animation: 'none', 
+          animation: 'none',
           contentStyle: isMobile ? { paddingTop: 0 } : undefined
         }}
       />
-      <Stack.Screen 
-        name="partners" 
+      <Stack.Screen
+        name="partners"
         options={{
           headerShown: false,
-          animation: 'none', 
+          animation: 'none',
           contentStyle: isMobile ? { paddingTop: 0 } : undefined
-        }} 
+        }}
       />
-      <Stack.Screen 
-        name="admin" 
+      <Stack.Screen
+        name="admin"
         options={{
           headerShown: false,
-          animation: 'none', 
+          animation: 'none',
           contentStyle: isMobile ? { paddingTop: 0 } : undefined
-        }} 
+        }}
       />
-      <Stack.Screen 
-        name="_redirects/index" 
+      <Stack.Screen
+        name="_redirects/index"
         options={{
           headerShown: false,
-          animation: 'none', 
+          animation: 'none',
           contentStyle: isMobile ? { paddingTop: 0 } : undefined
-        }} 
+        }}
       />
     </Stack>
   );
@@ -282,9 +303,9 @@ function RootLayoutNav() {
   // Get app variant from environment variable
   const appVariant = process.env.EXPO_PUBLIC_APP_VARIANT || 'main';
   const isPartner = appVariant === 'partner';
-  
+
   console.log(`[RootLayoutNav] Rendering ${isPartner ? 'Partner' : 'Main'} layout for variant: ${appVariant}`);
-  
+
   // Render the appropriate layout component based on app variant
   // This avoids any navigation before layout is mounted
   return isPartner ? <PartnerLayoutNav /> : <MainLayoutNav />;
@@ -327,20 +348,20 @@ export default function RootLayout() {
 
   if (!fontsLoaded && !fontError) {
     return (
-      <View style={{flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#fff'}}>
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#fff' }}>
         <ActivityIndicator size="large" color="#0000ff" />
       </View>
     );
   }
-  
+
   if (fontError) {
     return (
-      <View style={{flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#fff'}}>
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#fff' }}>
         <Text>Error loading fonts. Please restart the app.</Text>
       </View>
     );
   }
-  
+
   return (
     <SessionProvider>
       <I18nextProvider i18n={i18n}>

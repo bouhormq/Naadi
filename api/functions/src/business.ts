@@ -41,6 +41,7 @@ interface BusinessWriteData {
 
 const db = admin.firestore();
 const businessesCollection = db.collection("Businesses");
+const PARTNER_ACCOUNTS_COLLECTION = "PartnerAccounts";
 
 /**
  * Gets the business profile for a specific business ID.
@@ -264,7 +265,242 @@ export const getMyBusinesses = onCall({ region: TARGET_REGION }, async (request)
     }
 });
 
+// Helper to get partner account ref, handling potential migration issues or legacy IDs
+async function getPartnerAccountRef(uid: string): Promise<admin.firestore.DocumentReference> {
+  const directRef = db.collection(PARTNER_ACCOUNTS_COLLECTION).doc(uid);
+  const doc = await directRef.get();
+  
+  if (doc.exists) {
+    return directRef;
+  }
+
+  // Fallback: query by uid field
+  const querySnapshot = await db.collection(PARTNER_ACCOUNTS_COLLECTION).where('uid', '==', uid).limit(1).get();
+  if (!querySnapshot.empty) {
+    return querySnapshot.docs[0].ref;
+  }
+
+  // If still not found, return the direct ref so the caller gets a "not found" error on update/get if they try to use it
+  // or maybe we should throw here? For now, let's return directRef to maintain behavior of "trying" to access it.
+  return directRef;
+}
+
+// --- Client Sources Management ---
+
+export const getClientSources = onCall({ region: TARGET_REGION }, async (request) => {
+  if (!request.auth) throw new HttpsError("unauthenticated", "Auth required");
+  const uid = request.auth.uid;
+  
+  try {
+    const ref = await getPartnerAccountRef(uid);
+    const doc = await ref.get();
+    if (!doc.exists) return { sources: [] };
+    const data = doc.data();
+    return { sources: data?.clientSources || [] };
+  } catch (e: any) {
+    logger.error("Error fetching client sources", e);
+    throw new HttpsError("internal", e.message);
+  }
+});
+
+export const createClientSource = onCall({ region: TARGET_REGION }, async (request) => {
+  if (!request.auth) throw new HttpsError("unauthenticated", "Auth required");
+  const uid = request.auth.uid;
+  const { name, active } = request.data;
+  
+  if (!name) throw new HttpsError("invalid-argument", "Name required");
+
+  try {
+    const newSource = {
+      id: db.collection('_').doc().id, // Generate ID
+      name,
+      active: active ?? true,
+      createdAt: Timestamp.now().toDate().toISOString() // Store as string for easier JSON handling
+    };
+    
+    const ref = await getPartnerAccountRef(uid);
+    
+    // Check if doc exists, if not we might need to create it or fail. 
+    // Assuming partner account MUST exist.
+    const doc = await ref.get();
+    if (!doc.exists) {
+        throw new HttpsError("not-found", "Partner account not found.");
+    }
+
+    await ref.update({
+      clientSources: admin.firestore.FieldValue.arrayUnion(newSource)
+    });
+    
+    return { id: newSource.id, success: true };
+  } catch (e: any) {
+    logger.error("Error creating client source", e);
+    throw new HttpsError("internal", e.message);
+  }
+});
+
+export const updateClientSource = onCall({ region: TARGET_REGION }, async (request) => {
+  if (!request.auth) throw new HttpsError("unauthenticated", "Auth required");
+  const uid = request.auth.uid;
+  const { id, name, active } = request.data;
+  
+  if (!id) throw new HttpsError("invalid-argument", "ID required");
+
+  try {
+    const ref = await getPartnerAccountRef(uid);
+
+    await db.runTransaction(async (t) => {
+      const doc = await t.get(ref);
+      if (!doc.exists) throw new HttpsError("not-found", "Partner account not found");
+      
+      const data = doc.data();
+      const sources = data?.clientSources || [];
+      
+      const index = sources.findIndex((s: any) => s.id === id);
+      if (index === -1) throw new HttpsError("not-found", "Source not found");
+      
+      const updatedSource = {
+        ...sources[index],
+        ...(name !== undefined && { name }),
+        ...(active !== undefined && { active }),
+        updatedAt: Timestamp.now().toDate().toISOString()
+      };
+      
+      sources[index] = updatedSource;
+      t.update(ref, { clientSources: sources });
+    });
+    
+    return { success: true };
+  } catch (e: any) {
+    logger.error("Error updating client source", e);
+    throw new HttpsError("internal", e.message);
+  }
+});
+
+export const deleteClientSource = onCall({ region: TARGET_REGION }, async (request) => {
+  if (!request.auth) throw new HttpsError("unauthenticated", "Auth required");
+  const uid = request.auth.uid;
+  const { id } = request.data;
+  
+  if (!id) throw new HttpsError("invalid-argument", "ID required");
+
+  try {
+    const ref = await getPartnerAccountRef(uid);
+
+    await db.runTransaction(async (t) => {
+      const doc = await t.get(ref);
+      if (!doc.exists) throw new HttpsError("not-found", "Partner account not found");
+
+      const data = doc.data();
+      const sources = data?.clientSources || [];
+      
+      const newSources = sources.filter((s: any) => s.id !== id);
+      t.update(ref, { clientSources: newSources });
+    });
+    
+    return { success: true };
+  } catch (e: any) {
+    logger.error("Error deleting client source", e);
+    throw new HttpsError("internal", e.message);
+  }
+});
+
+// --- Locations Management (Subcollection) ---
+
+export const getLocations = onCall({ region: TARGET_REGION }, async (request) => {
+  if (!request.auth) throw new HttpsError("unauthenticated", "Auth required");
+  const uid = request.auth.uid;
+
+  try {
+    const ref = await getPartnerAccountRef(uid);
+    const snapshot = await ref.collection('locations').get();
+    
+    const locations = snapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data(),
+      createdAt: serializeDate(doc.data().createdAt),
+      updatedAt: serializeDate(doc.data().updatedAt)
+    }));
+    
+    return { locations };
+  } catch (e: any) {
+    logger.error("Error fetching locations", e);
+    throw new HttpsError("internal", e.message);
+  }
+});
+
+export const createLocation = onCall({ region: TARGET_REGION }, async (request) => {
+  if (!request.auth) throw new HttpsError("unauthenticated", "Auth required");
+  const uid = request.auth.uid;
+  const data = request.data;
+  
+  if (!data.name) throw new HttpsError("invalid-argument", "Name required");
+
+  try {
+    const ref = await getPartnerAccountRef(uid);
+    const newLocationRef = ref.collection('locations').doc();
+    
+    const newLocation = {
+      ...data,
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      updatedAt: admin.firestore.FieldValue.serverTimestamp()
+    };
+    
+    await newLocationRef.set(newLocation);
+    
+    return { id: newLocationRef.id, success: true };
+  } catch (e: any) {
+    logger.error("Error creating location", e);
+    throw new HttpsError("internal", e.message);
+  }
+});
+
+export const updateLocation = onCall({ region: TARGET_REGION }, async (request) => {
+  if (!request.auth) throw new HttpsError("unauthenticated", "Auth required");
+  const uid = request.auth.uid;
+  const { id, ...data } = request.data;
+  
+  if (!id) throw new HttpsError("invalid-argument", "ID required");
+
+  try {
+    const ref = await getPartnerAccountRef(uid);
+    const locationRef = ref.collection('locations').doc(id);
+    
+    const doc = await locationRef.get();
+    if (!doc.exists) throw new HttpsError("not-found", "Location not found");
+
+    await locationRef.update({
+      ...data,
+      updatedAt: admin.firestore.FieldValue.serverTimestamp()
+    });
+    
+    return { success: true };
+  } catch (e: any) {
+    logger.error("Error updating location", e);
+    throw new HttpsError("internal", e.message);
+  }
+});
+
+export const deleteLocation = onCall({ region: TARGET_REGION }, async (request) => {
+  if (!request.auth) throw new HttpsError("unauthenticated", "Auth required");
+  const uid = request.auth.uid;
+  const { id } = request.data;
+  
+  if (!id) throw new HttpsError("invalid-argument", "ID required");
+
+  try {
+    const ref = await getPartnerAccountRef(uid);
+    const locationRef = ref.collection('locations').doc(id);
+    
+    await locationRef.delete();
+    
+    return { success: true };
+  } catch (e: any) {
+    logger.error("Error deleting location", e);
+    throw new HttpsError("internal", e.message);
+  }
+});
+
 // Ensure this new function is exported from the main index file if needed
 // Example in api/functions/src/index.ts:
 // export { getMyBusinesses } from './business';
-// (This might already be handled by exporting *) 
+// (This might already be handled by exporting *)

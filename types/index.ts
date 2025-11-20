@@ -26,16 +26,16 @@ export interface User {
   role: 'user' | 'partner' | 'admin'; // Include admin role
   profilePic?: string;
   photoURL?: string;
-  phone: PhoneInfo; 
+  phone: PhoneInfo;
   authMethod?: 'email' | 'google' | 'facebook' | 'apple';
-  lastLoginAt?: Date; 
+  lastLoginAt?: Date;
   firstName: string;
   lastName: string;
   agreeToMarketing: boolean;
   onboardingCompleted: boolean; // Track if user has completed onboarding
-  createdAt: Date; 
+  createdAt: Date;
   favorites?: string[]; // Array of establishment IDs
-  gender?: 'male' | 'female'; 
+  gender?: 'male' | 'female';
 }
 
 /**
@@ -201,20 +201,20 @@ export interface PhoneConfirmRequest {
  * Stored in a separate 'businesses' collection.
  */
 export interface Business {
-  id?: string; 
-  ownerUid: string; 
+  id?: string;
+  ownerUid: string;
   name: string;
-  address: { 
+  address: {
     street?: string;
     city?: string;
     state?: string;
     zip?: string;
     country?: string;
   };
-  phone: PhoneInfo; 
-  website?: string; 
+  phone: PhoneInfo;
+  website?: string;
   description?: string;
-  category: string; 
+  category: string;
   createdAt?: Date; // Use standard Date
   updatedAt?: Date; // Use standard Date
 }
@@ -224,7 +224,7 @@ export interface Business {
  * This is created after an admin approves a PartnerSignupRequest.
  */
 export interface PartnerAccount {
-  id: string; // Corresponds to the original requestId initially
+  // id: string; // Removed as per request
   uid?: string; // Firebase Auth UID, added after registration completion
   email: string;
   firstName: string;
@@ -241,6 +241,73 @@ export interface PartnerAccount {
   createdAt: Date; // Timestamp when the original request was created - Keep as Date?
   registeredAt?: Date; // Timestamp when the partner completed registration (set password) - Keep as Date?
   businessId?: string; // ID linking to the Business document in the 'businesses' collection
+  address?: string; // Specific address field if different from location
+  workingHours?: any; // Structure for working hours
+  openingHours?: any; // Alternative structure for working hours
+  onboardingCompleted?: boolean; // Track if partner has completed onboarding
+  facebook?: string;
+  instagram?: string;
+  twitter?: string;
+  /** Custom client sources created by the partner (editable) */
+  clientSources?: ClientSource[];
+}
+
+/**
+ * Custom client source owned by a partner. Fixed sources (like Instagram, Google) are not stored
+ * and are shown as built-in options in the UI. Custom sources created by the partner are stored
+ * and can be edited or deleted.
+ */
+export interface ClientSource {
+  id?: string;
+  ownerUid?: string; // partner uid
+  name: string;
+  active: boolean;
+  createdAt?: Date;
+}
+
+/**
+ * Represents a Location for a Partner Business.
+ * Stored in a subcollection 'locations' under PartnerAccount.
+ */
+export interface Location {
+  id?: string;
+  name: string; // "Main Branch"
+  email?: string;
+  phone?: string; // Contact number
+  
+  // Business Type
+  services?: {
+    primary?: string;
+    related?: string[];
+  };
+
+  // Location Details
+  address: string;
+  coordinates?: {
+    lat: number;
+    lng: number;
+  };
+  noPhysicalLocation?: boolean;
+  
+  // Billing Details
+  billing?: {
+    companyName?: string;
+    address?: string;
+    notes?: string;
+  };
+
+  // Opening Hours
+  openingHours?: {
+    [day: string]: {
+      isOpen: boolean;
+      start: string;
+      end: string;
+    };
+  };
+
+  isDefault?: boolean;
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
 /**
@@ -357,7 +424,7 @@ export interface StudioAnalyticsData {
 
 export interface Service {
   id: string;
-  name:string;
+  name: string;
   duration: string;
   price: string;
   category: string;
@@ -397,7 +464,7 @@ export interface EstablishmentData {
   };
 }
 
-export interface PartnerContactFormData {}
+export interface PartnerContactFormData { }
 
 export interface Appointment {
   id: string;
@@ -442,4 +509,18 @@ export interface Review {
   date: string;
   teamMemberId?: string; // Optional, for team member specific reviews
   serviceId?: string; // Optional, for service specific reviews
+}
+
+/**
+ * Data collected during the partner onboarding process.
+ */
+export interface OnboardingData {
+  businessName?: string;
+  services?: string[] | { primary: string; related: string[] } | string; // Allow various formats
+  teamSize?: string;
+  businessLocation?: string | { address: string; lat: number; lng: number }; // Allow string or object
+  currentSoftware?: string;
+  hearAboutUs?: string;
+  // Add other fields as needed based on your onboarding steps
+  [key: string]: any; // Allow flexibility for now
 }

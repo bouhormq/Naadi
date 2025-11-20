@@ -54,9 +54,10 @@ type MapViewComponentProps = {
   singleVenueMode?: boolean;
   scrollEnabled?: boolean;
   zoomEnabled?: boolean;
+  options?: any;
 };
 
-export default function MapViewComponent({ mapRef, filteredVenues, animatedY, handleCardPress, region, singleVenueMode, scrollEnabled = true, zoomEnabled = true, onMarkerPress }: MapViewComponentProps & { onMarkerPress?: (venueId: string) => void }) {
+export default function MapViewComponent({ mapRef, filteredVenues, animatedY, handleCardPress, region, singleVenueMode, scrollEnabled = true, zoomEnabled = true, options, onMarkerPress }: MapViewComponentProps & { onMarkerPress?: (venueId: string) => void }) {
   const onRegionChangeComplete = (region: Region) => {
     const { latitude, longitude } = region;
 
@@ -80,7 +81,23 @@ export default function MapViewComponent({ mapRef, filteredVenues, animatedY, ha
     }
   };
 
-  
+  // Force update map region when prop changes
+  React.useEffect(() => {
+    if (region && mapRef.current) {
+      // Ensure google.maps is available before using animateToRegion (web implementation)
+      if (typeof google !== 'undefined' && google.maps && typeof google.maps.LatLngBounds === 'function') {
+        mapRef.current.animateToRegion(region, 1000);
+      } else if (mapRef.current.setCamera) {
+        // Fallback for web maps: set camera directly
+        mapRef.current.setCamera({
+          center: { latitude: region.latitude, longitude: region.longitude },
+          zoom: 15,
+        });
+      }
+    }
+  }, [region]);
+
+
 
   const handleMarkerPress = (venueId: string) => {
     animatedY.setValue(0);
@@ -98,32 +115,33 @@ export default function MapViewComponent({ mapRef, filteredVenues, animatedY, ha
     <CustomMapView
       ref={mapRef}
       style={styles.map}
-      initialRegion={singleVenueMode && region ? region : initialRegion}
-      {...(region && !singleVenueMode ? { region } : {})}
+      initialRegion={initialRegion}
+      {...(region ? { region } : {})}
       onRegionChangeComplete={onRegionChangeComplete}
       renderCluster={renderCluster}
       radius={500}
       scrollEnabled={scrollEnabled}
       zoomEnabled={zoomEnabled}
+      options={options}
     >
       {singleVenueMode && filteredVenues.length === 1 ? (
-      <CustomMarker
-        key={filteredVenues[0].id}
-        coordinate={filteredVenues[0].coordinate}
-        onPress={() => {}}
-        type={filteredVenues[0].type}
-        services={filteredVenues[0].services || filteredVenues[0].activities || []}
-      />
-      ) : (
-      filteredVenues.map((venue) => (
         <CustomMarker
-        key={venue.id}
-        coordinate={venue.coordinate}
-        onPress={() => handleMarkerPress(venue.id)}
-        type={venue.type}
-        services={venue.services || venue.activities || []}
+          key={filteredVenues[0].id}
+          coordinate={filteredVenues[0].coordinate}
+          onPress={() => { }}
+          type={filteredVenues[0].type}
+          services={filteredVenues[0].services || filteredVenues[0].activities || []}
         />
-      ))
+      ) : (
+        filteredVenues.map((venue) => (
+          <CustomMarker
+            key={venue.id}
+            coordinate={venue.coordinate}
+            onPress={() => handleMarkerPress(venue.id)}
+            type={venue.type}
+            services={venue.services || venue.activities || []}
+          />
+        ))
       )}
     </CustomMapView>
   );

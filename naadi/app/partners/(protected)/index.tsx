@@ -12,12 +12,15 @@ import {
     Platform,
     FlatList
 } from 'react-native';
+import { useRouter, useFocusEffect, Stack } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 import CustomText from '@/components/CustomText'; 
-import { getMyBusinesses, setMyBusinessProfile } from '@naadi/api'; 
+import { getMyBusinesses, setMyBusinessProfile, getPartnerOnboardingStatus } from '@naadi/api'; 
 import { Business, PhoneInfo } from '../../../../types'; // Adjust path as needed
-import { auth } from '../../../config/firebase/firebase'; // Import auth directly
-import { onAuthStateChanged, User } from 'firebase/auth'; // Import onAuthStateChanged
 import PhoneInput, { countriesData } from '@/components/PhoneInput'; // Import PhoneInput component and countriesData
+import PartnerOnboardingSteps from '@/components/PartnerOnboardingSteps';
+import { useSession } from '../../../hooks/ctx';
+import Header from '../(components)/Header';
 
 // Define the expected payload type for setMyBusinessProfile API call locally
 // Based on the API function signature: Partial<Pick<Business, 'id'>> & Omit<Business, 'id' | 'ownerUid' | 'createdAt' | 'updatedAt'>
@@ -35,6 +38,9 @@ const getDefaultPhoneInfo = (): PhoneInfo => {
 };
 
 export default function PartnerProtectedIndex() {
+    const router = useRouter();
+    const { session, isLoading: isSessionLoading } = useSession();
+
     // State for the list of businesses
     const [businessList, setBusinessList] = useState<Business[]>([]);
     const [selectedBusinessId, setSelectedBusinessId] = useState<string | null>(null); // null = creating new, string = editing existing
@@ -43,7 +49,6 @@ export default function PartnerProtectedIndex() {
     const [isLoadingList, setIsLoadingList] = useState(true); // Loading the list
     const [isSaving, setIsSaving] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const [checkingAuth, setCheckingAuth] = useState(true); 
 
     // Form state - Clear initial values, will be populated on selection
     const [name, setName] = useState('');
@@ -53,6 +58,33 @@ export default function PartnerProtectedIndex() {
     // Initialize phoneInfo state with a default structure, never null
     const [phoneInfo, setPhoneInfo] = useState<PhoneInfo>(getDefaultPhoneInfo());
     const [isPhoneValid, setIsPhoneValid] = useState<boolean>(true); 
+
+    const [onboardingSteps, setOnboardingSteps] = useState({
+        address: false,
+        website: false,
+        services: false,
+        team: false,
+        hours: false,
+    });
+    const [isPanelVisible, setIsPanelVisible] = useState(true);
+
+    const checkOnboardingStatus = useCallback(async () => {
+        try {
+            const status = await getPartnerOnboardingStatus();
+            setOnboardingSteps(status);
+        } catch (error) {
+            console.error("Error checking onboarding status:", error);
+        }
+    }, []);
+
+    // Re-check onboarding status whenever the screen comes into focus
+    useFocusEffect(
+        useCallback(() => {
+            if (session) {
+                checkOnboardingStatus();
+            }
+        }, [session, checkOnboardingStatus])
+    );
 
     // Function to populate form fields based on selected business
     const populateForm = (business: Business | null) => {
@@ -76,17 +108,11 @@ export default function PartnerProtectedIndex() {
     };
 
     // Fetch business list data
-    const fetchBusinesses = useCallback(async (user: User | null) => {
-        if (!user) { 
-            setError("Authentication error occurred.");
-            setIsLoadingList(false);
-            setCheckingAuth(false);
-            return;
-        }
+    const fetchBusinesses = useCallback(async () => {
         setIsLoadingList(true);
         setError(null);
         try {
-            console.log(`Fetching business list for user: ${user.uid}`); 
+            console.log(`Fetching business list...`); 
             const list = await getMyBusinesses(); 
             setBusinessList(list);
             if (list.length > 0) {
@@ -108,11 +134,11 @@ export default function PartnerProtectedIndex() {
 
     // Handle auth state changes
     useEffect(() => {
-        const unsubscribe = onAuthStateChanged(auth, (user) => {
-            setCheckingAuth(false); // Auth check is complete
-            if (user) {
-                console.log("Auth state confirmed: User logged in", user.uid);
-                fetchBusinesses(user); // Fetch list when logged in
+        if (!isSessionLoading) {
+            if (session) {
+                console.log("Auth state confirmed: User logged in", session.uid);
+                fetchBusinesses(); // Fetch list when logged in
+                checkOnboardingStatus();
             } else {
                 console.log("Auth state confirmed: User logged out");
                 setIsLoadingList(false); // No data to load
@@ -121,9 +147,8 @@ export default function PartnerProtectedIndex() {
                 setSelectedBusinessId(null); // Reset selection
                 populateForm(null); // Clear form
             }
-        });
-        return () => unsubscribe();
-    }, [fetchBusinesses]); // Depend on fetchBusinesses
+        }
+    }, [session, isSessionLoading, fetchBusinesses, checkOnboardingStatus]);
 
     // Handle selecting a business from the list or creating new
     const handleSelectBusiness = (businessId: string | null) => {
@@ -133,6 +158,15 @@ export default function PartnerProtectedIndex() {
         } else {
             const selected = businessList.find(b => b.id === businessId);
             populateForm(selected || null); 
+        }
+    };
+
+    const handlePressStep = (step: string) => {
+        if (step === 'website') {
+            router.push('/partners/workspace-settings');
+        } else {
+            Alert.alert("Step Selected", `You selected: ${step}`);
+            // Navigate to the appropriate screen for the step
         }
     };
 
@@ -153,8 +187,7 @@ export default function PartnerProtectedIndex() {
     const handleSave = async () => {
         console.log("handleSave called"); 
 
-        const user = auth.currentUser;
-        if (!user) {
+        if (!session) {
             console.log("handleSave exit: No user"); 
             Alert.alert("Authentication Error", "Cannot save profile. User is not authenticated.");
             return;
@@ -199,7 +232,7 @@ export default function PartnerProtectedIndex() {
             console.log("handleSave: setMyBusinessProfile call successful", result); 
 
             Alert.alert("Success", result.message || "Business profile saved successfully!");
-            await fetchBusinesses(user); 
+            await fetchBusinesses(); 
            
             // If it was a creation, select the newly created business
             if (!selectedBusinessId && result.businessId) {
@@ -243,7 +276,7 @@ export default function PartnerProtectedIndex() {
     );
 
     // Show loading indicator while checking auth state
-    if (checkingAuth) {
+    if (isSessionLoading) {
         return (
             <View style={styles.centered}>
                 <ActivityIndicator size="large" />
@@ -262,127 +295,157 @@ export default function PartnerProtectedIndex() {
         );
     }
 
+    const totalTasks = 5;
+    const completedTasks = Object.values(onboardingSteps).filter(Boolean).length;
+    const progress = completedTasks / totalTasks;
+    const allTasksFinished = completedTasks === totalTasks;
+    const showCompleteSetup = !isPanelVisible && !allTasksFinished;
+
+    const CompleteSetupButton = () => (
+        <TouchableOpacity 
+            style={styles.completeSetupButton} 
+            onPress={() => setIsPanelVisible(true)}
+        >
+            <View style={styles.progressCircleSmall}>
+                <CustomText style={styles.progressTextSmall}>{Math.round(progress * 100)}%</CustomText>
+            </View>
+            <CustomText style={styles.completeSetupText}>Complete Setup</CustomText>
+            <Ionicons name="chevron-forward" size={16} color="#fff" />
+        </TouchableOpacity>
+    );
+
     // Main component rendering
     return (
-        <KeyboardAvoidingView 
-            behavior={Platform.OS === "ios" ? "padding" : "height"}
-            style={styles.keyboardAvoidingContainer}
-        >
-            <View style={styles.listContainer}>
-                <CustomText style={styles.listTitle}>Your Businesses</CustomText>
-                {isLoadingList ? (
-                    <ActivityIndicator style={{ marginTop: 10 }}/>
-                ) : businessList.length === 0 ? (
-                    <CustomText style={styles.noBusinessesText}>No businesses found. Create one below!</CustomText>
-                ) : (
-                    <FlatList
-                        data={businessList}
-                        renderItem={renderBusinessItem}
-                        keyExtractor={(item) => item.id ?? `fallback-${Math.random()}`}
-                        style={styles.flatList}
-                        ListFooterComponent={( // Add "Create New" button at the end of the list
-                             <TouchableOpacity 
-                                style={[
-                                    styles.listItem, 
-                                    styles.createNewButton,
-                                    selectedBusinessId === null && styles.listItemSelected // Highlight if "create new" is active
-                                ]} 
-                                onPress={() => handleSelectBusiness(null)} // null ID signifies create new
-                            >
-                                <CustomText 
-                                    style={[
-                                        styles.listItemText, 
-                                        styles.createNewButtonText,
-                                        selectedBusinessId === null && styles.listItemTextSelected
-                                    ]}
-                                >
-                                    + Create New Business
-                                </CustomText>
-                            </TouchableOpacity>
-                        )}
-                    />
-                )}
-                 {error && !error.includes("User is not authenticated") && !error.includes("list") && (
-                    <CustomText style={[styles.errorText, { marginTop: 10 }]}>{error}</CustomText>
-                )}
-            </View>
-
-            <ScrollView contentContainerStyle={styles.scrollContainer} keyboardShouldPersistTaps="handled">
-                <CustomText style={styles.title}>
-                    {selectedBusinessId ? 'Edit Business Profile' : 'Create New Business'}
-                </CustomText>
-                
-                {/* Error specifically related to saving */}
-                 {error && error.includes("Failed to save") && (
-                    <CustomText style={styles.errorText}>{error}</CustomText>
-                )}
-
-                {/* Form Fields - same as before but populated dynamically */}
-                <CustomText style={styles.label}>Business Name *</CustomText>
-                <TextInput
-                    style={styles.input}
-                    value={name}
-                    onChangeText={setName}
-                    placeholder="Your Business Name"
-                    placeholderTextColor="#9ca3af"
+        <View style={{ flex: 1, backgroundColor: '#f8f9fa' }}>
+            <Stack.Screen options={{ headerShown: false }} />
+            <Header customAction={showCompleteSetup ? <CompleteSetupButton /> : null} />
+            
+            <KeyboardAvoidingView 
+                behavior={Platform.OS === "ios" ? "padding" : "height"}
+                style={styles.keyboardAvoidingContainer}
+            >
+                <PartnerOnboardingSteps 
+                    steps={onboardingSteps} 
+                    onPressStep={handlePressStep} 
+                    isVisible={isPanelVisible}
+                    onClose={() => setIsPanelVisible(false)}
                 />
-
-                <CustomText style={styles.label}>Category *</CustomText>
-                <TextInput
-                    style={styles.input}
-                    value={category}
-                    onChangeText={setCategory}
-                    placeholder="e.g., Yoga Studio, Gym, Wellness Center"
-                    placeholderTextColor="#9ca3af"
-                />
-
-                <CustomText style={styles.label}>Phone Number *</CustomText>
-                <PhoneInput
-                    value={phoneInfo} // Now always passes PhoneInfo, never null
-                    onChangeInfo={handlePhoneChange} 
-                    isValid={isPhoneValid} 
-                    containerStyle={{ marginBottom: isPhoneValid ? 20 : 5 }} 
-                />
-                {!isPhoneValid && <CustomText style={styles.validationErrorText}>Please enter a valid phone number.</CustomText>}
-
-
-                <CustomText style={styles.label}>Description</CustomText>
-                <TextInput
-                    style={[styles.input, styles.textArea]}
-                    value={description}
-                    onChangeText={setDescription}
-                    placeholder="Tell users about your business..."
-                    placeholderTextColor="#9ca3af"
-                    multiline
-                />
-
-                <CustomText style={styles.label}>Website</CustomText>
-                <TextInput
-                    style={styles.input}
-                    value={website}
-                    onChangeText={setWebsite}
-                    placeholder="https://yourbusiness.com"
-                    placeholderTextColor="#9ca3af"
-                    keyboardType="url"
-                    autoCapitalize="none"
-                />
-
-                <TouchableOpacity 
-                    style={[styles.button, isSaving && styles.buttonDisabled]}
-                    onPress={handleSave}
-                    disabled={isSaving || isLoadingList} // Disable save if list is loading
-                >
-                    {isSaving ? (
-                        <ActivityIndicator color="#fff" size="small" /> 
+                <View style={styles.listContainer}>
+                    <CustomText style={styles.listTitle}>Your Businesses</CustomText>
+                    {isLoadingList ? (
+                        <ActivityIndicator style={{ marginTop: 10 }}/>
+                    ) : businessList.length === 0 ? (
+                        <CustomText style={styles.noBusinessesText}>No businesses found. Create one below!</CustomText>
                     ) : (
-                        <CustomText style={styles.buttonText}>
-                            {selectedBusinessId ? 'Update Profile' : 'Create Profile'}
-                        </CustomText>
+                        <FlatList
+                            data={businessList}
+                            renderItem={renderBusinessItem}
+                            keyExtractor={(item) => item.id ?? `fallback-${Math.random()}`}
+                            style={styles.flatList}
+                            ListFooterComponent={( // Add "Create New" button at the end of the list
+                                <TouchableOpacity 
+                                    style={[
+                                        styles.listItem, 
+                                        styles.createNewButton,
+                                        selectedBusinessId === null && styles.listItemSelected // Highlight if "create new" is active
+                                    ]} 
+                                    onPress={() => handleSelectBusiness(null)} // null ID signifies create new
+                                >
+                                    <CustomText 
+                                        style={[
+                                            styles.listItemText, 
+                                            styles.createNewButtonText,
+                                            selectedBusinessId === null && styles.listItemTextSelected
+                                        ]}
+                                    >
+                                        + Create New Business
+                                    </CustomText>
+                                </TouchableOpacity>
+                            )}
+                        />
                     )}
-                </TouchableOpacity>
+                    {error && !error.includes("User is not authenticated") && !error.includes("list") && (
+                        <CustomText style={[styles.errorText, { marginTop: 10 }]}>{error}</CustomText>
+                    )}
+                </View>
 
-            </ScrollView>
-        </KeyboardAvoidingView>
+                <ScrollView contentContainerStyle={styles.scrollContainer} keyboardShouldPersistTaps="handled">
+                    <CustomText style={styles.title}>
+                        {selectedBusinessId ? 'Edit Business Profile' : 'Create New Business'}
+                    </CustomText>
+                    
+                    {/* Error specifically related to saving */}
+                    {error && error.includes("Failed to save") && (
+                        <CustomText style={styles.errorText}>{error}</CustomText>
+                    )}
+
+                    {/* Form Fields - same as before but populated dynamically */}
+                    <CustomText style={styles.label}>Business Name *</CustomText>
+                    <TextInput
+                        style={styles.input}
+                        value={name}
+                        onChangeText={setName}
+                        placeholder="Your Business Name"
+                        placeholderTextColor="#9ca3af"
+                    />
+
+                    <CustomText style={styles.label}>Category *</CustomText>
+                    <TextInput
+                        style={styles.input}
+                        value={category}
+                        onChangeText={setCategory}
+                        placeholder="e.g., Yoga Studio, Gym, Wellness Center"
+                        placeholderTextColor="#9ca3af"
+                    />
+
+                    <CustomText style={styles.label}>Phone Number *</CustomText>
+                    <PhoneInput
+                        value={phoneInfo} // Now always passes PhoneInfo, never null
+                        onChangeInfo={handlePhoneChange} 
+                        isValid={isPhoneValid} 
+                        containerStyle={{ marginBottom: isPhoneValid ? 20 : 5 }} 
+                    />
+                    {!isPhoneValid && <CustomText style={styles.validationErrorText}>Please enter a valid phone number.</CustomText>}
+
+
+                    <CustomText style={styles.label}>Description</CustomText>
+                    <TextInput
+                        style={[styles.input, styles.textArea]}
+                        value={description}
+                        onChangeText={setDescription}
+                        placeholder="Tell users about your business..."
+                        placeholderTextColor="#9ca3af"
+                        multiline
+                    />
+
+                    <CustomText style={styles.label}>Website</CustomText>
+                    <TextInput
+                        style={styles.input}
+                        value={website}
+                        onChangeText={setWebsite}
+                        placeholder="https://yourbusiness.com"
+                        placeholderTextColor="#9ca3af"
+                        keyboardType="url"
+                        autoCapitalize="none"
+                    />
+
+                    <TouchableOpacity 
+                        style={[styles.button, isSaving && styles.buttonDisabled]}
+                        onPress={handleSave}
+                        disabled={isSaving || isLoadingList} // Disable save if list is loading
+                    >
+                        {isSaving ? (
+                            <ActivityIndicator color="#fff" size="small" /> 
+                        ) : (
+                            <CustomText style={styles.buttonText}>
+                                {selectedBusinessId ? 'Update Profile' : 'Create Profile'}
+                            </CustomText>
+                        )}
+                    </TouchableOpacity>
+
+                </ScrollView>
+            </KeyboardAvoidingView>
+        </View>
     );
 }
 
@@ -513,5 +576,34 @@ const styles = StyleSheet.create({
         fontSize: 12,
         marginTop: -15, // Position below the input
         marginBottom: 15,
-    }
-}); 
+    },
+    completeSetupButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#6366f1', // Indigo-500
+        paddingVertical: 6,
+        paddingHorizontal: 12,
+        borderRadius: 20,
+        marginRight: 12,
+    },
+    completeSetupText: {
+        color: '#fff',
+        fontWeight: '600',
+        fontSize: 14,
+        marginHorizontal: 8,
+    },
+    progressCircleSmall: {
+        width: 24,
+        height: 24,
+        borderRadius: 12,
+        borderWidth: 2,
+        borderColor: '#fff',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    progressTextSmall: {
+        color: '#fff',
+        fontSize: 8,
+        fontWeight: 'bold',
+    },
+});

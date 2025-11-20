@@ -127,6 +127,12 @@ const PartnerLayout = () => {
           } : { headerShown: true })
         }} 
       />
+      <Stack.Screen 
+        name="(protected)/workspace-settings/edit" 
+        options={{ 
+          headerShown: false 
+        }} 
+      />
       {/* Add other partner screens */} 
     </Stack>
   );

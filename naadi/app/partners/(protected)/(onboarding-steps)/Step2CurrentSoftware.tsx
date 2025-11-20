@@ -4,34 +4,36 @@ import CustomText from '@/components/CustomText';
 import { Ionicons } from '@expo/vector-icons';
 import { useOnboarding } from '@naadi/utils/onboarding/OnboardingContext';
 
-const options = [
-  { id: 'friend', label: 'Recommended by a friend', icon: '👥' },
-  { id: 'search', label: 'Search engine (e.g. Google, Bing)', icon: '🔍' },
-  { id: 'social', label: 'Social media', icon: '📱' },
-  { id: 'email', label: 'Advert in the mail', icon: '📧' },
-  { id: 'magazine', label: 'Magazine ad', icon: '📰' },
-  { id: 'website', label: 'Ratings website (e.g. Capterra, Trustpilot)', icon: '⭐' },
+const softwareOptions = [
+  { id: 'fresha', label: 'Fresha', icon: '🎯' },
+  { id: 'acuityScheduling', label: 'Acuity Scheduling', icon: '📅' },
+  { id: 'mindbody', label: 'Mindbody', icon: '💪' },
+  { id: 'booksy', label: 'Booksy', icon: '📱' },
+  { id: 'vagaro', label: 'Vagaro', icon: '✂️' },
+  { id: 'simplybook', label: 'SimplyBook.me', icon: '📖' },
+  { id: 'square', label: 'Square', icon: '◻️' },
   { id: 'other', label: 'Other', icon: '❓' },
+  { id: 'none', label: 'No software yet', icon: '📝' },
 ];
 
-interface Step6Props {
+interface Step5Props {
   onNext: () => void;
   onBack: () => void;
 }
 
-export default function Step2HearAboutUs({ onNext, onBack }: Step6Props) {
+export default function Step2CurrentSoftware({ onNext, onBack }: Step5Props) {
   const { data, updateData, saveToFirebase, isSaving } = useOnboarding();
-  const [selected, setSelected] = useState<string | undefined>(data.hearAboutUs);
+  const [selected, setSelected] = useState<string | undefined>(data.currentSoftware);
   const [localSaving, setLocalSaving] = useState(false);
 
   const handleSelect = (optionId: string) => {
     // Toggle: if already selected, deselect; otherwise select
     if (selected === optionId) {
       setSelected(undefined);
-      updateData('hearAboutUs', undefined);
+      updateData('currentSoftware', undefined);
     } else {
       setSelected(optionId);
-      updateData('hearAboutUs', optionId);
+      updateData('currentSoftware', optionId);
     }
   };
 
@@ -74,52 +76,52 @@ export default function Step2HearAboutUs({ onNext, onBack }: Step6Props) {
 
       {/* Main content with centered layout */}
       <View style={styles.contentWrapper}>
-          {/* Account setup label */}
-          <CustomText style={styles.accountSetupLabel}>Final step</CustomText>
+        {/* Account setup label */}
+        <CustomText style={styles.accountSetupLabel}>Account setup</CustomText>
 
-          {/* Title */}
-          <CustomText style={styles.title}>How did you hear about us?</CustomText>
+        {/* Title */}
+        <CustomText style={styles.title}>Which software are you currently using?</CustomText>
 
-          {/* Subtitle */}
-          <CustomText style={styles.subtitle}>
-            This helps us understand where to find more partners like you
-          </CustomText>
+        {/* Subtitle */}
+        <CustomText style={styles.subtitle}>
+          If you're looking to switch, we can help speed up your business setup and import your data into your new Naadi account.
+        </CustomText>
 
-          {/* Options */}
-          <View style={styles.optionsContainer}>
-            {options.map((option) => (
-              <TouchableOpacity
-                key={option.id}
-                style={[
-                  styles.option,
-                  selected === option.id && styles.optionSelected,
-                ]}
-                onPress={() => handleSelect(option.id)}
-              >
-                <View style={styles.optionContent}>
-                  <CustomText style={styles.optionIcon}>{option.icon}</CustomText>
-                  <View style={styles.optionTextContainer}>
-                    <CustomText
-                      style={[
-                        styles.optionLabel,
-                        selected === option.id && styles.optionLabelSelected,
-                      ]}
-                    >
-                      {option.label}
-                    </CustomText>
-                  </View>
+        {/* Options */}
+        <View style={styles.optionsContainer}>
+          {softwareOptions.map((option) => (
+            <TouchableOpacity
+              key={option.id}
+              style={[
+                styles.option,
+                selected === option.id && styles.optionSelected,
+              ]}
+              onPress={() => handleSelect(option.id)}
+            >
+              <View style={styles.optionContent}>
+                <CustomText style={styles.optionIcon}>{option.icon}</CustomText>
+                <View style={styles.optionTextContainer}>
+                  <CustomText
+                    style={[
+                      styles.optionLabel,
+                      selected === option.id && styles.optionLabelSelected,
+                    ]}
+                  >
+                    {option.label}
+                  </CustomText>
                 </View>
-                {selected === option.id && (
-                  <View style={styles.checkmark}>
-                    <Ionicons name="checkmark-circle" size={24} color="#2563eb" />
-                  </View>
-                )}
-              </TouchableOpacity>
-            ))}
-          </View>
+              </View>
+              {selected === option.id && (
+                <View style={styles.checkmark}>
+                  <Ionicons name="checkmark-circle" size={24} color="#2563eb" />
+                </View>
+              )}
+            </TouchableOpacity>
+          ))}
         </View>
-      </ScrollView>
-    );
+      </View>
+    </ScrollView>
+  );
 }
 
 const styles = StyleSheet.create({

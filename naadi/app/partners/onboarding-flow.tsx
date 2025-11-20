@@ -4,22 +4,22 @@ import { useRouter } from 'expo-router';
 import { completeOnboarding } from '@naadi/api';
 import { useSession } from '@naadi/hooks/ctx';
 import { OnboardingProvider, useOnboarding } from '@naadi/utils/onboarding/OnboardingContext';
-import { finalizeOnboarding } from '@naadi/utils/onboarding/onboardingService';
+import { finalizeOnboarding } from '@naadi/utils/api/partner';
 import CustomText from '@/components/CustomText';
 
 // Import step components
-import Step1BusinessName from './(onboarding-steps)/Step1HearAboutUs';
-import Step2Services from './(onboarding-steps)/Step5Services';
-import Step3TeamSize from './(onboarding-steps)/Step4TeamSize';
-import Step4Location from './(onboarding-steps)/Step3Location';
-import Step5CurrentSoftware from './(onboarding-steps)/Step2CurrentSoftware';
-import Step6HearAboutUs from './(onboarding-steps)/Step2HearAboutUs';
-import Step7Complete from './(onboarding-steps)/Step13Complete';
-import SetupCompleteScreen from './(onboarding-steps)/SetupCompleteScreen';
+import Step1BusinessName from './(protected)/(onboarding-steps)/Step1HearAboutUs';
+import Step2Services from './(protected)/(onboarding-steps)/Step5Services';
+import Step3TeamSize from './(protected)/(onboarding-steps)/Step4TeamSize';
+import Step4Location from './(protected)/(onboarding-steps)/Step3Location';
+import Step5CurrentSoftware from './(protected)/(onboarding-steps)/Step2CurrentSoftware';
+import Step6HearAboutUs from './(protected)/(onboarding-steps)/Step2HearAboutUs';
+// Removed Step7Complete import
+import SetupCompleteScreen from './(protected)/(onboarding-steps)/SetupCompleteScreen';
 
 function OnboardingContent() {
   const router = useRouter();
-  const { session } = useSession();
+  const { session, updateSession } = useSession();
   const { currentStep, totalSteps, nextStep, prevStep, data, isLoading } = useOnboarding();
   const [loading, setLoading] = useState(false);
 
@@ -60,14 +60,23 @@ function OnboardingContent() {
       console.log('All onboarding steps completed. Data:', data);
 
       // Save finalized data to Firestore
-      await finalizeOnboarding(session.uid, data);
+      await finalizeOnboarding(session.uid, data, session.email || undefined);
       console.log('Onboarding finalized for partner');
+
+      // Refresh session to update onboardingCompleted status locally
+      // This prevents redirection loop back to onboarding
+      // We use updateSession for immediate optimistic update to ensure the router guard sees the change
+      updateSession({ onboardingCompleted: true });
+
 
       // Mark onboarding as completed in Users document
       await completeOnboarding(session.uid);
       console.log('Onboarding completed for partner');
 
-      router.replace('/partners/(protected)');
+      // Small delay to ensure context propagates before navigation
+      setTimeout(() => {
+        router.replace('/partners/(protected)');
+      }, 100);
     } catch (error: any) {
       console.error('Error completing onboarding:', error);
     } finally {
@@ -90,9 +99,9 @@ function OnboardingContent() {
       case 6:
         return <Step6HearAboutUs onNext={nextStep} onBack={prevStep} />;
       case 7:
-        return <Step7Complete onNext={nextStep} onBack={prevStep} />;
-      case 8:
+        // Use SetupCompleteScreen instead of Step7Complete
         return <SetupCompleteScreen onNext={handleComplete} loading={loading} />;
+      // Removed case 8 as SetupCompleteScreen now handles final step
       default:
         return <Step1BusinessName onNext={nextStep} />;
     }
@@ -170,3 +179,4 @@ const styles = StyleSheet.create({
     marginTop: 12,
   },
 });
+
